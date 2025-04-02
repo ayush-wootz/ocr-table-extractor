@@ -50,7 +50,7 @@ def cleanup_temp_data(session_id: str):
     """
     print(f"Cleaning up temporary data for session: {session_id}")
 
-@app.post("/ocr")
+@app.post("/")
 async def ocr_endpoint(
     background_tasks: BackgroundTasks,
     image: UploadFile = File(...),
