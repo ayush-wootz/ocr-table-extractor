@@ -50,12 +50,26 @@ def cleanup_temp_data(session_id: str):
     """
     print(f"Cleaning up temporary data for session: {session_id}")
 
-@app.post("/")
+@app.api_route("/", methods=["POST", "HEAD"])
 async def ocr_endpoint(
-    background_tasks: BackgroundTasks,
-    image: UploadFile = File(...),
-    mode: str = Form(...)
+    request: Request,
+    background_tasks: BackgroundTasks = None,
+    image: UploadFile = None,
+    mode: str = None
 ):
+
+    if request.method == "HEAD":
+        return JSONResponse(content={"status": "ok"})
+    
+    # For POST requests, require the parameters
+    if request.method == "POST":
+        if not image or not mode:
+            return JSONResponse(
+                status_code=400, 
+                content={"error": "Missing required parameters"}
+            )
+
+
     """
     Accepts an image and a mode ("quick" or "table").
     Processes the image using PaddleOCR and returns:
