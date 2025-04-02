@@ -48,8 +48,7 @@ def get_text_download_link(text_content, filename, link_text):
     href = f'<a href="data:file/txt;base64,{b64}" download="{filename}.txt">{link_text}</a>'
     return href
 
-# --- Main Application ---
-st.set_page_config(page_title="OCR Table Extractor", layout="wide")
+
 
 # App title
 st.title("OCR Table Extractor")
