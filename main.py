@@ -9,14 +9,16 @@ import os
 
 # Initialize the OCR model at import time
 print("Loading OCR model...")
-ocr_model = PaddleOCR(use_angle_cls=True, lang='en')
+
+# Initialize the OCR model with more conservative settings
+ocr_model = PaddleOCR(use_angle_cls=True, lang='en', use_gpu=False, enable_mkldnn=False)
 print("OCR model loaded successfully!")
 
 app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["https://ayush-wootz.github.io", "*"],  # Add your specific domain
     allow_credentials=True,
     allow_methods=["GET", "POST", "HEAD", "OPTIONS"],
     allow_headers=["*"],
@@ -78,6 +80,10 @@ def cleanup_temp_data(session_id: str):
 @app.get("/health")
 async def health_check():
     return {"status": "ok", "ocr_model_loaded": ocr_model is not None}
+
+@app.get("/test")
+async def test_endpoint():
+    return {"status": "ok", "message": "API is working"}
 
 # Handle HEAD requests
 @app.head("/")
