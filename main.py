@@ -1,12 +1,22 @@
-from fastapi import FastAPI, UploadFile, File, Form, BackgroundTasks
+from fastapi import FastAPI, UploadFile, File, Form, BackgroundTasks, Request
 from fastapi.responses import JSONResponse
 from fastapi.concurrency import run_in_threadpool
+from fastapi.middleware.cors import CORSMiddleware
+
 import cv2
 import numpy as np
 from paddleocr import PaddleOCR
 
 app = FastAPI()
 ocr_model = None
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "HEAD", "OPTIONS"],
+    allow_headers=["*"],
+)
 
 # Preload the OCR model asynchronously at startup
 @app.on_event("startup")
