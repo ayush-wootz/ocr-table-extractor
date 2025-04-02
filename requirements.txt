@@ -1,4 +1,4 @@
-streamlit>=1.31.0,<1.33.0
+
 paddlepaddle==2.6.2
 paddleocr==2.10.0
 opencv-python-headless==4.11.0.86
@@ -16,3 +16,9 @@ fire==0.7.0
 lxml==5.3.1
 requests==2.32.3
 setuptools>=60.0.0  # Add this line
+
+
+# FastAPI backend requirements:
+fastapi
+uvicorn
+python-multipart
