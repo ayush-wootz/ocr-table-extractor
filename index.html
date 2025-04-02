@@ -92,7 +92,7 @@
                 
                 const data = await response.json();
                 
-                // Display results based on mode
+                // Display results 
                 if (mode === "quick" && data.extracted_text) {
                     resultContainer.innerHTML = `
                         <h3>Extracted Text:</h3>
@@ -111,7 +111,7 @@
                 } else {
                     resultContainer.innerHTML = `Error: ${error.message}`;
                 }
-                console.error('Error details:', error);
+                console.error('Error details:', error)
             }
         };
     </script>
