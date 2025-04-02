@@ -1,0 +1,83 @@
+from fastapi import FastAPI, UploadFile, File, Form, BackgroundTasks
+from fastapi.responses import JSONResponse
+from fastapi.concurrency import run_in_threadpool
+import cv2
+import numpy as np
+from paddleocr import PaddleOCR
+
+app = FastAPI()
+ocr_model = None
+
+# Preload the OCR model asynchronously at startup
+@app.on_event("startup")
+async def startup_event():
+    global ocr_model
+    # Load the model in a thread so it doesn't block the event loop
+    ocr_model = await run_in_threadpool(PaddleOCR, use_angle_cls=True, lang='en')
+    print("OCR model loaded.")
+
+def process_image_bytes(image_bytes: bytes):
+    """
+    Convert image bytes to an OpenCV image, optionally resize it,
+    run OCR, and return the detected cells (each with y_center, text, and confidence).
+    """
+    nparr = np.frombuffer(image_bytes, np.uint8)
+    img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+    
+    # Optional: Resize large images for faster processing
+    max_dim = 1024
+    height, width = img.shape[:2]
+    if max(height, width) > max_dim:
+        scale = max_dim / max(height, width)
+        img = cv2.resize(img, (int(width * scale), int(height * scale)))
+    
+    image_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    results = ocr_model.ocr(image_rgb, cls=True)
+    cells = []
+    
+    if results and len(results) > 0 and len(results[0]) > 0:
+        for box, (text, confidence) in results[0]:
+            if text.strip():
+                y_center = int((box[0][1] + box[2][1]) / 2)
+                cells.append({"y_center": y_center, "text": text.strip(), "confidence": confidence})
+        cells.sort(key=lambda c: c["y_center"])
+    return cells
+
+def cleanup_temp_data(session_id: str):
+    """
+    Placeholder cleanup function for removing temporary session data.
+    Replace this with your own logic if needed.
+    """
+    print(f"Cleaning up temporary data for session: {session_id}")
+
+@app.post("/ocr")
+async def ocr_endpoint(
+    background_tasks: BackgroundTasks,
+    image: UploadFile = File(...),
+    mode: str = Form(...)
+):
+    """
+    Accepts an image and a mode ("quick" or "table").
+    Processes the image using PaddleOCR and returns:
+      - For mode "quick": a concatenated text string.
+      - For mode "table": the raw OCR cells as JSON.
+    Also schedules cleanup of session data after processing.
+    """
+    image_bytes = await image.read()
+    cells = process_image_bytes(image_bytes)
+    
+    # In a real application, obtain a proper session id (from cookies or authentication)
+    session_id = "dummy_session"
+    background_tasks.add_task(cleanup_temp_data, session_id)
+    
+    if mode == "quick":
+        extracted_text = "\n".join(cell["text"] for cell in cells)
+        return {"mode": mode, "extracted_text": extracted_text, "cells": cells}
+    elif mode == "table":
+        return {"mode": mode, "table": cells}
+    else:
+        return JSONResponse(status_code=400, content={"error": "Invalid mode provided"})
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
