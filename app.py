@@ -1,5 +1,4 @@
 import streamlit as st
-import os
 import cv2
 import numpy as np
 from paddleocr import PaddleOCR
@@ -32,14 +31,14 @@ def process_image(uploaded_image):
     cells.sort(key=lambda c: c[0])
     return cells
 
-# Confidence color coding
-def get_color(confidence):
-    if confidence > 0.9:
-        return '#d4fcd4'  # Green
-    elif confidence > 0.8:
-        return '#fff3cd'  # Orange
+# Confidence level indicator
+def confidence_indicator(confidence):
+    if confidence >= 0.9:
+        return "🟢 High"
+    elif confidence >= 0.8:
+        return "🟠 Medium"
     else:
-        return '#f8d7da'  # Red
+        return "🔴 Low"
 
 # --- Main Application ---
 st.title("OCR Table Extractor")
@@ -51,7 +50,6 @@ if mode == "Quick Text Copy (Paragraph)":
     uploaded_file = st.file_uploader("Choose an image file", type=["jpg", "jpeg", "png"])
     
     if uploaded_file is not None:
-        # Display smaller image preview
         image = Image.open(uploaded_file)
         st.image(image, caption="Uploaded Image", width=300)
         
@@ -59,37 +57,15 @@ if mode == "Quick Text Copy (Paragraph)":
             with st.spinner("Processing..."):
                 try:
                     data = process_image(uploaded_file)
-                    
-                    paragraph_data = [text for _, text, _ in data]
-                    confidences = [conf for _, _, conf in data]
-                    
-                    # Create DataFrame for display
                     df = pd.DataFrame({
-                        "Text": paragraph_data,
-                        "Confidence": confidences
+                        "Text": [text for _, text, _ in data],
+                        "Confidence": [confidence_indicator(conf) for _, _, conf in data]
                     })
                     
-                    # Display with confidence highlighting
-                    st.subheader("Extracted Text")
-                    for text, conf in zip(paragraph_data, confidences):
-                        st.markdown(
-                            f'<div style="background-color: {get_color(conf)}; padding: 10px; border-radius: 5px; margin: 5px 0;">{text}</div>',
-                            unsafe_allow_html=True
-                        )
-                    
-                    # Editable version
-                    st.subheader("Editable Text")
-                    edited_df = st.data_editor(df[["Text"]], hide_index=True)
-                    
-                    # Join text for download
-                    full_text = "\n".join(edited_df["Text"].tolist())
-                    
-                    # Download button
-                    st.download_button(
-                        "Download as TXT",
-                        full_text,
-                        file_name="extracted_text.txt"
-                    )
+                    st.data_editor(df, use_container_width=True, num_rows="dynamic")
+
+                    full_text = "\n".join(df["Text"])
+                    st.download_button("Download as TXT", full_text, file_name="extracted_text.txt")
                     
                 except Exception as e:
                     st.error(f"Error processing image: {str(e)}")
@@ -102,14 +78,13 @@ elif mode == "Column-by-Column Table Extract":
         st.session_state.column_data = [[] for _ in data_columns]
     
     col_index = st.selectbox("Select column to process:", 
-                           range(len(data_columns)), 
-                           format_func=lambda x: data_columns[x])
+                             range(len(data_columns)), 
+                             format_func=lambda x: data_columns[x])
     
     uploaded_file = st.file_uploader(f"Upload image for {data_columns[col_index]}", 
-                                   type=["jpg", "jpeg", "png"])
+                                     type=["jpg", "jpeg", "png"])
     
     if uploaded_file is not None:
-        # Display smaller image preview
         image = Image.open(uploaded_file)
         st.image(image, caption=f"Uploaded Image for {data_columns[col_index]}", width=300)
         
@@ -118,61 +93,43 @@ elif mode == "Column-by-Column Table Extract":
                 try:
                     column = process_image(uploaded_file)
                     st.session_state.column_data[col_index] = column
-                    st.success(f"Column {data_columns[col_index]} processed successfully!")
+                    st.success(f"Column '{data_columns[col_index]}' processed successfully!")
                 except Exception as e:
                     st.error(f"Error processing image: {str(e)}")
 
-    # Show the current table state
+    # Display editable spreadsheet with confidence indicators
     if any(len(col) > 0 for col in st.session_state.column_data):
-        st.subheader("Current Table State")
-        
-        # Create table data with confidence coloring
-        max_rows = max([len(col) for col in st.session_state.column_data], default=0)
-        table_html = "<table style='width:100%; border-collapse: collapse;'>"
-        
-        # Table headers
-        table_html += "<tr style='background-color: #f2f2f2;'>"
-        for col in data_columns:
-            table_html += f"<th style='border: 1px solid #ddd; padding: 8px; text-align: left;'>{col}</th>"
-        table_html += "</tr>"
-        
-        # Table rows
-        for i in range(max_rows):
-            table_html += "<tr>"
-            for j in range(len(data_columns)):
-                if j < len(st.session_state.column_data) and i < len(st.session_state.column_data[j]):
-                    text = st.session_state.column_data[j][i][1]
-                    conf = st.session_state.column_data[j][i][2]
-                    color = get_color(conf)
-                else:
-                    text = ""
-                    color = "white"
-                
-                table_html += f"<td style='border: 1px solid #ddd; padding: 8px; background-color: {color}'>{text}</td>"
-            table_html += "</tr>"
-        table_html += "</table>"
-        
-        st.markdown(table_html, unsafe_allow_html=True)
-        
-        # Create DataFrame for download
+        st.subheader("Extracted Table (Editable)")
+
+        max_rows = max(len(col) for col in st.session_state.column_data)
         table_data = []
+        
         for i in range(max_rows):
             row = []
-            for j in range(len(data_columns)):
-                if j < len(st.session_state.column_data) and i < len(st.session_state.column_data[j]):
-                    row.append(st.session_state.column_data[j][i][1])
+            for col in st.session_state.column_data:
+                if i < len(col):
+                    text, conf = col[i][1], confidence_indicator(col[i][2])
                 else:
-                    row.append("")
+                    text, conf = "", ""
+                row.extend([text, conf])
             table_data.append(row)
+
+        # Create DataFrame with alternating columns for text and confidence
+        expanded_columns = []
+        for col in data_columns:
+            expanded_columns.extend([col, f"{col} Confidence"])
         
-        df = pd.DataFrame(table_data, columns=data_columns)
-        
-        # Download button
-        csv = df.to_csv(index=False)
+        df = pd.DataFrame(table_data, columns=expanded_columns)
+
+        edited_df = st.data_editor(df, use_container_width=True, num_rows="dynamic")
+
+        # Download CSV
+        edited_csv = edited_df.to_csv(index=False)
         st.download_button(
             "Download as CSV",
-            csv,
-            file_name="extracted_table.csv"
+            edited_csv,
+            file_name="extracted_table.csv",
+            mime="text/csv"
         )
 
         if st.button("Clear Table"):
