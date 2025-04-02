@@ -1,14 +1,10 @@
-app.py
-
 import streamlit as st
 import os
 import cv2
 import numpy as np
 from paddleocr import PaddleOCR
 import pandas as pd
-import base64
 from PIL import Image
-import io
 
 # --- MUST BE FIRST STREAMLIT COMMAND ---
 st.set_page_config(page_title="OCR Table Extractor", layout="wide")
@@ -55,31 +51,48 @@ if mode == "Quick Text Copy (Paragraph)":
     uploaded_file = st.file_uploader("Choose an image file", type=["jpg", "jpeg", "png"])
     
     if uploaded_file is not None:
+        # Display smaller image preview
         image = Image.open(uploaded_file)
         st.image(image, caption="Uploaded Image", width=300)
         
         if st.button("Process Image"):
             with st.spinner("Processing..."):
-                data = process_image(uploaded_file)
-                
-                paragraph_data = [text for _, text, _ in data]
-                confidences = [conf for _, _, conf in data]
-                
-                # Display with confidence colors
-                df = pd.DataFrame({"Text": paragraph_data, "Confidence": confidences})
-                st.subheader("Extracted Text (editable)")
-                
-                # Create styled text display
-                styled_text = []
-                for text, conf in zip(paragraph_data, confidences):
-                    styled_text.append(f'<div style="background-color: {get_color(conf)}; padding: 5px; margin: 2px;">{text}</div>')
-                st.markdown("".join(styled_text), unsafe_allow_html=True)
-                
-                # Editable version
-                edited_df = st.data_editor(df[["Text"]], hide_index=True)
-                full_text = "\n".join(edited_df["Text"].tolist())
-                
-                st.download_button("Download as TXT", full_text, file_name="extracted_text.txt")
+                try:
+                    data = process_image(uploaded_file)
+                    
+                    paragraph_data = [text for _, text, _ in data]
+                    confidences = [conf for _, _, conf in data]
+                    
+                    # Create DataFrame for display
+                    df = pd.DataFrame({
+                        "Text": paragraph_data,
+                        "Confidence": confidences
+                    })
+                    
+                    # Display with confidence highlighting
+                    st.subheader("Extracted Text")
+                    for text, conf in zip(paragraph_data, confidences):
+                        st.markdown(
+                            f'<div style="background-color: {get_color(conf)}; padding: 10px; border-radius: 5px; margin: 5px 0;">{text}</div>',
+                            unsafe_allow_html=True
+                        )
+                    
+                    # Editable version
+                    st.subheader("Editable Text")
+                    edited_df = st.data_editor(df[["Text"]], hide_index=True)
+                    
+                    # Join text for download
+                    full_text = "\n".join(edited_df["Text"].tolist())
+                    
+                    # Download button
+                    st.download_button(
+                        "Download as TXT",
+                        full_text,
+                        file_name="extracted_text.txt"
+                    )
+                    
+                except Exception as e:
+                    st.error(f"Error processing image: {str(e)}")
 
 elif mode == "Column-by-Column Table Extract":
     st.subheader("Column-by-Column Table Extract")
@@ -96,55 +109,72 @@ elif mode == "Column-by-Column Table Extract":
                                    type=["jpg", "jpeg", "png"])
     
     if uploaded_file is not None:
+        # Display smaller image preview
         image = Image.open(uploaded_file)
         st.image(image, caption=f"Uploaded Image for {data_columns[col_index]}", width=300)
         
         if st.button("Process Column"):
             with st.spinner("Processing..."):
-                column = process_image(uploaded_file)
-                st.session_state.column_data[col_index] = column
-                st.success(f"Column {data_columns[col_index]} processed!")
+                try:
+                    column = process_image(uploaded_file)
+                    st.session_state.column_data[col_index] = column
+                    st.success(f"Column {data_columns[col_index]} processed successfully!")
+                except Exception as e:
+                    st.error(f"Error processing image: {str(e)}")
 
+    # Show the current table state
     if any(len(col) > 0 for col in st.session_state.column_data):
         st.subheader("Current Table State")
         
-        max_rows = max(len(col) for col in st.session_state.column_data)
-        table_html = "<table style='border-collapse: collapse; width: 100%;'>"
+        # Create table data with confidence coloring
+        max_rows = max([len(col) for col in st.session_state.column_data], default=0)
+        table_html = "<table style='width:100%; border-collapse: collapse;'>"
         
-        # Header
-        table_html += "<tr>"
+        # Table headers
+        table_html += "<tr style='background-color: #f2f2f2;'>"
         for col in data_columns:
-            table_html += f"<th style='border: 1px solid black; padding: 8px;'>{col}</th>"
+            table_html += f"<th style='border: 1px solid #ddd; padding: 8px; text-align: left;'>{col}</th>"
         table_html += "</tr>"
         
-        # Rows
+        # Table rows
         for i in range(max_rows):
             table_html += "<tr>"
             for j in range(len(data_columns)):
                 if j < len(st.session_state.column_data) and i < len(st.session_state.column_data[j]):
                     text = st.session_state.column_data[j][i][1]
                     conf = st.session_state.column_data[j][i][2]
+                    color = get_color(conf)
                 else:
                     text = ""
-                    conf = 1.0
-                table_html += f"<td style='border: 1px solid black; padding: 8px; background-color: {get_color(conf)}'>{text}</td>"
+                    color = "white"
+                
+                table_html += f"<td style='border: 1px solid #ddd; padding: 8px; background-color: {color}'>{text}</td>"
             table_html += "</tr>"
-        
         table_html += "</table>"
+        
         st.markdown(table_html, unsafe_allow_html=True)
         
-        # CSV Download
-        csv_data = []
+        # Create DataFrame for download
+        table_data = []
         for i in range(max_rows):
             row = []
             for j in range(len(data_columns)):
-                row.append(st.session_state.column_data[j][i][1] if j < len(st.session_state.column_data) and i < len(st.session_state.column_data[j]) else "")
-            csv_data.append(row)
+                if j < len(st.session_state.column_data) and i < len(st.session_state.column_data[j]):
+                    row.append(st.session_state.column_data[j][i][1])
+                else:
+                    row.append("")
+            table_data.append(row)
         
-        df = pd.DataFrame(csv_data, columns=data_columns)
+        df = pd.DataFrame(table_data, columns=data_columns)
+        
+        # Download button
         csv = df.to_csv(index=False)
-        st.download_button("Download as CSV", csv, file_name="extracted_table.csv")
+        st.download_button(
+            "Download as CSV",
+            csv,
+            file_name="extracted_table.csv"
+        )
 
         if st.button("Clear Table"):
             st.session_state.column_data = [[] for _ in data_columns]
-            st.rerun()  # Updated from experimental_rerun
+            st.rerun()
