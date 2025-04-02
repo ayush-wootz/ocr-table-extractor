@@ -2,10 +2,11 @@ from fastapi import FastAPI, UploadFile, File, Form, BackgroundTasks, Request
 from fastapi.responses import JSONResponse
 from fastapi.concurrency import run_in_threadpool
 from fastapi.middleware.cors import CORSMiddleware
-
 import cv2
 import numpy as np
 from paddleocr import PaddleOCR
+import os
+import traceback
 
 app = FastAPI()
 ocr_model = None
@@ -60,51 +61,64 @@ def cleanup_temp_data(session_id: str):
     """
     print(f"Cleaning up temporary data for session: {session_id}")
 
-@app.api_route("/", methods=["POST", "HEAD"])
-async def ocr_endpoint(
+# Handle HEAD requests separately
+@app.head("/")
+async def head_endpoint():
+    return JSONResponse(content={"status": "ok"})
+
+# Handle POST requests for OCR
+@app.post("/")
+async def ocr_post_endpoint(
     request: Request,
-    background_tasks: BackgroundTasks = None,
-    image: UploadFile = None,
-    mode: str = None
+    background_tasks: BackgroundTasks = BackgroundTasks()
 ):
-
-    if request.method == "HEAD":
-        return JSONResponse(content={"status": "ok"})
-    
-    # For POST requests, require the parameters
-    if request.method == "POST":
-        if not image or not mode:
-            return JSONResponse(
-                status_code=400, 
-                content={"error": "Missing required parameters"}
-            )
-
-
-    """
-    Accepts an image and a mode ("quick" or "table").
-    Processes the image using PaddleOCR and returns:
-      - For mode "quick": a concatenated text string.
-      - For mode "table": the raw OCR cells as JSON.
-    Also schedules cleanup of session data after processing.
-    """
-    image_bytes = await image.read()
-    cells = process_image_bytes(image_bytes)
-    
-    # In a real application, obtain a proper session id (from cookies or authentication)
-    session_id = "dummy_session"
-    background_tasks.add_task(cleanup_temp_data, session_id)
-    
-    if mode == "quick":
-        extracted_text = "\n".join(cell["text"] for cell in cells)
-        return {"mode": mode, "extracted_text": extracted_text, "cells": cells}
-    elif mode == "table":
-        return {"mode": mode, "table": cells}
-    else:
-        return JSONResponse(status_code=400, content={"error": "Invalid mode provided"})
+    try:
+        # Debug log the content type
+        print(f"Content-Type: {request.headers.get('content-type')}")
+        
+        # Get form data from the request
+        form = await request.form()
+        print(f"Form keys: {list(form.keys())}")
+        
+        # Extract image and mode from form
+        if "image" not in form:
+            return JSONResponse(status_code=400, content={"error": "Missing image parameter"})
+        
+        if "mode" not in form:
+            return JSONResponse(status_code=400, content={"error": "Missing mode parameter"})
+        
+        # Get the file and mode
+        image = form["image"]
+        mode = form["mode"]
+        
+        print(f"Received mode: {mode}, image: {image.filename}")
+        
+        # Process the image
+        image_bytes = await image.read()
+        cells = process_image_bytes(image_bytes)
+        
+        # In a real application, obtain a proper session id (from cookies or authentication)
+        session_id = "dummy_session"
+        background_tasks.add_task(cleanup_temp_data, session_id)
+        
+        if mode == "quick":
+            extracted_text = "\n".join(cell["text"] for cell in cells)
+            return {"mode": mode, "extracted_text": extracted_text, "cells": cells}
+        elif mode == "table":
+            return {"mode": mode, "table": cells}
+        else:
+            return JSONResponse(status_code=400, content={"error": "Invalid mode provided"})
+            
+    except Exception as e:
+        print(f"Error processing request: {str(e)}")
+        traceback.print_exc()
+        return JSONResponse(
+            status_code=500, 
+            content={"error": f"Server error: {str(e)}"}
+        )
 
 if __name__ == "__main__":
     import uvicorn
-    import os
     
     # Get port from environment variable or default to 8000
     port = int(os.environ.get("PORT", 8000))
