@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OCR Table Extractor</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>OCR Table Extractor</h1>
+
+        <select id="mode-select">
+            <option value="quick">Quick Text Copy (Paragraph)</option>
+            <option value="table">Column-by-Column Table Extract</option>
+        </select>
+
+        <input type="file" id="image-upload" accept="image/png, image/jpeg">
+        <div id="image-preview"></div>
+        <button id="process-btn">Process Image</button>
+
+        <div id="result-container"></div>
+
+        <button id="download-btn" style="display:none;">Download Result</button>
+    </div>
+
+    <script>
+        document.getElementById('image-upload').onchange = function(e) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const img = new Image();
+                img.src = event.target.result;
+                img.style.maxWidth = '300px';
+                const preview = document.getElementById('image-preview');
+                preview.innerHTML = '';
+                preview.appendChild(img);
+            }
+            reader.readAsDataURL(e.target.files[0]);
+        };
+
+        // Placeholder for backend API call
+        document.getElementById('process-btn').onclick = async function() {
+            const imageInput = document.getElementById('image-upload');
+            const mode = document.getElementById('mode-select').value;
+
+            if (!imageInput.files[0]) {
+                alert("Please upload an image first!");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('image', imageInput.files[0]);
+            formData.append('mode', mode);
+
+            const resultContainer = document.getElementById('result-container');
+            resultContainer.innerHTML = 'Processing...';
+
+            // Replace this URL later with backend endpoint
+            const response = await fetch('YOUR_BACKEND_ENDPOINT', {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await response.json();
+            
+            // Display results (simplified)
+            resultContainer.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+            document.getElementById('download-btn').style.display = 'block';
+        };
+    </script>
+</body>
+</html>
