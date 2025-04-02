@@ -8,6 +8,9 @@ import base64
 from PIL import Image
 import io
 
+st.set_page_config(page_title="OCR Table Extractor", layout="wide")
+
+
 # Initialize OCR
 @st.cache_resource
 def load_ocr():
