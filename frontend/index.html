@@ -36,8 +36,8 @@
 
   <script>
     // Global variables for spreadsheet data and configuration.
-    let spreadsheetData = []; // Array of row objects.
-    let columnsList = [];     // List of keys in order. For each OCR upload, two keys will be added.
+    let spreadsheetData = []; // Array of row objects. Each new OCR upload adds one column.
+    let columnsList = [];     // List of column keys (e.g., "Column 1", "Column 2", etc.)
     let columnCount = 0;      // Number of OCR uploads processed.
     let hot;                  // Handsontable instance
 
@@ -56,16 +56,16 @@
     };
 
     // Custom renderer for the text column.
-    // It expects the cell value to be an object: { text: string, conf: number }.
-    // Sets background color based on confidence thresholds:
-    // 0.9 to 1.0 => green, 0.7 to 0.9 => orange, < 0.7 => red.
+    // It expects the cell value to be an object: { text: string, confidence: number }.
+    // The background color is set based on the confidence thresholds.
     function textRenderer(instance, td, row, col, prop, value, cellProperties) {
       Handsontable.renderers.TextRenderer.apply(this, arguments);
       const rowData = instance.getSourceDataAtRow(row);
       if (rowData && rowData[prop] && typeof rowData[prop] === 'object') {
         const cellData = rowData[prop];
-        td.innerText = cellData.text; // Show only the text.
-        const conf = parseFloat(cellData.conf);
+        td.innerText = cellData.text; // Display only the text.
+        // Convert confidence to a number (in case it's a string).
+        const conf = parseFloat(cellData.confidence);
         if (conf >= 0.9) {
           td.style.backgroundColor = 'rgba(76, 175, 80, 0.2)'; // Green.
         } else if (conf >= 0.7) {
@@ -78,18 +78,12 @@
       }
     }
 
-    // Render the spreadsheet using the global columnsList and spreadsheetData.
+    // Function to render (or re-render) the Handsontable spreadsheet.
     function renderSpreadsheet() {
       let columns = [];
       let colHeaders = [];
-      // For each key in columnsList, create a column definition.
       columnsList.forEach(key => {
-        // If the key ends with "Confidence", it's a plain numeric column.
-        if (key.endsWith("Confidence")) {
-          columns.push({ data: key, title: key, type: 'numeric' });
-        } else {
-          columns.push({ data: key, title: key, renderer: textRenderer });
-        }
+        columns.push({ data: key, title: key, renderer: textRenderer });
         colHeaders.push(key);
       });
       
@@ -111,37 +105,30 @@
       });
     }
 
-    // Add a new OCR upload as two columns: one for text and one for confidence.
-    // newColumnData is an array of objects: { text: string, conf: number }.
+    // Function to add a new OCR upload as a single column.
+    // newColumnData is an array of objects: each { text: string, confidence: number }.
     function addColumn(newColumnData) {
       columnCount++;
-      const textKey = 'Column ' + columnCount;
-      const confKey = textKey + " Confidence";
-      // Append keys to columnsList.
-      columnsList.push(textKey);
-      columnsList.push(confKey);
+      const colKey = 'Column ' + columnCount;
+      columnsList.push(colKey);
       
       // Merge new column data into spreadsheetData.
-      // If there are more rows in newColumnData than existing rows, create new row objects.
       for (let i = 0; i < newColumnData.length; i++) {
         if (i < spreadsheetData.length) {
-          spreadsheetData[i][textKey] = { text: newColumnData[i].text, conf: newColumnData[i].conf };
-          spreadsheetData[i][confKey] = parseFloat(newColumnData[i].conf);
+          spreadsheetData[i][colKey] = { text: newColumnData[i].text, confidence: newColumnData[i].confidence };
         } else {
           let newRow = {};
           // Initialize previous columns with empty values.
-          for (let j = 0; j < columnsList.length - 2; j++) {
-            newRow[columnsList[j]] = (columnsList[j].endsWith("Confidence")) ? 0 : { text: '', conf: 0 };
+          for (let j = 0; j < columnsList.length - 1; j++) {
+            newRow[columnsList[j]] = { text: '', confidence: 0 };
           }
-          newRow[textKey] = { text: newColumnData[i].text, conf: newColumnData[i].conf };
-          newRow[confKey] = parseFloat(newColumnData[i].conf);
+          newRow[colKey] = { text: newColumnData[i].text, confidence: newColumnData[i].confidence };
           spreadsheetData.push(newRow);
         }
       }
-      // For existing rows beyond newColumnData length, fill new cells with empty values.
+      // For any rows that already exist beyond the length of newColumnData, fill the new cell with an empty object.
       for (let i = newColumnData.length; i < spreadsheetData.length; i++) {
-        spreadsheetData[i][textKey] = { text: '', conf: 0 };
-        spreadsheetData[i][confKey] = 0;
+        spreadsheetData[i][colKey] = { text: '', confidence: 0 };
       }
       
       renderSpreadsheet();
@@ -198,7 +185,7 @@
         const data = await response.json();
 
         if (mode === "table" && data.table) {
-          // data.table is an array of objects: each { text, confidence }.
+          // data.table is expected to be an array of objects: each { text, confidence }.
           addColumn(data.table);
           resultContainer.innerHTML = '<h3>Spreadsheet Updated.</h3>';
         } else if (mode === "quick" && data.extracted_text) {
@@ -210,7 +197,7 @@
           resultContainer.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
         }
         
-        // Ensure download button is visible.
+        // Ensure the download button is visible.
         document.getElementById('download-btn').style.display = 'block';
       } catch (error) {
         if (error.name === 'AbortError') {
