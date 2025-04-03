@@ -27,10 +27,12 @@
 
     <!-- Results container for non-spreadsheet results -->
     <div id="result-container"></div>
+
+    <!-- Download button placed above the spreadsheet -->
+    <button id="download-btn" style="display: none;">Download Result</button>
+    
     <!-- Container for Handsontable spreadsheet (hidden by default) -->
     <div id="hot" style="width: 100%; height: 400px; display: none;"></div>
-
-    <button id="download-btn" style="display: none;">Download Result</button>
   </div>
 
   <script>
@@ -53,21 +55,22 @@
       reader.readAsDataURL(e.target.files[0]);
     };
 
-    // Custom renderer for the text cell. It reads an object {text, conf} from the cell
-    // and sets the cell's background color based on the confidence.
+    // Custom renderer for the text cell.
+    // It expects the cell value to be an object: { text: string, conf: number }
+    // It sets the background color based on the confidence thresholds:
+    // 0.9-1.0 => green, 0.7-0.9 => orange, < 0.7 => red.
     function textRenderer(instance, td, row, col, prop, value, cellProperties) {
       Handsontable.renderers.TextRenderer.apply(this, arguments);
-      // Each cell should be an object: { text: string, conf: number }
       const rowData = instance.getSourceDataAtRow(row);
       if (rowData && rowData[prop] && typeof rowData[prop] === 'object') {
         const cellData = rowData[prop];
         td.innerText = cellData.text; // Display only the text
         if (cellData.conf >= 0.9) {
-          td.style.backgroundColor = 'rgba(76, 175, 80, 0.2)'; // Green for high confidence
-        } else if (cellData.conf >= 0.8) {
-          td.style.backgroundColor = 'rgba(255, 152, 0, 0.2)'; // Orange for medium
+          td.style.backgroundColor = 'rgba(76, 175, 80, 0.2)'; // Green
+        } else if (cellData.conf >= 0.7) {
+          td.style.backgroundColor = 'rgba(255, 152, 0, 0.2)'; // Orange
         } else {
-          td.style.backgroundColor = 'rgba(244, 67, 54, 0.2)';  // Red for low
+          td.style.backgroundColor = 'rgba(244, 67, 54, 0.2)';  // Red
         }
       } else {
         td.innerText = value;
@@ -76,7 +79,6 @@
 
     // Function to (re)render the Handsontable spreadsheet.
     function renderSpreadsheet() {
-      // Build column definitions based on the current column count.
       let columns = [];
       let colHeaders = [];
       for (let i = 1; i <= columnCount; i++) {
@@ -85,16 +87,13 @@
         colHeaders.push(key);
       }
       
-      // Show the Handsontable container and hide any generic result.
       const container = document.getElementById('hot');
       container.style.display = 'block';
       
-      // Destroy previous instance if exists.
       if (hot) {
         hot.destroy();
       }
       
-      // Initialize Handsontable with spare row for adding new rows.
       hot = new Handsontable(container, {
         data: spreadsheetData,
         columns: columns,
@@ -106,20 +105,18 @@
       });
     }
 
-    // Function to add a new column from uploaded OCR data.
-    // newColumnData should be an array of objects, each { text: string, conf: number }.
+    // Function to add a new column from OCR data.
+    // newColumnData is an array of objects: each { text: string, conf: number }.
     function addColumn(newColumnData) {
       columnCount++;
       const colKey = 'Column ' + columnCount;
       
-      // Merge the new column into spreadsheetData.
-      // If there are more rows in newColumnData than currently exist, add new row objects.
+      // Merge new column into spreadsheetData.
       for (let i = 0; i < newColumnData.length; i++) {
         if (i < spreadsheetData.length) {
           spreadsheetData[i][colKey] = newColumnData[i];
         } else {
           let newRow = {};
-          // Initialize existing columns with empty values.
           for (let j = 1; j < columnCount; j++) {
             newRow['Column ' + j] = { text: '', conf: 0 };
           }
@@ -127,12 +124,10 @@
           spreadsheetData.push(newRow);
         }
       }
-      // For any existing rows beyond newColumnData length, set the new column value as empty.
       for (let i = newColumnData.length; i < spreadsheetData.length; i++) {
         spreadsheetData[i][colKey] = { text: '', conf: 0 };
       }
       
-      // Re-render the spreadsheet with the updated data.
       renderSpreadsheet();
     }
 
@@ -147,7 +142,6 @@
         return;
       }
 
-      // Limit file size to 2MB.
       const fileSizeMB = imageInput.files[0].size / (1024 * 1024);
       if (fileSizeMB > 2) {
         alert(`Image size (${fileSizeMB.toFixed(2)}MB) is too large. Please use an image under 2MB.`);
@@ -161,17 +155,16 @@
       formData.append('mode', mode);
 
       try {
-        // Replace with your actual backend URL (e.g., Render URL).
+        // Replace with your actual backend URL.
         const API_URL = 'https://ocr-table-extractor.onrender.com';
         
-        // Optional: Test the API.
+        // Optional: Test API.
         const testResponse = await fetch(`${API_URL}/test`);
         if (!testResponse.ok) {
           throw new Error(`API test failed with status: ${testResponse.status}`);
         }
         console.log("API test successful");
 
-        // Set a timeout for the request.
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 60000);
         const response = await fetch(API_URL, {
@@ -188,9 +181,7 @@
         
         const data = await response.json();
 
-        // For "table" mode, add a new column with the OCR results.
         if (mode === "table" && data.table) {
-          // data.table is an array of objects: each { text, confidence }
           addColumn(data.table);
           resultContainer.innerHTML = '<h3>Spreadsheet Updated.</h3>';
         } else if (mode === "quick" && data.extracted_text) {
