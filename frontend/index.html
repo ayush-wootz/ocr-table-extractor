@@ -27,16 +27,17 @@
 
     <!-- Results container for non-spreadsheet results -->
     <div id="result-container"></div>
+
+    <!-- Download button placed before the spreadsheet -->
+    <button id="download-btn" style="display: none;">Download as CSV</button>
+
     <!-- Container for Handsontable spreadsheet (hidden by default) -->
     <div id="hot" style="width: 100%; height: 400px; display: none;"></div>
-
-    <!-- Download button placed above the spreadsheet -->
-    <button id="download-btn" style="display: none;">Download as CSV</button>
   </div>
 
   <script>
     // Global variables for spreadsheet data and configuration.
-    let spreadsheetData = []; // Array of row objects. Each new OCR upload adds one column.
+    let spreadsheetData = []; // Array of row objects.
     let columnsList = [];     // List of column keys (e.g., "Column 1", "Column 2", etc.)
     let columnCount = 0;      // Number of OCR uploads processed.
     let hot;                  // Handsontable instance
@@ -55,16 +56,16 @@
       reader.readAsDataURL(e.target.files[0]);
     };
 
-    // Custom renderer for the text column.
+    // Custom renderer for text cells.
     // It expects the cell value to be an object: { text: string, confidence: number }.
-    // The background color is set based on the confidence thresholds.
+    // It displays only the text and sets the background color based on confidence:
+    // 0.9–1.0 green, 0.7–0.9 orange, <0.7 red.
     function textRenderer(instance, td, row, col, prop, value, cellProperties) {
       Handsontable.renderers.TextRenderer.apply(this, arguments);
       const rowData = instance.getSourceDataAtRow(row);
       if (rowData && rowData[prop] && typeof rowData[prop] === 'object') {
         const cellData = rowData[prop];
-        td.innerText = cellData.text; // Display only the text.
-        // Convert confidence to a number (in case it's a string).
+        td.innerText = cellData.text; // Show only the text.
         const conf = parseFloat(cellData.confidence);
         if (conf >= 0.9) {
           td.style.backgroundColor = 'rgba(76, 175, 80, 0.2)'; // Green.
@@ -83,7 +84,23 @@
       let columns = [];
       let colHeaders = [];
       columnsList.forEach(key => {
-        columns.push({ data: key, title: key, renderer: textRenderer });
+        // For text columns, add a valueGetter and valueSetter so that only the text is edited.
+        columns.push({
+          data: key,
+          title: key,
+          renderer: textRenderer,
+          editor: 'text',
+          valueGetter: function(rowData) {
+            return rowData[key] ? rowData[key].text : '';
+          },
+          valueSetter: function(rowData, newValue) {
+            if (!rowData[key]) {
+              rowData[key] = { text: '', confidence: 0 };
+            }
+            rowData[key].text = newValue;
+            return newValue;
+          }
+        });
         colHeaders.push(key);
       });
       
@@ -118,7 +135,7 @@
           spreadsheetData[i][colKey] = { text: newColumnData[i].text, confidence: newColumnData[i].confidence };
         } else {
           let newRow = {};
-          // Initialize previous columns with empty values.
+          // Initialize all existing columns with empty objects.
           for (let j = 0; j < columnsList.length - 1; j++) {
             newRow[columnsList[j]] = { text: '', confidence: 0 };
           }
@@ -126,7 +143,7 @@
           spreadsheetData.push(newRow);
         }
       }
-      // For any rows that already exist beyond the length of newColumnData, fill the new cell with an empty object.
+      // For any existing rows beyond the new column data, fill the new cell with an empty value.
       for (let i = newColumnData.length; i < spreadsheetData.length; i++) {
         spreadsheetData[i][colKey] = { text: '', confidence: 0 };
       }
