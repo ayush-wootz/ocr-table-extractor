@@ -14,16 +14,18 @@
   <div class="container">
     <h1>OCR Table Extractor</h1>
 
+    <!-- Mode selection -->
     <select id="mode-select">
       <option value="quick">Quick Text Copy (Paragraph)</option>
       <option value="table">Column-by-Column Table Extract</option>
     </select>
 
+    <!-- Image uploader and preview -->
     <input type="file" id="image-upload" accept="image/png, image/jpeg" />
     <div id="image-preview"></div>
     <button id="process-btn">Process Image</button>
 
-    <!-- Container for non-spreadsheet results -->
+    <!-- Results container for non-spreadsheet results -->
     <div id="result-container"></div>
     <!-- Container for Handsontable spreadsheet (hidden by default) -->
     <div id="hot" style="width: 100%; height: 400px; display: none;"></div>
@@ -32,10 +34,15 @@
   </div>
 
   <script>
-    // Preview the selected image
-    document.getElementById('image-upload').onchange = function (e) {
+    // Global variables for spreadsheet data and state.
+    let spreadsheetData = []; // Array of row objects. Each key: "Column 1", "Column 2", etc.
+    let columnCount = 0;      // How many columns have been added.
+    let hot;                  // Handsontable instance
+
+    // Preview the uploaded image.
+    document.getElementById('image-upload').onchange = function(e) {
       const reader = new FileReader();
-      reader.onload = function (event) {
+      reader.onload = function(event) {
         const img = new Image();
         img.src = event.target.result;
         img.style.maxWidth = '300px';
@@ -46,55 +53,90 @@
       reader.readAsDataURL(e.target.files[0]);
     };
 
-    // Custom renderer for Handsontable to apply conditional formatting based on confidence
-    function confidenceRenderer(instance, td, row, col, prop, value, cellProperties) {
+    // Custom renderer for the text cell. It reads an object {text, conf} from the cell
+    // and sets the cell's background color based on the confidence.
+    function textRenderer(instance, td, row, col, prop, value, cellProperties) {
       Handsontable.renderers.TextRenderer.apply(this, arguments);
-      // Only apply coloring for the "confidence" column (assumed numeric)
-      if (value >= 0.9) {
-        td.style.backgroundColor = 'rgba(76, 175, 80, 0.2)'; // Green
-      } else if (value >= 0.8) {
-        td.style.backgroundColor = 'rgba(255, 152, 0, 0.2)'; // Orange
+      // Each cell should be an object: { text: string, conf: number }
+      const rowData = instance.getSourceDataAtRow(row);
+      if (rowData && rowData[prop] && typeof rowData[prop] === 'object') {
+        const cellData = rowData[prop];
+        td.innerText = cellData.text; // Display only the text
+        if (cellData.conf >= 0.9) {
+          td.style.backgroundColor = 'rgba(76, 175, 80, 0.2)'; // Green for high confidence
+        } else if (cellData.conf >= 0.8) {
+          td.style.backgroundColor = 'rgba(255, 152, 0, 0.2)'; // Orange for medium
+        } else {
+          td.style.backgroundColor = 'rgba(244, 67, 54, 0.2)';  // Red for low
+        }
       } else {
-        td.style.backgroundColor = 'rgba(244, 67, 54, 0.2)';  // Red
+        td.innerText = value;
       }
     }
 
-    // Function to initialize and render Handsontable spreadsheet
-    function renderSpreadsheet(data) {
-      // Show the Handsontable container and hide the generic result container
-      document.getElementById('hot').style.display = 'block';
-      document.getElementById('result-container').innerHTML = '';
-
-      // Initialize Handsontable
+    // Function to (re)render the Handsontable spreadsheet.
+    function renderSpreadsheet() {
+      // Build column definitions based on the current column count.
+      let columns = [];
+      let colHeaders = [];
+      for (let i = 1; i <= columnCount; i++) {
+        const key = 'Column ' + i;
+        columns.push({ data: key, title: key, renderer: textRenderer });
+        colHeaders.push(key);
+      }
+      
+      // Show the Handsontable container and hide any generic result.
       const container = document.getElementById('hot');
-      const hot = new Handsontable(container, {
-        data: data, // data should be an array of objects: { text: "ABC", confidence: 0.95 }
-        columns: [
-          { data: 'text', title: 'Text', type: 'text' },
-          { data: 'confidence', title: 'Confidence', type: 'numeric', renderer: confidenceRenderer }
-        ],
-        colHeaders: true,
+      container.style.display = 'block';
+      
+      // Destroy previous instance if exists.
+      if (hot) {
+        hot.destroy();
+      }
+      
+      // Initialize Handsontable with spare row for adding new rows.
+      hot = new Handsontable(container, {
+        data: spreadsheetData,
+        columns: columns,
+        colHeaders: colHeaders,
         rowHeaders: true,
-        minSpareRows: 1, // Always provide an extra row for adding new data
+        minSpareRows: 1, // Enables user to add rows
         contextMenu: true,
         licenseKey: 'non-commercial-and-evaluation'
       });
-
-      // Attach download functionality to export the spreadsheet as CSV
-      document.getElementById('download-btn').onclick = function () {
-        const csv = Handsontable.helper.stringify(hot.getData());
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.setAttribute("href", url);
-        link.setAttribute("download", "extracted_table.csv");
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      };
     }
 
-    // Process button handler
+    // Function to add a new column from uploaded OCR data.
+    // newColumnData should be an array of objects, each { text: string, conf: number }.
+    function addColumn(newColumnData) {
+      columnCount++;
+      const colKey = 'Column ' + columnCount;
+      
+      // Merge the new column into spreadsheetData.
+      // If there are more rows in newColumnData than currently exist, add new row objects.
+      for (let i = 0; i < newColumnData.length; i++) {
+        if (i < spreadsheetData.length) {
+          spreadsheetData[i][colKey] = newColumnData[i];
+        } else {
+          let newRow = {};
+          // Initialize existing columns with empty values.
+          for (let j = 1; j < columnCount; j++) {
+            newRow['Column ' + j] = { text: '', conf: 0 };
+          }
+          newRow[colKey] = newColumnData[i];
+          spreadsheetData.push(newRow);
+        }
+      }
+      // For any existing rows beyond newColumnData length, set the new column value as empty.
+      for (let i = newColumnData.length; i < spreadsheetData.length; i++) {
+        spreadsheetData[i][colKey] = { text: '', conf: 0 };
+      }
+      
+      // Re-render the spreadsheet with the updated data.
+      renderSpreadsheet();
+    }
+
+    // Process button handler.
     document.getElementById('process-btn').onclick = async function () {
       const imageInput = document.getElementById('image-upload');
       const mode = document.getElementById('mode-select').value;
@@ -105,7 +147,7 @@
         return;
       }
 
-      // Check file size (limit to 2MB for example)
+      // Limit file size to 2MB.
       const fileSizeMB = imageInput.files[0].size / (1024 * 1024);
       if (fileSizeMB > 2) {
         alert(`Image size (${fileSizeMB.toFixed(2)}MB) is too large. Please use an image under 2MB.`);
@@ -119,19 +161,19 @@
       formData.append('mode', mode);
 
       try {
-        // Replace with your actual backend URL (e.g., on Render)
+        // Replace with your actual backend URL (e.g., Render URL).
         const API_URL = 'https://ocr-table-extractor.onrender.com';
         
-        // Test API endpoint (optional)
+        // Optional: Test the API.
         const testResponse = await fetch(`${API_URL}/test`);
         if (!testResponse.ok) {
           throw new Error(`API test failed with status: ${testResponse.status}`);
         }
+        console.log("API test successful");
 
-        // Set a timeout for the main request (60 seconds)
+        // Set a timeout for the request.
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 60000);
-
         const response = await fetch(API_URL, {
           method: 'POST',
           body: formData,
@@ -143,12 +185,14 @@
           const errorText = await response.text();
           throw new Error(`Server error (${response.status}): ${errorText}`);
         }
-
+        
         const data = await response.json();
 
-        // For "table" mode, use Handsontable to display an editable spreadsheet.
+        // For "table" mode, add a new column with the OCR results.
         if (mode === "table" && data.table) {
-          renderSpreadsheet(data.table);
+          // data.table is an array of objects: each { text, confidence }
+          addColumn(data.table);
+          resultContainer.innerHTML = '<h3>Spreadsheet Updated.</h3>';
         } else if (mode === "quick" && data.extracted_text) {
           resultContainer.innerHTML = `
             <h3>Extracted Text:</h3>
