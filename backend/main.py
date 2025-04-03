@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI()
 
-# Configure CORS - explicitly allow your GitHub Pages doma
+# Configure CORS - explicitly allow your GitHub Pages d
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["https://ayush-wootz.github.io", "http://localhost:3000"],
