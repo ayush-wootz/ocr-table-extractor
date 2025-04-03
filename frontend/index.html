@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OCR Table Extractor</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>OCR Table Extractor</h1>
+
+        <select id="mode-select">
+            <option value="quick">Quick Text Copy (Paragraph)</option>
+            <option value="table">Column-by-Column Table Extract</option>
+        </select>
+
+        <input type="file" id="image-upload" accept="image/png, image/jpeg">
+        <div id="image-preview"></div>
+        <button id="process-btn">Process Image</button>
+
+        <div id="result-container"></div>
+
+        <button id="download-btn" style="display:none;">Download Result</button>
+    </div>
+
+    <script>
+        document.getElementById('image-upload').onchange = function(e) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const img = new Image();
+                img.src = event.target.result;
+                img.style.maxWidth = '300px';
+                const preview = document.getElementById('image-preview');
+                preview.innerHTML = '';
+                preview.appendChild(img);
+            }
+            reader.readAsDataURL(e.target.files[0]);
+        };
+
+        // Placeholder for backend API call
+        document.getElementById('process-btn').onclick = async function() {
+    const imageInput = document.getElementById('image-upload');
+    const mode = document.getElementById('mode-select').value;
+    const resultContainer = document.getElementById('result-container');
+    
+    if (!imageInput.files[0]) {
+        alert("Please upload an image first!");
+        return;
+    }
+    
+    // Check file size
+    const fileSizeMB = imageInput.files[0].size / (1024 * 1024);
+    if (fileSizeMB > 2) {
+        alert(`Image size (${fileSizeMB.toFixed(2)}MB) is too large. Please use an image under 2MB.`);
+        return;
+    }
+    
+    resultContainer.innerHTML = '<div class="loading">Processing... This may take up to 30 seconds.</div>';
+    
+    const formData = new FormData();
+    formData.append('image', imageInput.files[0]);
+    formData.append('mode', mode);
+    
+    try {
+        // Use your Render URL here
+        const API_URL = 'https://ocr-table-extractor.onrender.com';
+        
+        // First check if the API is available
+        try {
+            const testResponse = await fetch(`${API_URL}/test`);
+            if (!testResponse.ok) {
+                throw new Error(`API test failed with status: ${testResponse.status}`);
+            }
+            console.log("API test successful");
+        } catch (testError) {
+            console.warn("API test failed:", testError);
+            resultContainer.innerHTML = 'The OCR service appears to be offline. Please try again later.';
+            return;
+        }
+        
+        // Set a timeout for the main request
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
+        
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            body: formData,
+            signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
+        
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`Server error (${response.status}): ${errorText}`);
+        }
+        
+        const data = await response.json();
+        
+        // Display results based on mode
+        if (mode === "quick" && data.extracted_text) {
+            resultContainer.innerHTML = `
+                <h3>Extracted Text:</h3>
+                <div class="extracted-text">${data.extracted_text.replace(/\n/g, '<br>')}</div>
+                <h4>Confidence:</h4>
+                <div class="confidence-info">
+                    ${data.cells.map(cell => `
+                        <div class="conf-item ${getConfidenceClass(cell.confidence)}">
+                            "${cell.text}" - ${Math.round(cell.confidence * 100)}%
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        } else if (mode === "table" && data.table) {
+            resultContainer.innerHTML = `
+                <h3>Table Data:</h3>
+                <table class="result-table">
+                    <tr>
+                        <th>Text</th>
+                        <th>Confidence</th>
+                    </tr>
+                    ${data.table.map(cell => `
+                        <tr class="${getConfidenceClass(cell.confidence)}">
+                            <td>${cell.text}</td>
+                            <td>${Math.round(cell.confidence * 100)}%</td>
+                        </tr>
+                    `).join('')}
+                </table>
+            `;
+        } else {
+            resultContainer.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+        }
+        
+        document.getElementById('download-btn').style.display = 'block';
+    } catch (error) {
+        if (error.name === 'AbortError') {
+            resultContainer.innerHTML = '<p class="error">Request timed out. Try a smaller image or try again later.</p>';
+        } else {
+            resultContainer.innerHTML = `<p class="error">Error: ${error.message}</p>`;
+        }
+        console.error('Error details:', error);
+    }
+};
+
+// Helper function for confidence styling
+function getConfidenceClass(confidence) {
+    if (confidence >= 0.9) return 'high-confidence';
+    if (confidence >= 0.7) return 'medium-confidence';
+    return 'low-confidence';
+}
+    </script>
+</body>
+</html>
