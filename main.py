@@ -5,8 +5,41 @@ import cv2
 import numpy as np
 import os
 import time
+import pathlib
 
 app = FastAPI()
+
+# Create PaddleOCR home directory if it doesn't exist
+paddle_home = os.path.join(os.path.expanduser("~"), ".paddleocr")
+pathlib.Path(paddle_home).mkdir(parents=True, exist_ok=True)
+
+# Ensure the directory is writable
+os.chmod(paddle_home, 0o755)
+
+# Initialize OCR model with explicit model paths
+def get_ocr_model():
+    from paddleocr import PaddleOCR
+    # Specify the exact model paths to avoid downloading
+    det_model_dir = os.path.join(paddle_home, "whl/det/en/en_PP-OCRv3_det_infer")
+    rec_model_dir = os.path.join(paddle_home, "whl/rec/en/en_PP-OCRv3_rec_infer")
+    cls_model_dir = os.path.join(paddle_home, "whl/cls/ch_ppocr_mobile_v2.0_cls_infer")
+    
+    # Check if models exist
+    if os.path.exists(det_model_dir) and os.path.exists(rec_model_dir) and os.path.exists(cls_model_dir):
+        print("Using pre-downloaded model files")
+        return PaddleOCR(
+            use_angle_cls=True, 
+            lang='en',
+            det_model_dir=det_model_dir,
+            rec_model_dir=rec_model_dir,
+            cls_model_dir=cls_model_dir,
+            use_gpu=False
+        )
+    else:
+        print("Model files not found, using default download behavior")
+        return PaddleOCR(use_angle_cls=True, lang='en', use_gpu=False)
+
+
 
 # Add CORS middleware
 app.add_middleware(
@@ -83,6 +116,18 @@ async def ocr_endpoint(request: Request):
         # Read image
         image_bytes = await image.read()
         
+        # Check PaddleOCR directory
+        paddle_home = os.path.join(os.path.expanduser("~"), ".paddleocr")
+        model_paths = {
+            "det": os.path.join(paddle_home, "whl/det/en/en_PP-OCRv3_det_infer"),
+            "rec": os.path.join(paddle_home, "whl/rec/en/en_PP-OCRv3_rec_infer"),
+            "cls": os.path.join(paddle_home, "whl/cls/ch_ppocr_mobile_v2.0_cls_infer")
+        }
+        
+        # Log directory status
+        dir_status = {path: os.path.exists(path) for name, path in model_paths.items()}
+        print(f"Model directory status: {dir_status}")
+        
         # Process with timeout
         import asyncio
         try:
@@ -104,10 +149,12 @@ async def ocr_endpoint(request: Request):
             )
     except Exception as e:
         import traceback
-        traceback.print_exc()
+        error_trace = traceback.format_exc()
+        print(f"Error: {str(e)}")
+        print(f"Traceback: {error_trace}")
         return JSONResponse(
             status_code=500,
-            content={"error": f"Server error: {str(e)}"}
+            content={"error": f"Server error: {str(e)}", "trace": error_trace}
         )
 
 if __name__ == "__main__":
