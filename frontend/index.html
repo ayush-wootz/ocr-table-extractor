@@ -27,18 +27,18 @@
 
     <!-- Results container for non-spreadsheet results -->
     <div id="result-container"></div>
-
-    <!-- Download button placed above the spreadsheet -->
-    <button id="download-btn" style="display: none;">Download Result</button>
-    
     <!-- Container for Handsontable spreadsheet (hidden by default) -->
     <div id="hot" style="width: 100%; height: 400px; display: none;"></div>
+
+    <!-- Download button placed above the spreadsheet -->
+    <button id="download-btn" style="display: none;">Download as CSV</button>
   </div>
 
   <script>
-    // Global variables for spreadsheet data and state.
-    let spreadsheetData = []; // Array of row objects. Each key: "Column 1", "Column 2", etc.
-    let columnCount = 0;      // How many columns have been added.
+    // Global variables for spreadsheet data and configuration.
+    let spreadsheetData = []; // Array of row objects.
+    let columnsList = [];     // List of keys in order. For each OCR upload, two keys will be added.
+    let columnCount = 0;      // Number of OCR uploads processed.
     let hot;                  // Handsontable instance
 
     // Preview the uploaded image.
@@ -55,37 +55,43 @@
       reader.readAsDataURL(e.target.files[0]);
     };
 
-    // Custom renderer for the text cell.
-    // It expects the cell value to be an object: { text: string, conf: number }
-    // It sets the background color based on the confidence thresholds:
-    // 0.9-1.0 => green, 0.7-0.9 => orange, < 0.7 => red.
+    // Custom renderer for the text column.
+    // It expects the cell value to be an object: { text: string, conf: number }.
+    // Sets background color based on confidence thresholds:
+    // 0.9 to 1.0 => green, 0.7 to 0.9 => orange, < 0.7 => red.
     function textRenderer(instance, td, row, col, prop, value, cellProperties) {
       Handsontable.renderers.TextRenderer.apply(this, arguments);
       const rowData = instance.getSourceDataAtRow(row);
       if (rowData && rowData[prop] && typeof rowData[prop] === 'object') {
         const cellData = rowData[prop];
-        td.innerText = cellData.text; // Display only the text
-        if (cellData.conf >= 0.9) {
-          td.style.backgroundColor = 'rgba(76, 175, 80, 0.2)'; // Green
-        } else if (cellData.conf >= 0.7) {
-          td.style.backgroundColor = 'rgba(255, 152, 0, 0.2)'; // Orange
+        td.innerText = cellData.text; // Show only the text.
+        const conf = parseFloat(cellData.conf);
+        if (conf >= 0.9) {
+          td.style.backgroundColor = 'rgba(76, 175, 80, 0.2)'; // Green.
+        } else if (conf >= 0.7) {
+          td.style.backgroundColor = 'rgba(255, 152, 0, 0.2)'; // Orange.
         } else {
-          td.style.backgroundColor = 'rgba(244, 67, 54, 0.2)';  // Red
+          td.style.backgroundColor = 'rgba(244, 67, 54, 0.2)';  // Red.
         }
       } else {
         td.innerText = value;
       }
     }
 
-    // Function to (re)render the Handsontable spreadsheet.
+    // Render the spreadsheet using the global columnsList and spreadsheetData.
     function renderSpreadsheet() {
       let columns = [];
       let colHeaders = [];
-      for (let i = 1; i <= columnCount; i++) {
-        const key = 'Column ' + i;
-        columns.push({ data: key, title: key, renderer: textRenderer });
+      // For each key in columnsList, create a column definition.
+      columnsList.forEach(key => {
+        // If the key ends with "Confidence", it's a plain numeric column.
+        if (key.endsWith("Confidence")) {
+          columns.push({ data: key, title: key, type: 'numeric' });
+        } else {
+          columns.push({ data: key, title: key, renderer: textRenderer });
+        }
         colHeaders.push(key);
-      }
+      });
       
       const container = document.getElementById('hot');
       container.style.display = 'block';
@@ -99,33 +105,43 @@
         columns: columns,
         colHeaders: colHeaders,
         rowHeaders: true,
-        minSpareRows: 1, // Enables user to add rows
+        minSpareRows: 1, // Enables users to add rows.
         contextMenu: true,
         licenseKey: 'non-commercial-and-evaluation'
       });
     }
 
-    // Function to add a new column from OCR data.
-    // newColumnData is an array of objects: each { text: string, conf: number }.
+    // Add a new OCR upload as two columns: one for text and one for confidence.
+    // newColumnData is an array of objects: { text: string, conf: number }.
     function addColumn(newColumnData) {
       columnCount++;
-      const colKey = 'Column ' + columnCount;
+      const textKey = 'Column ' + columnCount;
+      const confKey = textKey + " Confidence";
+      // Append keys to columnsList.
+      columnsList.push(textKey);
+      columnsList.push(confKey);
       
-      // Merge new column into spreadsheetData.
+      // Merge new column data into spreadsheetData.
+      // If there are more rows in newColumnData than existing rows, create new row objects.
       for (let i = 0; i < newColumnData.length; i++) {
         if (i < spreadsheetData.length) {
-          spreadsheetData[i][colKey] = newColumnData[i];
+          spreadsheetData[i][textKey] = { text: newColumnData[i].text, conf: newColumnData[i].conf };
+          spreadsheetData[i][confKey] = parseFloat(newColumnData[i].conf);
         } else {
           let newRow = {};
-          for (let j = 1; j < columnCount; j++) {
-            newRow['Column ' + j] = { text: '', conf: 0 };
+          // Initialize previous columns with empty values.
+          for (let j = 0; j < columnsList.length - 2; j++) {
+            newRow[columnsList[j]] = (columnsList[j].endsWith("Confidence")) ? 0 : { text: '', conf: 0 };
           }
-          newRow[colKey] = newColumnData[i];
+          newRow[textKey] = { text: newColumnData[i].text, conf: newColumnData[i].conf };
+          newRow[confKey] = parseFloat(newColumnData[i].conf);
           spreadsheetData.push(newRow);
         }
       }
+      // For existing rows beyond newColumnData length, fill new cells with empty values.
       for (let i = newColumnData.length; i < spreadsheetData.length; i++) {
-        spreadsheetData[i][colKey] = { text: '', conf: 0 };
+        spreadsheetData[i][textKey] = { text: '', conf: 0 };
+        spreadsheetData[i][confKey] = 0;
       }
       
       renderSpreadsheet();
@@ -158,7 +174,7 @@
         // Replace with your actual backend URL.
         const API_URL = 'https://ocr-table-extractor.onrender.com';
         
-        // Optional: Test API.
+        // Optional: Test the API.
         const testResponse = await fetch(`${API_URL}/test`);
         if (!testResponse.ok) {
           throw new Error(`API test failed with status: ${testResponse.status}`);
@@ -182,6 +198,7 @@
         const data = await response.json();
 
         if (mode === "table" && data.table) {
+          // data.table is an array of objects: each { text, confidence }.
           addColumn(data.table);
           resultContainer.innerHTML = '<h3>Spreadsheet Updated.</h3>';
         } else if (mode === "quick" && data.extracted_text) {
@@ -193,6 +210,7 @@
           resultContainer.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
         }
         
+        // Ensure download button is visible.
         document.getElementById('download-btn').style.display = 'block';
       } catch (error) {
         if (error.name === 'AbortError') {
