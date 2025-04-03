@@ -49,7 +49,7 @@
         return;
     }
     
-    // Check file size
+    // Check file 
     const fileSizeMB = imageInput.files[0].size / (1024 * 1024);
     if (fileSizeMB > 2) {
         alert(`Image size (${fileSizeMB.toFixed(2)}MB) is too large. Please use an image under 2MB.`);
