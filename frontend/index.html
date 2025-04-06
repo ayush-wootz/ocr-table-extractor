@@ -3,21 +3,48 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>OCR Table Extractor</title>
+  <title>Extract Drawing info</title>
   <link rel="stylesheet" href="style.css">
 
   <!-- Handsontable CSS and JS from CDN -->
   <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/handsontable@12.1.0/dist/handsontable.full.min.css">
   <script src="https://cdn.jsdelivr.net/npm/handsontable@12.1.0/dist/handsontable.full.min.js"></script>
+  
+  <style>
+    /* Additional inline styles for layout adjustments */
+    #hot-wrapper {
+      max-width: 100%;
+      overflow-x: auto;
+      background: white;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      margin-top: 10px;
+    }
+    /* Style for secondary buttons (download) */
+    .secondary-button {
+      background-color: #ccc;
+      color: #333;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-bottom: 10px;
+    }
+    .secondary-button:hover {
+      opacity: 0.8;
+    }
+  </style>
 </head>
 <body>
   <div class="container">
-    <h1>OCR Table Extractor</h1>
+    <!-- Changed title -->
+    <h1>Extract Drawing info</h1>
 
-    <!-- Mode selection -->
+    <!-- Default mode: Column-by-Column Table Extract -->
     <select id="mode-select">
+      <option value="table" selected>Column-by-Column Table Extract</option>
       <option value="quick">Quick Text Copy (Paragraph)</option>
-      <option value="table">Column-by-Column Table Extract</option>
     </select>
 
     <!-- Image uploader and preview -->
@@ -28,11 +55,13 @@
     <!-- Results container for non-spreadsheet results -->
     <div id="result-container"></div>
 
-    <!-- Download button placed before the spreadsheet -->
-    <button id="download-btn" style="display: none;">Download as CSV</button>
+    <!-- Secondary Download button placed before spreadsheet -->
+    <button id="download-btn" class="secondary-button" style="display: none;">Download as CSV</button>
 
-    <!-- Container for Handsontable spreadsheet (hidden by default) -->
-    <div id="hot" style="width: 100%; height: 400px; display: none;"></div>
+    <!-- Spreadsheet container wrapper to enforce page limits -->
+    <div id="hot-wrapper" style="display: none;">
+      <div id="hot" style="width: 100%; height: 400px;"></div>
+    </div>
   </div>
 
   <script>
@@ -57,15 +86,15 @@
     };
 
     // Custom renderer for text cells.
-    // It expects the cell value to be an object: { text: string, confidence: number }.
-    // It displays only the text and sets the background color based on confidence:
-    // 0.9–1.0 green, 0.7–0.9 orange, <0.7 red.
+    // Expects each cell to be an object: { text: string, confidence: number }.
+    // Sets background color based on thresholds:
+    // 0.9-1.0: green, 0.7-0.9: orange, below 0.7: red.
     function textRenderer(instance, td, row, col, prop, value, cellProperties) {
       Handsontable.renderers.TextRenderer.apply(this, arguments);
       const rowData = instance.getSourceDataAtRow(row);
       if (rowData && rowData[prop] && typeof rowData[prop] === 'object') {
         const cellData = rowData[prop];
-        td.innerText = cellData.text; // Show only the text.
+        td.innerText = cellData.text; // Display only the text.
         const conf = parseFloat(cellData.confidence);
         if (conf >= 0.9) {
           td.style.backgroundColor = 'rgba(76, 175, 80, 0.2)'; // Green.
@@ -84,15 +113,16 @@
       let columns = [];
       let colHeaders = [];
       columnsList.forEach(key => {
-        // For text columns, add a valueGetter and valueSetter so that only the text is edited.
         columns.push({
           data: key,
           title: key,
           renderer: textRenderer,
           editor: 'text',
+          // The value getter returns the cell text.
           valueGetter: function(rowData) {
             return rowData[key] ? rowData[key].text : '';
           },
+          // The value setter updates the cell's text.
           valueSetter: function(rowData, newValue) {
             if (!rowData[key]) {
               rowData[key] = { text: '', confidence: 0 };
@@ -107,6 +137,9 @@
       const container = document.getElementById('hot');
       container.style.display = 'block';
       
+      // Ensure the wrapper is shown.
+      document.getElementById('hot-wrapper').style.display = 'block';
+      
       if (hot) {
         hot.destroy();
       }
@@ -117,7 +150,7 @@
         colHeaders: colHeaders,
         rowHeaders: true,
         minSpareRows: 1, // Enables users to add rows.
-        contextMenu: true,
+        contextMenu: ['remove_row', 'copy', 'paste'],
         licenseKey: 'non-commercial-and-evaluation'
       });
     }
@@ -143,7 +176,7 @@
           spreadsheetData.push(newRow);
         }
       }
-      // For any existing rows beyond the new column data, fill the new cell with an empty value.
+      // For any existing rows beyond the new column data, fill the new cell with an empty object.
       for (let i = newColumnData.length; i < spreadsheetData.length; i++) {
         spreadsheetData[i][colKey] = { text: '', confidence: 0 };
       }
@@ -223,6 +256,21 @@
           resultContainer.innerHTML = `<p class="error">Error: ${error.message}</p>`;
         }
         console.error('Error details:', error);
+      }
+    };
+
+    // Download button click: Export the spreadsheet data as CSV.
+    document.getElementById('download-btn').onclick = function () {
+      if (hot) {
+        const csv = Handsontable.helper.stringify(hot.getData());
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.setAttribute("href", url);
+        link.setAttribute("download", "extracted_table.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
       }
     };
   </script>
