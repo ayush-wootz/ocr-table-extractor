@@ -252,7 +252,8 @@
             }
             rows.push(row);
           }
-          
+
+          console.log("Sending data to Zapier:", userEmail, rows);
           // Zapier/Glide Data post codeblock
           fetch("https://hooks.zapier.com/hooks/catch/21674508/2pv0c1j/", {
           method: "POST",
@@ -260,7 +261,6 @@
             "Content-Type": "application/json"
           },
           body: JSON.stringify({
-            user: "example_user", // optional user ID
             user_email: userEmail,
             extracted_rows: rows, // structured, column-mapped rows
             timestamp: new Date().toISOString()
