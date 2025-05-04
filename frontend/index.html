@@ -54,11 +54,21 @@
 
   <script>
     // ✅ Extract user_email from query string
+    // const urlParams = new URLSearchParams(window.location.search);
+    // const userEmail = urlParams.get("user_email");
+    // if (!userEmail) {
+    //   alert("User email not found. Please reopen from your app.");
+    // }
+    // STEP 1: Parse query params
     const urlParams = new URLSearchParams(window.location.search);
-    const userEmail = urlParams.get("user_email");
-    if (!userEmail) {
-      alert("User email not found. Please reopen from your app.");
+    const project = urlParams.get("project");
+    const partNumber = urlParams.get("part");
+    
+    // 👇 Optional: show an error if missing
+    if (!project || !partNumber) {
+      alert("Missing query params: project or part number");
     }
+
 
     // Global variables for spreadsheet data and configuration.
     let spreadsheetData = []; // Array of row objects.
