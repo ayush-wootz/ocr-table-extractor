@@ -53,7 +53,7 @@
   </div>
 
   <script>
-    // ✅ Extract user_email from query string
+    // Extract user_email from query string
     // const urlParams = new URLSearchParams(window.location.search);
     // const userEmail = urlParams.get("user_email");
     // if (!userEmail) {
@@ -241,53 +241,53 @@
           addColumn(data.table);
           resultContainer.innerHTML = '<h3>Spreadsheet Updated.</h3>';
         
-          // New Code -> Glide Data Post
-          // Map column name list (make sure order matches upload order)
-          const columnNames = ["BO Code", "BO Name", "BO Qty", "Material/Spec"];
+          // // New Code -> Glide Data Post
+          // // Map column name list (make sure order matches upload order)
+          // const columnNames = ["BO Code", "BO Name", "BO Qty", "Material/Spec"];
 
-          // // Use global spreadsheetData array (this already stores merged columns)
-          // spreadsheetData.push(data.table);  // optional if you're building row-by-row
+          // // // Use global spreadsheetData array (this already stores merged columns)
+          // // spreadsheetData.push(data.table);  // optional if you're building row-by-row
           
-          // Transform spreadsheetData into row objects
-          const rows = [];
+          // // Transform spreadsheetData into row objects
+          // const rows = [];
 
-          for (let i = 0; i < data.table.length; i++) {
-            let row = {};
-            for (let j = 0; j < columnNames.length; j++) {
-              const colName = columnNames[j];
-              const colData = spreadsheetData[i]?.[columnNames[j]];
+          // for (let i = 0; i < data.table.length; i++) {
+          //   let row = {};
+          //   for (let j = 0; j < columnNames.length; j++) {
+          //     const colName = columnNames[j];
+          //     const colData = spreadsheetData[i]?.[columnNames[j]];
               
-              // Default fallback if missing
-              row[colName] = colData?.text || "";
-            }
-            rows.push(row);
-          }
+          //     // Default fallback if missing
+          //     row[colName] = colData?.text || "";
+          //   }
+          //   rows.push(row);
+          // }
 
-          console.log("Sending data to Zapier:", userEmail, rows);
-          // Zapier/Glide Data post codeblock
-          fetch("https://hooks.zapier.com/hooks/catch/21674508/2pv0c1j/", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            user_email: userEmail,
-            extracted_rows: rows, // structured, column-mapped rows
-            timestamp: new Date().toISOString()
-          })
-          })
-          .then(res => {
-            if (res.ok) {
-              resultContainer.innerHTML = '<h3>Data sent to Glide!</h3>';
-            } else {
-              resultContainer.innerHTML = `<h3>Error sending data: ${res.status}</h3>`;
-            }
-          })
-          .catch(err => {
-            resultContainer.innerHTML = `<h3>Request failed: ${err.message}</h3>`;
-          });
+          // console.log("Sending data to Zapier:", userEmail, rows);
+          // // Zapier/Glide Data post codeblock
+          // fetch("https://hooks.zapier.com/hooks/catch/21674508/2pv0c1j/", {
+          // method: "POST",
+          // headers: {
+          //   "Content-Type": "application/json"
+          // },
+          // body: JSON.stringify({
+          //   user_email: userEmail,
+          //   extracted_rows: rows, // structured, column-mapped rows
+          //   timestamp: new Date().toISOString()
+          // })
+          // })
+          // .then(res => {
+          //   if (res.ok) {
+          //     resultContainer.innerHTML = '<h3>Data sent to Glide!</h3>';
+          //   } else {
+          //     resultContainer.innerHTML = `<h3>Error sending data: ${res.status}</h3>`;
+          //   }
+          // })
+          // .catch(err => {
+          //   resultContainer.innerHTML = `<h3>Request failed: ${err.message}</h3>`;
+          // });
 
-          // New Code Ending
+          // // New Code Ending
         } else if (mode === "quick" && data.extracted_text) {
           resultContainer.innerHTML = `
             <h3>Extracted Text:</h3>
