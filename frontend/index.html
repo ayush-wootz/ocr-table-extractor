@@ -59,15 +59,20 @@
     // if (!userEmail) {
     //   alert("User email not found. Please reopen from your app.");
     // }
-    // STEP 1: Parse query params
-    const urlParams = new URLSearchParams(window.location.search);
-    const project = urlParams.get("project");
-    const partNumber = urlParams.get("part");
+   // ProjectName & PartNumber
+    window.addEventListener("DOMContentLoaded", () => {
+      // STEP 1: Parse query params
+      const urlParams = new URLSearchParams(window.location.search);
+      const project = urlParams.get("project");
+      const partNumber = urlParams.get("part");
     
-    // 👇 Optional: show an error if missing
-    if (!project || !partNumber) {
-      alert("Missing query params: project or part number");
-    }
+      if (!project || !partNumber) {
+        alert("Missing query params: project or part number");
+      } else {
+        console.log("✅ Project:", project);
+        console.log("✅ Part:", partNumber);
+      }
+    });
 
 
     // Global variables for spreadsheet data and configuration.
