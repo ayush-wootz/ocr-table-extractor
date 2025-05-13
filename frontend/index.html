@@ -65,12 +65,15 @@
       const urlParams = new URLSearchParams(window.location.search);
       const project = urlParams.get("project");
       const partNumber = urlParams.get("part");
+      const parentDrgNum = urlParams.get("parentdrgnum");
+
     
-      if (!project || !partNumber) {
-        alert("Missing query params: project or part number");
+      if (!project || !partNumber || !parentDrgNum) {
+        alert("Missing query params: project or part or parent drawing number");
       } else {
         console.log("✅ Project:", project);
         console.log("✅ Part:", partNumber);
+        console.log("✅ Parent Drawing Number:", parentDrgNum);
       }
     });
 
