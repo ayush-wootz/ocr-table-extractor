@@ -6,6 +6,7 @@ import numpy as np
 import os
 import asyncio
 import logging
+import httpx  # used to fecth drawing numbers (File name)
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -164,6 +165,48 @@ async def ocr_endpoint(request: Request):
             status_code=500,
             content={"error": f"Server error: {str(e)}"}
         )
+
+
+# API code to fetch drawing numbers (File name)
+GLIDE_API_KEY = "54333200-37b8-4742-929c-156d49cd7c64"
+GLIDE_APP_ID = "1Ywfm3mzeWfqqAMNovPV"
+GLIDE_TABLE = "native-table-unGdNRqsjTPlBDZB2629"
+
+@app.post("/fetch-drawings")
+async def fetch_drawings(request: Request):
+    try:
+        payload = await request.json()
+        project = payload.get("project")
+        part_number = payload.get("part")
+
+        if not project or not part_number:
+            return {"error": "Missing project or part"}
+
+        body = {
+            "appID": GLIDE_APP_ID,
+            "tableName": GLIDE_TABLE,
+            "filters": {
+                "Project Name": project,
+                "Part Number": part_number
+            },
+            "limit": 1000
+        }
+
+        async with httpx.AsyncClient() as client:
+            res = await client.post(
+                "https://api.glideapp.io/api/function/dataTables/query",
+                headers={
+                    "Authorization": f"Bearer {GLIDE_API_KEY}",
+                    "Content-Type": "application/json"
+                },
+                json=body
+            )
+
+        res.raise_for_status()
+        return res.json()
+
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
 
 if __name__ == "__main__":
     import uvicorn
