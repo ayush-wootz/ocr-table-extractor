@@ -54,45 +54,6 @@
 
   <script>
 
-    //   async function fetchDrawingData(project, partNumber) {
-    //   const API_KEY = "54333200-37b8-4742-929c-156d49cd7c64"; // KEEP SAFE
-    //   const APP_ID = "1Ywfm3mzeWfqqAMNovPV";
-    //   const TABLE_NAME = "native-table-unGdNRqsjTPlBDZB2629"; // Replace with your actual table name
-    
-    //   const API_URL = "https://api.glideapp.io/api/function/queryTables";
-    
-    //   const body = {
-    //     appID: APP_ID,
-    //     tableName: TABLE_NAME,
-    //     filters: {
-    //       "Project Name": project,
-    //       "Part Number": partNumber
-    //     },
-    //     limit: 500
-    //   };
-    
-    //   try {
-    //     const response = await fetch(API_URL, {
-    //       method: "POST",
-    //       headers: {
-    //         "Authorization": `Bearer ${API_KEY}`,
-    //         "Content-Type": "application/json"
-    //       },
-    //       body: JSON.stringify(body)
-    //     });
-    
-    //     if (!response.ok) throw new Error(`Glide returned ${response.status}`);
-    
-    //     const result = await response.json();
-    //     console.log("✅ Drawing Data from Glide:", result.rows);
-    //     return result.rows;
-    
-    //   } catch (err) {
-    //     console.error("❌ Failed to fetch drawing data:", err);
-    //     return [];
-    //   }
-    // }
-
    // ProjectName & PartNumber
     window.addEventListener("DOMContentLoaded", () => {
       // STEP 1: Parse query params
@@ -100,7 +61,6 @@
       const project = urlParams.get("project");
       const partNumber = urlParams.get("part");
       const parentDrgNum = urlParams.get("parentdrgnum");
-
     
       if (!project || !partNumber || !parentDrgNum) {
         alert("Missing query params: project or part or parent drawing number");
@@ -109,10 +69,27 @@
         console.log("✅ Part:", partNumber);
         console.log("✅ Parent Drawing Number:", parentDrgNum);
       }
-    // API Fetch Code
-      // const drawingData = await fetchDrawingData(project, partNumber);
-      // Save globally for next step
-      // window.childParts = drawingData;
+      
+    // ✅ Call your FastAPI backend to fetch filtered drawing data
+    try {
+      const response = await fetch("https://ocr-table-extractor.onrender.com/fetch-drawings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          project: project,
+          part: partNumber
+        })
+      });
+  
+      const data = await response.json();
+      console.log("✅ Filtered drawing data from Glide via backend:", data.rows);
+  
+      // Store globally for later matching
+      window.childParts = data.rows;
+  
+    } catch (err) {
+      console.error("❌ Error fetching drawing data:", err);
+    }
     });
 
 
