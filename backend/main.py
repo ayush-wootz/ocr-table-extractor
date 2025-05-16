@@ -179,6 +179,8 @@ async def fetch_drawings(request: Request):
         project = payload.get("project")
         part_number = payload.get("part")
 
+        print("📦 Incoming fetch-drawings request:", project, part_number)
+        
         if not project or not part_number:
             return {"error": "Missing project or part"}
 
@@ -191,6 +193,8 @@ async def fetch_drawings(request: Request):
             },
             "limit": 1000
         }
+        
+        print("📤 Sending request to Glide:", body)
 
         async with httpx.AsyncClient() as client:
             res = await client.post(
@@ -203,7 +207,17 @@ async def fetch_drawings(request: Request):
             )
 
         res.raise_for_status()
-        return res.json()
+
+        try:
+            data = res.json()
+            print("✅ Glide response:", data)
+            return data
+        
+        except Exception:
+            error_text = await res.aread()
+            print("❌ Non-JSON response from Glide:", error_text.decode())
+            raise
+
 
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
