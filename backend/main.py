@@ -6,6 +6,7 @@ import numpy as np
 import os
 import asyncio
 import logging
+import re
 import httpx  # used to fecth drawing numbers (File name)
 
 # Configure logging
@@ -168,6 +169,12 @@ async def ocr_endpoint(request: Request):
             content={"error": f"Server error: {str(e)}"}
         )
 
+# Extracts Drawing number from File Name
+def extract_drawing_number(url: str):
+    if not url:
+        return ""
+    match = re.search(r"/([^/]+)\.pdf$", url)
+    return match.group(1) if match else ""
 
 # API code to fetch drawing numbers (File name)
 GLIDE_API_KEY = "54333200-37b8-4742-929c-156d49cd7c64"
@@ -224,7 +231,19 @@ async def fetch_drawings(request: Request):
             ]
 
             print(f"✅ Filtered rows: {len(filtered)} match")
-            return {"rows": filtered}
+            # ✅ Add extracted drawingNumber from drawing link
+            filtered_trimmed = [
+                {
+                    "project": row.get("VQlMl"),
+                    "partNumber": row.get("nlHAO"),
+                    "partName": row.get("Name"),
+                    "drawingLink": row.get("9iB5E"),
+                    "drawingNumber": extract_drawing_number(row.get("9iB5E"))
+                }
+                for row in filtered
+            ]
+        
+            return {"rows": filtered_trimmed}
         
         except Exception:
             error_text = await res.aread()
