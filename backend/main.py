@@ -229,6 +229,11 @@ async def fetch_drawings(request: Request):
         print(traceback.format_exc())
         return JSONResponse(status_code=500, content={"error": str(e)})
 
+@app.get("/debug")
+async def debug():
+    print("✅ /debug route hit", flush=True)
+    return {"ok": True}
+
 if __name__ == "__main__":
     import uvicorn
     port = int(os.environ.get("PORT", 8000))
