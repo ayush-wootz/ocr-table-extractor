@@ -202,7 +202,7 @@ async def fetch_drawings(request: Request):
 
         async with httpx.AsyncClient() as client:
             res = await client.post(
-                "https://api.glideapp.io/api/function/dataTables/query",
+                "https://api.glideapp.io/api/function/queryTables",
                 headers={
                     "Authorization": f"Bearer {GLIDE_API_KEY}",
                     "Content-Type": "application/json"
