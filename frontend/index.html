@@ -9,6 +9,7 @@
   <!-- Handsontable CSS and JS from CDN -->
   <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/handsontable@12.1.0/dist/handsontable.full.min.css">
   <script src="https://cdn.jsdelivr.net/npm/handsontable@12.1.0/dist/handsontable.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/string-similarity@4.0.4/umd/string-similarity.min.js"></script>
   
   <style>
     /* (Optional) Additional inline styles if needed */
@@ -193,6 +194,11 @@
         columnCount++;
         const colKey = 'Column ' + columnCount;
         columnsList.push(colKey);
+
+        // newly added code to include colours in matched drawing
+        if (colKey === "Column 1" && !columnsList.includes("Matched Drawing")) {
+          columnsList.push("Matched Drawing");
+        }
       
         for (let i = 0; i < newColumnData.length; i++) {
           const extractedText = newColumnData[i].text || "";
@@ -212,14 +218,29 @@
           }
       
           // 🎯 Match Drawing Number (only for first column)
-          if (colKey === "Column 1" && window.childParts?.length) {
-            const matched = window.childParts.find(p =>
-              p.drawingNumber?.trim() === extractedText.trim()
-            );
+          // if (colKey === "Column 1" && window.childParts?.length) {
+          //   const matched = window.childParts.find(p =>
+          //     p.drawingNumber?.trim() === extractedText.trim()
+          //   );
+           if (colKey === "Column 1" && window.childParts?.length) {
+              const drawingNumbers = window.childParts.map(p => p.drawingNumber || "");
+              const result = stringSimilarity.findBestMatch(extractedText, drawingNumbers);
+            
+              const bestMatch = result.bestMatch.target;
+              const bestRating = result.bestMatch.rating;
+            
+              // Only use match if confidence is reasonable
+              const matchText = bestRating > 0.5 ? bestMatch : "";
+            
+              spreadsheetData[i]["Matched Drawing"] = {
+                text: matchText,
+                confidence: bestRating
+              };
+            }
       
             // Add new matched column
             if (!spreadsheetData[i]) spreadsheetData[i] = {};
-            spreadsheetData[i]["Matched Drawing"] = { text: matched?.drawingNumber || "", confidence: 1 };
+            spreadsheetData[i]["Matched Drawing"] = { text: matchText, confidence: bestRating };
           }
         }
       
