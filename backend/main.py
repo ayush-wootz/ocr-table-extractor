@@ -174,6 +174,8 @@ GLIDE_TABLE = "native-table-unGdNRqsjTPlBDZB2629"
 
 @app.post("/fetch-drawings")
 async def fetch_drawings(request: Request):
+    print("🎯 /fetch-drawings endpoint hit")
+
     try:
         payload = await request.json()
         project = payload.get("project")
@@ -209,7 +211,7 @@ async def fetch_drawings(request: Request):
         res.raise_for_status()
 
         try:
-            data = res.json()
+            data = await res.json()
             print("✅ Glide response:", data)
             return data
         
@@ -220,6 +222,9 @@ async def fetch_drawings(request: Request):
 
 
     except Exception as e:
+        import traceback
+        print("❌ Exception occurred:")
+        print(traceback.format_exc())
         return JSONResponse(status_code=500, content={"error": str(e)})
 
 if __name__ == "__main__":
