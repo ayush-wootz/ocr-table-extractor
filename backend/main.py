@@ -220,7 +220,7 @@ async def fetch_drawings(request: Request):
             all_rows = full_data[0]["rows"]
             filtered = [
                 row for row in all_rows
-                if row.get("projName") == project and row.get("partNumber") == part_number
+                if row.get("VQlMl") == project and row.get("nlHAO") == part_number
             ]
 
             print(f"✅ Filtered rows: {len(filtered)} match")
