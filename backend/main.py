@@ -214,10 +214,10 @@ async def fetch_drawings(request: Request):
         res.raise_for_status()
         
         try:
-            full_data = await res.json()
+            full_data = res.json()
             print("✅ Full response from Glide:", full_data)
             # ✅ Extract and filter rows manually
-            all_rows = full_data["data"][0]["rows"]
+            all_rows = full_data[0]["rows"]
             filtered = [
                 row for row in all_rows
                 if row.get("projName") == project and row.get("partNumber") == part_number
