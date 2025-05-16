@@ -188,14 +188,15 @@ async def fetch_drawings(request: Request):
         if not project or not part_number:
             return {"error": "Missing project or part"}
 
+        # ✅ Correct API format
         body = {
             "appID": GLIDE_APP_ID,
-            "tableName": GLIDE_TABLE,
-            "filters": {
-                "Project Name": project,
-                "Part Number": part_number
-            },
-            "limit": 1000
+            "queries": [
+                {
+                    "tableName": GLIDE_TABLE,
+                    "utc": True
+                }
+            ]
         }
         
         print("📤 Sending request to Glide:", body)
@@ -211,11 +212,19 @@ async def fetch_drawings(request: Request):
             )
 
         res.raise_for_status()
-
+        
         try:
-            data = await res.json()
-            print("✅ Glide response:", data)
-            return data
+            full_data = await res.json()
+            print("✅ Full response from Glide:", full_data)
+            # ✅ Extract and filter rows manually
+            all_rows = full_data["data"][0]["rows"]
+            filtered = [
+                row for row in all_rows
+                if row.get("projName") == project and row.get("partNumber") == part_number
+            ]
+
+            print(f"✅ Filtered rows: {len(filtered)} match")
+            return {"rows": filtered}
         
         except Exception:
             error_text = await res.aread()
