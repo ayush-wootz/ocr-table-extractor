@@ -14,6 +14,8 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI()
 
+print("🚀 Server has started and main.py is loaded")
+
 # Configure CORS - explicitly allow your GitHub Pages d
 app.add_middleware(
     CORSMiddleware,
