@@ -140,6 +140,13 @@
     function renderSpreadsheet() {
       let columns = [];
       let colHeaders = [];
+      
+      // new code
+      if (columnsList.includes("Column 1") && !columnsList.includes("Matched Drawing")) {
+      columnsList.push("Matched Drawing");
+      }
+
+      
       columnsList.forEach(key => {
         columns.push({
           data: key,
@@ -181,33 +188,80 @@
 
     // Function to add a new OCR upload as a single column.
     // newColumnData is an array of objects: each { text: string, confidence: number }.
-    function addColumn(newColumnData) {
-      columnCount++;
-      const colKey = 'Column ' + columnCount;
-      columnsList.push(colKey);
+
+        function addColumn(newColumnData) {
+        columnCount++;
+        const colKey = 'Column ' + columnCount;
+        columnsList.push(colKey);
       
-      // Merge new column data into spreadsheetData.
-      for (let i = 0; i < newColumnData.length; i++) {
-        if (i < spreadsheetData.length) {
-          spreadsheetData[i][colKey] = { text: newColumnData[i].text, confidence: newColumnData[i].confidence };
-        } else {
-          let newRow = {};
-          // Initialize all existing columns with empty objects.
-          for (let j = 0; j < columnsList.length - 1; j++) {
-            newRow[columnsList[j]] = { text: '', confidence: 0 };
+        for (let i = 0; i < newColumnData.length; i++) {
+          const extractedText = newColumnData[i].text || "";
+          const confidence = newColumnData[i].confidence || 0;
+      
+          // Initialize or update row
+          if (i < spreadsheetData.length) {
+            spreadsheetData[i][colKey] = { text: extractedText, confidence };
+          } else {
+            let newRow = {};
+            // initialize previous columns with empty cells
+            for (let j = 0; j < columnsList.length - 1; j++) {
+              newRow[columnsList[j]] = { text: "", confidence: 0 };
+            }
+            newRow[colKey] = { text: extractedText, confidence };
+            spreadsheetData.push(newRow);
           }
-          newRow[colKey] = { text: newColumnData[i].text, confidence: newColumnData[i].confidence };
-          spreadsheetData.push(newRow);
-        }
-      }
-      // For any existing rows beyond the new column data, fill the new cell with an empty object.
-      for (let i = newColumnData.length; i < spreadsheetData.length; i++) {
-        spreadsheetData[i][colKey] = { text: '', confidence: 0 };
-      }
       
-      renderSpreadsheet();
-      renderSpreadsheet();
-    }
+          // 🎯 Match Drawing Number (only for first column)
+          if (colKey === "Column 1" && window.childParts?.length) {
+            const matched = window.childParts.find(p =>
+              p.drawingNumber?.trim() === extractedText.trim()
+            );
+      
+            // Add new matched column
+            if (!spreadsheetData[i]) spreadsheetData[i] = {};
+            spreadsheetData[i]["Matched Drawing"] = { text: matched?.drawingNumber || "", confidence: 1 };
+          }
+        }
+      
+        // For rows longer than new data
+        for (let i = newColumnData.length; i < spreadsheetData.length; i++) {
+          spreadsheetData[i][colKey] = { text: "", confidence: 0 };
+      
+          // Add Matched Drawing column if first col is short
+          if (colKey === "Column 1") {
+            spreadsheetData[i]["Matched Drawing"] = { text: "", confidence: 0 };
+          }
+        }
+      
+        renderSpreadsheet();
+      }
+    // function addColumn(newColumnData) {
+    //   columnCount++;
+    //   const colKey = 'Column ' + columnCount;
+    //   columnsList.push(colKey);
+      
+    //   // Merge new column data into spreadsheetData.
+    //   for (let i = 0; i < newColumnData.length; i++) {
+    //     if (i < spreadsheetData.length) {
+    //       spreadsheetData[i][colKey] = { text: newColumnData[i].text, confidence: newColumnData[i].confidence };
+    //     } else {
+    //       let newRow = {};
+    //       // Initialize all existing columns with empty objects.
+    //       for (let j = 0; j < columnsList.length - 1; j++) {
+    //         newRow[columnsList[j]] = { text: '', confidence: 0 };
+    //       }
+    //       newRow[colKey] = { text: newColumnData[i].text, confidence: newColumnData[i].confidence };
+    //       spreadsheetData.push(newRow);
+    //     }
+    //   }
+    //   // For any existing rows beyond the new column data, fill the new cell with an empty object.
+    //   for (let i = newColumnData.length; i < spreadsheetData.length; i++) {
+    //     spreadsheetData[i][colKey] = { text: '', confidence: 0 };
+    //   }
+      
+    //   renderSpreadsheet();
+    //   renderSpreadsheet();
+    // }
 
     // Process button handler.
     document.getElementById('process-btn').onclick = async function () {
