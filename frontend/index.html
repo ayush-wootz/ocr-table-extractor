@@ -157,13 +157,16 @@
 
       columnsList.forEach(key => {
       const isDropdown = key === "Matched Childpart";
+      const drawingOptions = Array.isArray(window.childParts)
+        ? window.childParts.map(p => p.drawingNumber || "")
+        : [];
       
       columns.push({
         data: key,
         title: key,
         renderer: textRenderer,
         editor: isDropdown ? 'autocomplete' : 'text',
-        source: isDropdown ? window.childParts.map(p => p.drawingNumber) : undefined,
+        source: isDropdown ? drawingOptions : undefined,
         strict: false,
         allowInvalid: false,
         valueGetter: function(rowData) {
@@ -172,7 +175,7 @@
         valueSetter: function(rowData, newValue) {
           if (!rowData[key]) rowData[key] = { text: '', confidence: 0 };
           rowData[key].text = newValue;
-          rowData[key].confidence = 1; // Mark user overrides as confident
+          rowData[key].confidence = 1;
           return newValue;
         }
       });
