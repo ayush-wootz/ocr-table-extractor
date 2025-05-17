@@ -156,27 +156,20 @@
       let colHeaders = [];
 
       columnsList.forEach(key => {
-      const isDropdown = key === "Matched Childpart";
-      const drawingOptions = Array.isArray(window.childParts)
-        ? window.childParts.map(p => p.drawingNumber || "")
-        : [];
-      
-      columns.push({
-        data: key,
-        title: key,
-        renderer: textRenderer,
-        editor: isDropdown ? 'autocomplete' : 'text',
-        source: isDropdown ? drawingOptions : undefined,
-        strict: false,
-        allowInvalid: false,
-        valueGetter: function(rowData) {
-          return rowData[key] ? rowData[key].text : '';
-        },
-        valueSetter: function(rowData, newValue) {
-          if (!rowData[key]) rowData[key] = { text: '', confidence: 0 };
-          rowData[key].text = newValue;
-          rowData[key].confidence = 1;
-          return newValue;
+        const isDropdown = key === "Matched Childpart" && Array.isArray(window.childParts);
+        columns.push({
+          data: key,
+          title: key,
+          renderer: textRenderer,
+          editor: isDropdown ? 'dropdown' : 'text',
+          source: isDropdown ? window.childParts.map(p => p.drawingNumber) : undefined,
+          strict: false,
+          allowInvalid: true,
+          valueGetter: rowData => rowData[key]?.text || "",
+          valueSetter: (rowData, newValue) => {
+            if (!rowData[key]) rowData[key] = { text: '', confidence: 0 };
+            rowData[key].text = newValue;
+            return newValue;
         }
       });
         
