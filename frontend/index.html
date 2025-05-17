@@ -33,6 +33,19 @@
     .upload-row input[type="file"] {
       width: 180px;
     }
+    .container {
+      max-width: 1000px;
+      margin: auto;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+    
+    #table-wrapper {
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      overflow-x: auto;
+      background-color: white;
+    }
   </style>
 </head>
 <body>
@@ -71,7 +84,9 @@
 
     <div id="result-container"></div>
     <button id="download-btn" class="secondary-button" style="display: none;">Download as CSV</button>
-    <div id="hot" style="width: 100%; height: 400px; display: none;"></div>
+    <div id="table-wrapper" style="max-width: 100%; overflow-x: auto;">
+      <div id="hot" style="width: 100%; height: 400px; display: none;"></div>
+    </div>
   </div>
 
   <script>
@@ -141,22 +156,27 @@
       let colHeaders = [];
 
       columnsList.forEach(key => {
-        const isDropdown = key === "Matched Childpart" && Array.isArray(window.childParts);
-        columns.push({
-          data: key,
-          title: key,
-          renderer: textRenderer,
-          editor: isDropdown ? 'dropdown' : 'text',
-          source: isDropdown ? window.childParts.map(p => p.drawingNumber) : undefined,
-          strict: false,
-          allowInvalid: true,
-          valueGetter: rowData => rowData[key]?.text || "",
-          valueSetter: (rowData, newValue) => {
-            if (!rowData[key]) rowData[key] = { text: '', confidence: 0 };
-            rowData[key].text = newValue;
-            return newValue;
-          }
-        });
+      const isDropdown = key === "Matched Childpart";
+      
+      columns.push({
+        data: key,
+        title: key,
+        renderer: textRenderer,
+        editor: isDropdown ? 'autocomplete' : 'text',
+        source: isDropdown ? window.childParts.map(p => p.drawingNumber) : undefined,
+        strict: false,
+        allowInvalid: false,
+        valueGetter: function(rowData) {
+          return rowData[key] ? rowData[key].text : '';
+        },
+        valueSetter: function(rowData, newValue) {
+          if (!rowData[key]) rowData[key] = { text: '', confidence: 0 };
+          rowData[key].text = newValue;
+          rowData[key].confidence = 1; // Mark user overrides as confident
+          return newValue;
+        }
+      });
+        
         colHeaders.push(key);
       });
 
