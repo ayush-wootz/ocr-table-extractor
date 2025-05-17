@@ -24,6 +24,15 @@
     .secondary-button:hover {
       opacity: 0.8;
     }
+    .upload-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+    }
+    .upload-row input[type="file"] {
+      width: 180px;
+    }
   </style>
 </head>
 <body>
@@ -36,17 +45,25 @@
     </select>
 
     <h3>Upload Column Data</h3>
-    <label>Select PartNumber (Required)</label>
-    <input type="file" id="upload-partnumber" accept="image/*" /><br><br>
-
-    <label>Select Quantity (Required)</label>
-    <input type="file" id="upload-quantity" accept="image/*" /><br><br>
-
-    <label>Select Description (Optional)</label>
-    <input type="file" id="upload-description" accept="image/*" /><br><br>
-
-    <label>Select Material (Optional)</label>
-    <input type="file" id="upload-material" accept="image/*" /><br><br>
+    <div class="upload-row">
+      <input type="file" id="upload-partnumber" accept="image/*" />
+      <label for="upload-partnumber">Select PartNumber (Required)</label>
+    </div>
+    
+    <div class="upload-row">
+      <input type="file" id="upload-quantity" accept="image/*" />
+      <label for="upload-quantity">Select Quantity (Required)</label>
+    </div>
+    
+    <div class="upload-row">
+      <input type="file" id="upload-description" accept="image/*" />
+      <label for="upload-description">Select Description (Optional)</label>
+    </div>
+    
+    <div class="upload-row">
+      <input type="file" id="upload-material" accept="image/*" />
+      <label for="upload-material">Select Material (Optional)</label>
+    </div>
 
     <div id="image-preview"></div>
     <button id="process-btn">Process Image</button>
