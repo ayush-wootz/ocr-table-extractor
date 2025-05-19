@@ -148,23 +148,15 @@
           ? window.childParts.map(p => p.drawingNumber || "")
           : [];
     
-        columns.push({
-          data: key,
-          title: key,
-          renderer: textRenderer,
-          editor: isDropdown ? 'dropdown' : 'text',
-          source: isDropdown ? drawingOptions : undefined,
-          strict: false,
-          allowInvalid: false,
-          // 🔧 Fix display and editing of object values
-          valueGetter: (rowData) => rowData[key]?.text || "",
-          valueSetter: (rowData, newValue) => {
-            if (!rowData[key]) rowData[key] = { text: '', confidence: 0 };
-            rowData[key].text = newValue;
-            rowData[key].confidence = 1; // Optional: flag as "manual override"
-            return newValue;
-          }
-        });
+columns.push({
+  data: key,
+  title: key,
+  editor: isDropdown ? 'dropdown' : 'text',
+  source: isDropdown ? drawingOptions : undefined,
+  strict: false,
+  allowInvalid: false,
+  renderer: isDropdown ? undefined : textRenderer
+});
     
         colHeaders.push(key);
       });
@@ -248,7 +240,8 @@
           const drawingNumbers = window.childParts.map(p => p.drawingNumber || "");
           const result = stringSimilarity.findBestMatch(text, drawingNumbers);
           const matchText = result.bestMatch.rating > 0.5 ? result.bestMatch.target : "";
-          spreadsheetData[i]["Matched Childpart"] = { text: matchText, confidence: result.bestMatch.rating };
+          // spreadsheetData[i]["Matched Childpart"] = { text: matchText, confidence: result.bestMatch.rating };
+          spreadsheetData[i]["Matched Childpart"] = matchText; // Just plain string
         }
       }
 
