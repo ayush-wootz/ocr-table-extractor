@@ -63,30 +63,97 @@ def process_image(image_bytes):
     
     # Resize image for faster processing
     max_dim = 800
-    height, width = img.shape[:2]
-    if max(height, width) > max_dim:
-        scale = max_dim / max(height, width)
-        img = cv2.resize(img, (int(width * scale), int(height * scale)))
-        logger.info(f"Resized image to {img.shape[1]}x{img.shape[0]}")
+    h, w = img.shape[:2]
+    if max(h, w) > max_dim:
+        scale = max_dim / max(h, w)
+        img = cv2.resize(img, (int(w * scale), int(h * scale)))
+        logger.info(f"Resized image to {img.shape[1]}×{img.shape[0]}")
     
-    # Convert to RGB for OCR
+    # Convert to RGB and run OCR
     image_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    
-    # Process with OCR
     logger.info("Starting OCR processing")
     ocr_model = get_ocr_model()
     results = ocr_model.ocr(image_rgb, cls=True)
-    cells = []
+    raw = results[0] if results and results[0] else []
     
-    if results and len(results) > 0 and len(results[0]) > 0:
-        for box, (text, confidence) in results[0]:
-            if text.strip():
-                y_center = int((box[0][1] + box[2][1]) / 2)
-                cells.append({"y_center": y_center, "text": text.strip(), "confidence": confidence})
-        cells.sort(key=lambda c: c["y_center"])
+    # Build list of (y_center, text, confidence)
+    lines = []
+    for box, (txt, conf) in raw:
+        txt = txt.strip()
+        if not txt:
+            continue
+        # midpoint between top-left and bottom-right
+        y0 = box[0][1]
+        y2 = box[2][1]
+        yc = int((y0 + y2) / 2)
+        lines.append((yc, txt, conf))
     
-    logger.info(f"OCR completed, found {len(cells)} text elements")
-    return cells
+    if not lines:
+        return []
+    
+    # Sort by y and compute a dynamic threshold
+    lines.sort(key=lambda r: r[0])
+    gaps = [lines[i+1][0] - lines[i][0] for i in range(len(lines)-1)]
+    thresh = (float(np.median(gaps)) * 1.5) if gaps else 10.0
+
+    # Cluster adjacent lines whose centers differ ≤ thresh
+    clusters = []
+    cur = [lines[0]]
+    for y, t, c in lines[1:]:
+        if y - cur[-1][0] <= thresh:
+            cur.append((y, t, c))
+        else:
+            clusters.append(cur)
+            cur = [(y, t, c)]
+    clusters.append(cur)
+    
+    # Merge each cluster into one cell
+    merged = []
+    for group in clusters:
+        ys, texts, confs = zip(*group)
+        combined_text = " ".join(texts)
+        avg_y = int(np.mean(ys))
+        avg_conf = float(np.mean(confs))
+        merged.append({"y_center": avg_y, "text": combined_text, "confidence": avg_conf})
+    
+    # Final sort and return
+    merged.sort(key=lambda c: c["y_center"])
+    logger.info(f"OCR completed, found {len(merged)} text elements (merged)")
+    return merged
+    
+# def process_image(image_bytes):
+#     logger.info(f"Processing image of size {len(image_bytes)} bytes")
+    
+#     # Convert to OpenCV format
+#     nparr = np.frombuffer(image_bytes, np.uint8)
+#     img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+    
+#     # Resize image for faster processing
+#     max_dim = 800
+#     height, width = img.shape[:2]
+#     if max(height, width) > max_dim:
+#         scale = max_dim / max(height, width)
+#         img = cv2.resize(img, (int(width * scale), int(height * scale)))
+#         logger.info(f"Resized image to {img.shape[1]}x{img.shape[0]}")
+    
+#     # Convert to RGB for OCR
+#     image_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    
+#     # Process with OCR
+#     logger.info("Starting OCR processing")
+#     ocr_model = get_ocr_model()
+#     results = ocr_model.ocr(image_rgb, cls=True)
+#     cells = []
+    
+#     if results and len(results) > 0 and len(results[0]) > 0:
+#         for box, (text, confidence) in results[0]:
+#             if text.strip():
+#                 y_center = int((box[0][1] + box[2][1]) / 2)
+#                 cells.append({"y_center": y_center, "text": text.strip(), "confidence": confidence})
+#         cells.sort(key=lambda c: c["y_center"])
+    
+#     logger.info(f"OCR completed, found {len(cells)} text elements")
+#     return cells
 
 # Health check endpoint
 @app.get("/health")
