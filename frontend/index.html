@@ -52,13 +52,13 @@
     </div>
     
     <div class="upload-row">
-      <label>Select Quantity (Required)</label>
-      <input type="file" id="upload-quantity" accept="image/*" />
-    </div>
-    
-    <div class="upload-row">
       <label>Select Description (Optional)</label>
       <input type="file" id="upload-description" accept="image/*" />
+    </div>
+
+    <div class="upload-row">
+      <label>Select Quantity (Required)</label>
+      <input type="file" id="upload-quantity" accept="image/*" />
     </div>
     
     <div class="upload-row">
@@ -83,15 +83,15 @@
 
     const uploads = {
       partNumber: document.getElementById("upload-partnumber"),
-      quantity: document.getElementById("upload-quantity"),
       description: document.getElementById("upload-description"),
+      quantity: document.getElementById("upload-quantity"),
       material: document.getElementById("upload-material")
     };
 
     const columnOrder = [
       { id: "partNumber", label: "PartNumber" },
-      { id: "quantity", label: "Quantity" },
       { id: "description", label: "Description" },
+      { id: "quantity", label: "Quantity" },
       { id: "material", label: "Material" }
     ];
 
@@ -147,16 +147,38 @@
         const drawingOptions = Array.isArray(window.childParts)
           ? window.childParts.map(p => p.drawingNumber || "")
           : [];
-    
-columns.push({
-  data: key,
-  title: key,
-  editor: isDropdown ? 'dropdown' : 'text',
-  source: isDropdown ? drawingOptions : undefined,
-  strict: isDropdown,
-  allowInvalid: false,
-  renderer: isDropdown ? undefined : textRenderer
-});
+
+        columns.push({
+          data: key,
+          title: key,
+          editor: isDropdown ? false : 'text',
+          source: isDropdown ? drawingOptions : undefined,
+          strict: isDropdown,
+          allowInvalid: false,
+          renderer: textRenderer,
+          valueGetter: (rowData) => {
+            return typeof rowData[key] === 'object' ? rowData[key].text : rowData[key];
+          },
+          valueSetter: (rowData, newValue) => {
+            if (typeof rowData[key] === 'object') {
+              rowData[key].text = newValue;
+              return newValue;
+            } else {
+              rowData[key] = { text: newValue, confidence: 1 };
+              return newValue;
+            }
+          }
+        });
+        
+// columns.push({
+//   data: key,
+//   title: key,
+//   editor: isDropdown ? 'dropdown' : 'text',
+//   source: isDropdown ? drawingOptions : undefined,
+//   strict: isDropdown,
+//   allowInvalid: false,
+//   renderer: isDropdown ? undefined : textRenderer
+// });
     
         colHeaders.push(key);
       });
@@ -176,53 +198,6 @@ columns.push({
         licenseKey: 'non-commercial-and-evaluation'
       });
     }
-    // function renderSpreadsheet() {
-    //   let columns = [];
-    //   let colHeaders = [];
-
-    //   columnsList.forEach(key => {
-    //   const isDropdown = key === "Matched Childpart";
-    //   const drawingOptions = Array.isArray(window.childParts)
-    //     ? window.childParts.map(p => p.drawingNumber || "")
-    //     : [];
-      
-    //   columns.push({
-    //     data: key,
-    //     title: key,
-    //     renderer: textRenderer,
-    //     editor: isDropdown ? 'autocomplete' : 'text',
-    //     source: isDropdown ? drawingOptions : undefined,
-    //     strict: false,
-    //     allowInvalid: false,
-    //     valueGetter: function(rowData) {
-    //       return rowData[key] ? rowData[key].text : '';
-    //     },
-    //     valueSetter: function(rowData, newValue) {
-    //       if (!rowData[key]) rowData[key] = { text: '', confidence: 0 };
-    //       rowData[key].text = newValue;
-    //       rowData[key].confidence = 1;
-    //       return newValue;
-    //     }
-    //   });
-        
-    //     colHeaders.push(key);
-    //   });
-
-    //   const container = document.getElementById('hot');
-    //   container.style.display = 'block';
-
-    //   if (hot) hot.destroy();
-
-    //   hot = new Handsontable(container, {
-    //     data: spreadsheetData,
-    //     columns: columns,
-    //     colHeaders: colHeaders,
-    //     rowHeaders: true,
-    //     minSpareRows: 1,
-    //     contextMenu: ['remove_row', 'copy', 'paste'],
-    //     licenseKey: 'non-commercial-and-evaluation'
-    //   });
-    // }
 
     function addColumn(newColumnData, label) {
       columnsList.push(label);
