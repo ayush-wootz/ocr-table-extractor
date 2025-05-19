@@ -156,23 +156,27 @@ function renderSpreadsheet() {
       strict: isMatched,                              // force to list
       allowInvalid: false,
       renderer: isMatched ? undefined : textRenderer, // only use your custom renderer on OCR cols
-      valueGetter: rowData => {
-        const v = rowData[key];
-        // if object, show .text, otherwise show string
-        return (v && typeof v === 'object') ? v.text : (v || '');
+      
+      // ←── override how Handsontable reads the cell
+      getValue(rowData) {
+        const cell = rowData[key];
+        return (cell && typeof cell === 'object')
+          ? cell.text       // show the extracted string
+          : (cell || '');   // or the plain matched string
       },
-      valueSetter: (rowData, newValue) => {
-        // for OCR cols we keep {text, confidence}
+
+      // ←── override how Handsontable writes back into your data
+      setValue(rowData, newValue) {
         if (!isMatched) {
+          // keep your {text, confidence} object for OCR columns
           if (!rowData[key] || typeof rowData[key] !== 'object') {
             rowData[key] = { text: '', confidence: 0 };
           }
           rowData[key].text = newValue;
         } else {
-          // matched = just a string
+          // matched parts are just a string
           rowData[key] = newValue;
         }
-        return newValue;
       }
     });
 
