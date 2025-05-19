@@ -153,7 +153,7 @@ columns.push({
   title: key,
   editor: isDropdown ? 'dropdown' : 'text',
   source: isDropdown ? drawingOptions : undefined,
-  strict: false,
+  strict: isDropdown,
   allowInvalid: false,
   renderer: isDropdown ? undefined : textRenderer
 });
