@@ -202,17 +202,30 @@ function renderSpreadsheet() {
     licenseKey: 'non-commercial-and-evaluation'
   });
   
-  // ─── add this AFTER you create `hot` ───
+  // after you create `hot` in renderSpreadsheet():
   hot.addHook('afterChange', (changes, source) => {
     if (source !== 'edit' || !changes) return;
+  
     changes.forEach(([row, prop /*, oldValue, newValue */]) => {
       const col = hot.propToCol(prop);
-      const cell = hot.getCell(row, col);
-      if (cell) {
-        cell.classList.add('edited-cell');
-      }
+      // set the CSS class meta on the cell
+      hot.setCellMeta(row, col, 'className', 'edited-cell');
     });
+  
+    // re-draw so you can see all flagged cells
+    hot.render();
   });
+  
+  // hot.addHook('afterChange', (changes, source) => {
+  //   if (source !== 'edit' || !changes) return;
+  //   changes.forEach(([row, prop /*, oldValue, newValue */]) => {
+  //     const col = hot.propToCol(prop);
+  //     const cell = hot.getCell(row, col);
+  //     if (cell) {
+  //       cell.classList.add('edited-cell');
+  //     }
+  //   });
+  // });
 }
 
     
