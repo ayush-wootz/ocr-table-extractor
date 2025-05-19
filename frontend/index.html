@@ -33,6 +33,11 @@
     .upload-row input[type="file"] {
       width: 180px;
     }
+    /* highlight user-edited cells */
+    .edited-cell {
+      box-shadow: inset 0 0 0 2px orange !important;
+    }
+   
   </style>
 </head>
 <body>
@@ -195,6 +200,18 @@ function renderSpreadsheet() {
     minSpareRows: 1,
     contextMenu: ['remove_row','copy','paste'],
     licenseKey: 'non-commercial-and-evaluation'
+  });
+  
+  // ─── add this AFTER you create `hot` ───
+  hot.addHook('afterChange', (changes, source) => {
+    if (source !== 'edit' || !changes) return;
+    changes.forEach(([row, prop /*, oldValue, newValue */]) => {
+      const col = hot.propToCol(prop);
+      const cell = hot.getCell(row, col);
+      if (cell) {
+        cell.classList.add('edited-cell');
+      }
+    });
   });
 }
 
