@@ -148,14 +148,36 @@ function renderSpreadsheet() {
       : [];
 
     columns.push({
-      data: isMatched ? key : `${key}.text`,
-      title: key,
-      type: isMatched ? 'dropdown' : 'text',         // ← cell *type*
-      editor: isMatched ? 'dropdown' : 'text',       // ← editor widget
-      source: isMatched ? drawingOptions : undefined,// ← dropdown list
-      strict: isMatched,                              // force to list
+      // 1) editor & data binding
+      data:       isMatched ? key : `${key}.text`,
+      type:       isMatched ? 'dropdown' : 'text',
+      editor:     isMatched ? 'dropdown' : 'text',
+      source:     isMatched ? drawingOptions : undefined,
+      strict:     isMatched,
       allowInvalid: false,
-      renderer: isMatched ? undefined : textRenderer, // only use your custom renderer on OCR cols
+
+      // 2) custom renderer for OCR columns
+      renderer: isMatched
+        ? undefined
+        : function(hotInst, td, row, col, prop, value, cellProps) {
+            // first draw the text
+            Handsontable.renderers.TextRenderer.apply(this, arguments);
+
+            // then pull the original object back out
+            const rowData = hotInst.getSourceDataAtRow(row);
+            const cellObj = rowData[key];  // the {text, confidence} you stored
+
+            if (cellObj && typeof cellObj === 'object') {
+              const conf = parseFloat(cellObj.confidence);
+              if (conf >= 0.9) {
+                td.style.backgroundColor = 'rgba(76, 175, 80, 0.2)';
+              } else if (conf >= 0.7) {
+                td.style.backgroundColor = 'rgba(255, 152, 0, 0.2)';
+              } else {
+                td.style.backgroundColor = 'rgba(244, 67, 54, 0.2)';
+              }
+            }
+          }
     });
 
     colHeaders.push(key);
@@ -175,45 +197,6 @@ function renderSpreadsheet() {
     licenseKey: 'non-commercial-and-evaluation'
   });
 }
-    
-    // function renderSpreadsheet() {
-    //   let columns = [];
-    //   let colHeaders = [];
-    
-    //   columnsList.forEach(key => {
-    //     const isDropdown = key === "Matched Childpart";
-    //     const drawingOptions = Array.isArray(window.childParts)
-    //       ? window.childParts.map(p => p.drawingNumber || "")
-    //       : [];
-        
-    //   columns.push({
-    //     data: key,
-    //     title: key,
-    //     editor: isDropdown ? 'dropdown' : 'text',
-    //     source: isDropdown ? drawingOptions : undefined,
-    //     strict: isDropdown,
-    //     allowInvalid: false,
-    //     renderer: isDropdown ? undefined : textRenderer
-    //   });
-    
-    //     colHeaders.push(key);
-    //   });
-    
-    //   const container = document.getElementById('hot');
-    //   container.style.display = 'block';
-    
-    //   if (hot) hot.destroy();
-    
-    //   hot = new Handsontable(container, {
-    //     data: spreadsheetData,
-    //     columns: columns,
-    //     colHeaders: colHeaders,
-    //     rowHeaders: true,
-    //     minSpareRows: 1,
-    //     contextMenu: ['remove_row', 'copy', 'paste'],
-    //     licenseKey: 'non-commercial-and-evaluation'
-    //   });
-    // }
 
     
 
