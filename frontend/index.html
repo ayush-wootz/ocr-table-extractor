@@ -142,34 +142,39 @@
       let columns = [];
       let colHeaders = [];
     
-      columnsList.forEach(key => {
-        const isDropdown = key === "Matched Childpart";
-        const drawingOptions = Array.isArray(window.childParts)
-          ? window.childParts.map(p => p.drawingNumber || "")
-          : [];
+      // columnsList.forEach(key => {
+      //   const isDropdown = key === "Matched Childpart";
+      //   const drawingOptions = Array.isArray(window.childParts)
+      //     ? window.childParts.map(p => p.drawingNumber || "")
+      //     : [];
 
-columns.push({
-  data: key,
-  title: key,
-  editor: key === "Matched Childpart" ? false : 'text',
-  renderer: textRenderer,
-  readOnly: key === "Matched Childpart",
-  type: key === "Matched Childpart" ? 'dropdown' : 'text',
-  source: key === "Matched Childpart" ? drawingOptions : undefined,
-  strict: false,
-  allowInvalid: false,
-  valueGetter: (rowData) => {
-    const val = rowData[key];
-    return typeof val === 'object' ? val.text : val || "";
-  },
-  valueSetter: (rowData, newValue) => {
-    if (typeof rowData[key] !== 'object') {
-      rowData[key] = { text: newValue, confidence: 1 };
-    } else {
-      rowData[key].text = newValue;
+columnsList.forEach(key => {
+  const isMatchedColumn = key === "Matched Childpart";
+  const drawingOptions = Array.isArray(window.childParts)
+    ? window.childParts.map(p => p.drawingNumber || "")
+    : [];
+
+  columns.push({
+    data: key,
+    title: key,
+    renderer: textRenderer,
+    editor: isMatchedColumn ? 'dropdown' : 'text',
+    source: isMatchedColumn ? drawingOptions : undefined,
+    strict: isMatchedColumn,
+    allowInvalid: false,
+    valueGetter: (rowData) => {
+      const val = rowData[key];
+      return typeof val === 'object' ? val.text : val || "";
+    },
+    valueSetter: (rowData, newValue) => {
+      if (!rowData[key] || typeof rowData[key] !== 'object') {
+        rowData[key] = { text: newValue, confidence: 1 };
+      } else {
+        rowData[key].text = newValue;
+      }
+      return newValue;
     }
-    return newValue;
-  }
+  });
 });
         
 // columns.push({
