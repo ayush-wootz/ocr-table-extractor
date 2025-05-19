@@ -148,7 +148,7 @@ function renderSpreadsheet() {
       : [];
 
     columns.push({
-      data: key,
+      data: isMatched ? key : `${key}.text`,
       title: key,
       type: isMatched ? 'dropdown' : 'text',         // ← cell *type*
       editor: isMatched ? 'dropdown' : 'text',       // ← editor widget
@@ -156,28 +156,6 @@ function renderSpreadsheet() {
       strict: isMatched,                              // force to list
       allowInvalid: false,
       renderer: isMatched ? undefined : textRenderer, // only use your custom renderer on OCR cols
-      
-      // ←── override how Handsontable reads the cell
-      getValue(rowData) {
-        const cell = rowData[key];
-        return (cell && typeof cell === 'object')
-          ? cell.text       // show the extracted string
-          : (cell || '');   // or the plain matched string
-      },
-
-      // ←── override how Handsontable writes back into your data
-      setValue(rowData, newValue) {
-        if (!isMatched) {
-          // keep your {text, confidence} object for OCR columns
-          if (!rowData[key] || typeof rowData[key] !== 'object') {
-            rowData[key] = { text: '', confidence: 0 };
-          }
-          rowData[key].text = newValue;
-        } else {
-          // matched parts are just a string
-          rowData[key] = newValue;
-        }
-      }
     });
 
     colHeaders.push(key);
