@@ -93,8 +93,9 @@ def process_image(image_bytes):
     
     # Sort by y and compute a dynamic threshold
     lines.sort(key=lambda r: r[0])
-    gaps = [lines[i+1][0] - lines[i][0] for i in range(len(lines)-1)]
-    thresh = (float(np.median(gaps)) * 1.5) if gaps else 10.0
+    heights = [(box[2][1] - box[0][1]) for box,(_,_) in raw]
+    avg_h = float(np.mean(heights)) if heights else 20
+    thresh = avg_h * 1.2
 
     # Cluster adjacent lines whose centers differ ≤ thresh
     clusters = []
