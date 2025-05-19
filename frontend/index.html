@@ -137,43 +137,43 @@
       }
     }
 
+
     function renderSpreadsheet() {
       let columns = [];
       let colHeaders = [];
-
+    
       columnsList.forEach(key => {
-      const isDropdown = key === "Matched Childpart";
-      const drawingOptions = Array.isArray(window.childParts)
-        ? window.childParts.map(p => p.drawingNumber || "")
-        : [];
-      
-      columns.push({
-        data: key,
-        title: key,
-        renderer: textRenderer,
-        editor: isDropdown ? 'autocomplete' : 'text',
-        source: isDropdown ? drawingOptions : undefined,
-        strict: false,
-        allowInvalid: false,
-        valueGetter: function(rowData) {
-          return rowData[key] ? rowData[key].text : '';
-        },
-        valueSetter: function(rowData, newValue) {
-          if (!rowData[key]) rowData[key] = { text: '', confidence: 0 };
-          rowData[key].text = newValue;
-          rowData[key].confidence = 1;
-          return newValue;
-        }
-      });
-        
+        const isDropdown = key === "Matched Childpart";
+        const drawingOptions = Array.isArray(window.childParts)
+          ? window.childParts.map(p => p.drawingNumber || "")
+          : [];
+    
+        columns.push({
+          data: key,
+          title: key,
+          renderer: textRenderer,
+          editor: isDropdown ? 'dropdown' : 'text',
+          source: isDropdown ? drawingOptions : undefined,
+          strict: false,
+          allowInvalid: false,
+          // 🔧 Fix display and editing of object values
+          valueGetter: (rowData) => rowData[key]?.text || "",
+          valueSetter: (rowData, newValue) => {
+            if (!rowData[key]) rowData[key] = { text: '', confidence: 0 };
+            rowData[key].text = newValue;
+            rowData[key].confidence = 1; // Optional: flag as "manual override"
+            return newValue;
+          }
+        });
+    
         colHeaders.push(key);
       });
-
+    
       const container = document.getElementById('hot');
       container.style.display = 'block';
-
+    
       if (hot) hot.destroy();
-
+    
       hot = new Handsontable(container, {
         data: spreadsheetData,
         columns: columns,
@@ -184,6 +184,53 @@
         licenseKey: 'non-commercial-and-evaluation'
       });
     }
+    // function renderSpreadsheet() {
+    //   let columns = [];
+    //   let colHeaders = [];
+
+    //   columnsList.forEach(key => {
+    //   const isDropdown = key === "Matched Childpart";
+    //   const drawingOptions = Array.isArray(window.childParts)
+    //     ? window.childParts.map(p => p.drawingNumber || "")
+    //     : [];
+      
+    //   columns.push({
+    //     data: key,
+    //     title: key,
+    //     renderer: textRenderer,
+    //     editor: isDropdown ? 'autocomplete' : 'text',
+    //     source: isDropdown ? drawingOptions : undefined,
+    //     strict: false,
+    //     allowInvalid: false,
+    //     valueGetter: function(rowData) {
+    //       return rowData[key] ? rowData[key].text : '';
+    //     },
+    //     valueSetter: function(rowData, newValue) {
+    //       if (!rowData[key]) rowData[key] = { text: '', confidence: 0 };
+    //       rowData[key].text = newValue;
+    //       rowData[key].confidence = 1;
+    //       return newValue;
+    //     }
+    //   });
+        
+    //     colHeaders.push(key);
+    //   });
+
+    //   const container = document.getElementById('hot');
+    //   container.style.display = 'block';
+
+    //   if (hot) hot.destroy();
+
+    //   hot = new Handsontable(container, {
+    //     data: spreadsheetData,
+    //     columns: columns,
+    //     colHeaders: colHeaders,
+    //     rowHeaders: true,
+    //     minSpareRows: 1,
+    //     contextMenu: ['remove_row', 'copy', 'paste'],
+    //     licenseKey: 'non-commercial-and-evaluation'
+    //   });
+    // }
 
     function addColumn(newColumnData, label) {
       columnsList.push(label);
