@@ -148,27 +148,29 @@
           ? window.childParts.map(p => p.drawingNumber || "")
           : [];
 
-        columns.push({
-          data: key,
-          title: key,
-          editor: isDropdown ? false : 'text',
-          source: isDropdown ? drawingOptions : undefined,
-          strict: isDropdown,
-          allowInvalid: false,
-          renderer: textRenderer,
-          valueGetter: (rowData) => {
-            return typeof rowData[key] === 'object' ? rowData[key].text : rowData[key];
-          },
-          valueSetter: (rowData, newValue) => {
-            if (typeof rowData[key] === 'object') {
-              rowData[key].text = newValue;
-              return newValue;
-            } else {
-              rowData[key] = { text: newValue, confidence: 1 };
-              return newValue;
-            }
-          }
-        });
+columns.push({
+  data: key,
+  title: key,
+  editor: key === "Matched Childpart" ? false : 'text',
+  renderer: textRenderer,
+  readOnly: key === "Matched Childpart",
+  type: key === "Matched Childpart" ? 'dropdown' : 'text',
+  source: key === "Matched Childpart" ? drawingOptions : undefined,
+  strict: false,
+  allowInvalid: false,
+  valueGetter: (rowData) => {
+    const val = rowData[key];
+    return typeof val === 'object' ? val.text : val || "";
+  },
+  valueSetter: (rowData, newValue) => {
+    if (typeof rowData[key] !== 'object') {
+      rowData[key] = { text: newValue, confidence: 1 };
+    } else {
+      rowData[key].text = newValue;
+    }
+    return newValue;
+  }
+});
         
 // columns.push({
 //   data: key,
