@@ -204,15 +204,19 @@ function renderSpreadsheet() {
   
   // after you create `hot` in renderSpreadsheet():
   hot.addHook('afterChange', (changes, source) => {
+    // only care about real user edits
     if (source !== 'edit' || !changes) return;
   
-    changes.forEach(([row, prop /*, oldValue, newValue */]) => {
+    changes.forEach(([row, prop, oldValue, newValue]) => {
+      // skip if value didn’t actually change
+      if (oldValue === newValue) return;
+  
       const col = hot.propToCol(prop);
-      // set the CSS class meta on the cell
+      // mark this cell as edited
       hot.setCellMeta(row, col, 'className', 'edited-cell');
     });
   
-    // re-draw so you can see all flagged cells
+    // re-render so every flagged cell gets the CSS
     hot.render();
   });
   
