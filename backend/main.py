@@ -80,78 +80,90 @@ def simple_cells(img_rgb):
     return [{"text": c["text"], "confidence": c["confidence"]} for c in cells]
 
 def advanced_cells(img):
-    # … your existing decode/resize/RGB logic …
-    # 1) Binarize & invert
+
+    # 1) Run one OCR pass to get raw boxes
+    rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    raw = get_ocr_model().ocr(rgb, cls=True)[0]
+
+    # 2) Estimate a typical line-height from the OCR boxes
+    heights = [abs(box[2][1] - box[0][1]) for box,(_,_) in raw]
+    if heights:
+        median_h = sorted(heights)[len(heights)//2]
+        # half a line-height but never below 5px
+        merge_thresh = max(5, median_h // 2)
+    else:
+        # fallback if OCR saw nothing
+        merge_thresh = 5
+
+    # 3) Binarize & invert for line-detect
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     _, bw = cv2.threshold(gray, 128, 255, cv2.THRESH_BINARY_INV)
 
-    # 2) Narrow horizontal kernel
+    # 4) Extract horizontal strokes
     h, w = img.shape[:2]
     kern = cv2.getStructuringElement(cv2.MORPH_RECT, (max(5, w//80), 1))
     horiz = cv2.morphologyEx(bw, cv2.MORPH_OPEN, kern)
 
-    # 3) Hough for even short lines
+    # 5) Hough for even short lines
     lines = cv2.HoughLinesP(
         horiz, rho=1, theta=np.pi/180,
         threshold=30, minLineLength=w//40, maxLineGap=5
     )
 
-    # 4) Cluster y’s into row_bounds
+    # 6) Cluster all y’s into row_bounds using the dynamic threshold
     ys = []
     if lines is not None:
         for x1,y1,x2,y2 in lines[:,0]:
-            ys += [y1,y2]
+            ys += [y1, y2]
     ys.sort()
+
     clusters = []
     for y in ys:
-        if not clusters or abs(y - clusters[-1][0]) > 20:
+        if not clusters or abs(y - clusters[-1][0]) > merge_thresh:
             clusters.append([y])
         else:
             clusters[-1].append(y)
     row_bounds = [int(sum(c)/len(c)) for c in clusters]
 
-    # 5) FALLBACK if no or too few bounds
-    rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    # 7) FALLBACK if no lines or only one cluster
     if lines is None or len(row_bounds) < 2:
         return simple_cells(rgb)
 
-    # 6) Do one OCR pass & collect
-    raw = get_ocr_model().ocr(rgb, cls=True)[0]
+    # 8) Now bucket the same raw OCR into those bands
     cells = []
-    for box, (t, c) in raw:
+    for box,(t,c) in raw:
         if not t.strip(): continue
-        x = int((box[0][0]+box[2][0])/2)
-        y = int((box[0][1]+box[2][1])/2)
-        cells.append({"x":x,"y":y,"text":t.strip(),"conf":c})
+        x = int((box[0][0]+box[2][0]) / 2)
+        y = int((box[0][1]+box[2][1]) / 2)
+        cells.append({"x": x, "y": y, "text": t.strip(), "conf": c})
 
     rows = []
-    # handle head (above first line)
+    # head (above first line)
     head = [c for c in cells if c["y"] < row_bounds[0]]
     if head:
         head.sort(key=lambda c:(c["y"],c["x"]))
         rows.append({
-          "text":" ".join(c["text"] for c in head),
-          "confidence":min(c["conf"] for c in head)
+            "text": " ".join(c["text"] for c in head),
+            "confidence": min(c["conf"] for c in head)
         })
 
-    # handle bands between
-    for top,bot in zip(row_bounds, row_bounds[1:]):
+    # middle bands
+    for top, bot in zip(row_bounds, row_bounds[1:]):
         band = [c for c in cells if top <= c["y"] < bot]
         if not band: continue
-        # preserve top→bottom first, then left→right
-        band.sort(key=lambda c: (c["y"], c["x"]))
+        band.sort(key=lambda c:(c["y"],c["x"]))
         rows.append({
-          "text":" ".join(c["text"] for c in band),
-          "confidence":min(c["conf"] for c in band)
+            "text": " ".join(c["text"] for c in band),
+            "confidence": min(c["conf"] for c in band)
         })
 
-    # handle tail (below last line)
+    # tail (below last line)
     tail = [c for c in cells if c["y"] >= row_bounds[-1]]
     if tail:
         tail.sort(key=lambda c:(c["y"],c["x"]))
         rows.append({
-          "text":" ".join(c["text"] for c in tail),
-          "confidence":min(c["conf"] for c in tail)
+            "text": " ".join(c["text"] for c in tail),
+            "confidence": min(c["conf"] for c in tail)
         })
 
     return rows
