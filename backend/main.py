@@ -104,7 +104,7 @@ def advanced_cells(img):
     ys.sort()
     clusters = []
     for y in ys:
-        if not clusters or abs(y - clusters[-1][0]) > 5:
+        if not clusters or abs(y - clusters[-1][0]) > 15:
             clusters.append([y])
         else:
             clusters[-1].append(y)
