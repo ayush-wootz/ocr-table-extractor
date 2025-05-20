@@ -104,7 +104,7 @@ def advanced_cells(img):
     ys.sort()
     clusters = []
     for y in ys:
-        if not clusters or abs(y - clusters[-1][0]) > 15:
+        if not clusters or abs(y - clusters[-1][0]) > 20:
             clusters.append([y])
         else:
             clusters[-1].append(y)
@@ -138,7 +138,8 @@ def advanced_cells(img):
     for top,bot in zip(row_bounds, row_bounds[1:]):
         band = [c for c in cells if top <= c["y"] < bot]
         if not band: continue
-        band.sort(key=lambda c:(c["y"],c["x"]))
+        # preserve top→bottom first, then left→right
+        band.sort(key=lambda c: (c["y"], c["x"]))
         rows.append({
           "text":" ".join(c["text"] for c in band),
           "confidence":min(c["conf"] for c in band)
