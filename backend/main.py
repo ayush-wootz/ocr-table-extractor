@@ -54,91 +54,104 @@ def get_ocr_model():
     )
 
 # Process image with OCR
+def simple_cells(img_rgb):
+    """
+    Run PaddleOCR on an RGB image and return one cell per detected box,
+    sorted by its vertical (y) center.
+    """
+    ocr_model = get_ocr_model()
+    raw = ocr_model.ocr(img_rgb, cls=True)[0]
 
-def process_image(image_bytes):
-    # 1) Decode into OpenCV, exactly as you already have:
-    nparr = np.frombuffer(image_bytes, np.uint8)
-    img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-    max_dim = 800
-    h, w = img.shape[:2]
-    if max(h, w) > max_dim:
-        scale = max_dim / max(h, w)
-        img = cv2.resize(img, (int(w * scale), int(h * scale)))
+    cells = []
+    for box, (text, confidence) in raw:
+        if not text.strip():
+            continue
+        # compute the vertical midpoint for sorting
+        y_center = int((box[0][1] + box[2][1]) / 2)
+        cells.append({
+            "y_center": y_center,
+            "text": text.strip(),
+            "confidence": confidence
+        })
 
-    # 2) Binarize & invert so table lines become white on black
+    # stable sort top→bottom
+    cells.sort(key=lambda c: c["y_center"])
+    # drop the y_center before returning
+    return [{"text": c["text"], "confidence": c["confidence"]} for c in cells]
+
+def advanced_cells(img):
+    # … your existing decode/resize/RGB logic …
+    # 1) Binarize & invert
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     _, bw = cv2.threshold(gray, 128, 255, cv2.THRESH_BINARY_INV)
 
-    # 3) Morph‐open with a narrow horizontal kernel
-    #    (this picks up even very short separator lines)
-    horiz_kernel = cv2.getStructuringElement(
-        cv2.MORPH_RECT, (max(5, w // 80), 1)
-    )
-    horiz = cv2.morphologyEx(bw, cv2.MORPH_OPEN, horiz_kernel)
+    # 2) Narrow horizontal kernel
+    h, w = img.shape[:2]
+    kern = cv2.getStructuringElement(cv2.MORPH_RECT, (max(5, w//80), 1))
+    horiz = cv2.morphologyEx(bw, cv2.MORPH_OPEN, kern)
 
-    # 4) Hough detect even quite short segments
+    # 3) Hough for even short lines
     lines = cv2.HoughLinesP(
-        horiz,
-        rho=1,
-        theta=np.pi / 180,
-        threshold=30,            # lower so faint lines appear
-        minLineLength=w // 40,   # even small spans get caught
-        maxLineGap=5             # small interruptions OK
+        horiz, rho=1, theta=np.pi/180,
+        threshold=30, minLineLength=w//40, maxLineGap=5
     )
 
-    # 5) Cluster all the y–coordinates into “row boundaries”
+    # 4) Cluster y’s into row_bounds
     ys = []
     if lines is not None:
-        for x1, y1, x2, y2 in lines[:, 0]:
-            ys.extend([y1, y2])
+        for x1,y1,x2,y2 in lines[:,0]:
+            ys += [y1,y2]
     ys.sort()
-
     clusters = []
     for y in ys:
         if not clusters or abs(y - clusters[-1][0]) > 5:
             clusters.append([y])
         else:
             clusters[-1].append(y)
-    row_bounds = [int(sum(c) / len(c)) for c in clusters]
+    row_bounds = [int(sum(c)/len(c)) for c in clusters]
 
-    # 6) FALLBACK: if we found NO lines OR fewer than two row bounds,
-    #    revert to “each OCR box = its own row”
-    if lines is None or len(row_bounds) < 2:
-        rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        raw = get_ocr_model().ocr(rgb, cls=True)[0]
-        single = []
-        for box, (t, c) in raw:
-            if not t.strip():
-                continue
-            ycen = int((box[0][1] + box[2][1]) / 2)
-            single.append((ycen, t.strip(), c))
-        single.sort(key=lambda x: x[0])
-        return [{"text":t, "confidence":c} for _, t, c in single]
-
-    # 7) Otherwise do ONE OCR pass…
+    # 5) FALLBACK if no or too few bounds
     rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    raw = get_ocr_model().ocr(rgb, cls=True)[0]
+    if lines is None or len(row_bounds) < 2:
+        return simple_cells(rgb)
 
-    # …collect all detected words with their centers…
+    # 6) Do one OCR pass & collect
+    raw = get_ocr_model().ocr(rgb, cls=True)[0]
     cells = []
     for box, (t, c) in raw:
-        if not t.strip():
-            continue
-        xcen = int((box[0][0] + box[2][0]) / 2)
-        ycen = int((box[0][1] + box[2][1]) / 2)
-        cells.append({"x": xcen, "y": ycen, "text": t.strip(), "conf": c})
+        if not t.strip(): continue
+        x = int((box[0][0]+box[2][0])/2)
+        y = int((box[0][1]+box[2][1])/2)
+        cells.append({"x":x,"y":y,"text":t.strip(),"conf":c})
 
-    # 8) Bucket into each “band” between consecutive row_bounds
     rows = []
-    for top, bot in zip(row_bounds, row_bounds[1:]):
+    # handle head (above first line)
+    head = [c for c in cells if c["y"] < row_bounds[0]]
+    if head:
+        head.sort(key=lambda c:(c["y"],c["x"]))
+        rows.append({
+          "text":" ".join(c["text"] for c in head),
+          "confidence":min(c["conf"] for c in head)
+        })
+
+    # handle bands between
+    for top,bot in zip(row_bounds, row_bounds[1:]):
         band = [c for c in cells if top <= c["y"] < bot]
-        if not band:
-            continue
-        # sort by y then x so multi-line pieces stay in correct order
-        band.sort(key=lambda c: (c["y"], c["x"]))
-        merged_text = " ".join(c["text"] for c in band)
-        merged_conf = min(c["conf"] for c in band)
-        rows.append({"text": merged_text, "confidence": merged_conf})
+        if not band: continue
+        band.sort(key=lambda c:(c["y"],c["x"]))
+        rows.append({
+          "text":" ".join(c["text"] for c in band),
+          "confidence":min(c["conf"] for c in band)
+        })
+
+    # handle tail (below last line)
+    tail = [c for c in cells if c["y"] >= row_bounds[-1]]
+    if tail:
+        tail.sort(key=lambda c:(c["y"],c["x"]))
+        rows.append({
+          "text":" ".join(c["text"] for c in tail),
+          "confidence":min(c["conf"] for c in tail)
+        })
 
     return rows
 
@@ -277,57 +290,131 @@ async def head_endpoint():
 async def ocr_endpoint(request: Request):
     try:
         logger.info(f"Received OCR request with Content-Type: {request.headers.get('content-type')}")
-        
-        # Get form data
+
+        # 1) Get form + fields
         form = await request.form()
         logger.info(f"Received form data with keys: {list(form.keys())}")
-        
-        # Validate required fields
+
         if "image" not in form:
             logger.warning("Missing image parameter in request")
             return JSONResponse(status_code=400, content={"error": "Missing image parameter"})
-        
         if "mode" not in form:
             logger.warning("Missing mode parameter in request")
             return JSONResponse(status_code=400, content={"error": "Missing mode parameter"})
-        
-        # Get image and mode
-        image = form["image"]
-        mode = form["mode"]
-        logger.info(f"Processing request in mode: {mode}, image filename: {image.filename}")
-        
-        # Read image
-        image_bytes = await image.read()
-        
-        # Process with timeout protection
-        try:
-            cells = await asyncio.to_thread(process_image, image_bytes)
-            
-            # Return response based on mode
+        # ← NEW: optional “column” tag
+        column_id = form.get("column", None)
+
+        image_file = form["image"]
+        mode       = form["mode"]
+        logger.info(f"Processing request in mode: {mode}, image filename: {image_file.filename}, column: {column_id}")
+
+        # 2) Read the bytes
+        image_bytes = await image_file.read()
+
+        # 3) Decode once to a CV2 image
+        nparr = np.frombuffer(image_bytes, np.uint8)
+        img   = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+
+        # 4) Dispatch to the right OCR routine under a worker thread
+        def do_ocr():
+            # quick mode: just raw text join
             if mode == "quick":
-                extracted_text = "\n".join(cell["text"] for cell in cells)
+                rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+                # reuse simple_cells to get list of dicts
+                cells = simple_cells(rgb)
+                extracted_text = "\n".join(c["text"] for c in cells)
                 return {"mode": mode, "extracted_text": extracted_text, "cells": cells}
+
+            # table mode: choose by column tag
             elif mode == "table":
-                return {"mode": mode, "table": cells}
+                # quantity gets the old per‐line logic
+                if column_id == "quantity":
+                    rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+                    table_cells = simple_cells(rgb)
+                # everything else uses the fancy line‐based
+                else:
+                    table_cells = advanced_cells(img)
+                return {"mode": mode, "table": table_cells}
+
             else:
-                logger.warning(f"Invalid mode provided: {mode}")
-                return JSONResponse(status_code=400, content={"error": "Invalid mode provided"})
-                
+                raise ValueError(f"Invalid mode provided: {mode}")
+
+        # 5) Run OCR with timeout protection
+        try:
+            result = await asyncio.to_thread(do_ocr)
+            return result
+
         except asyncio.TimeoutError:
             logger.error("OCR processing timed out")
             return JSONResponse(
                 status_code=504,
                 content={"error": "Processing timed out. Try with a smaller image."}
             )
+
     except Exception as e:
         import traceback
-        error_trace = traceback.format_exc()
-        logger.error(f"Error processing request: {str(e)}")
-        logger.error(f"Traceback: {error_trace}")
+        tb = traceback.format_exc()
+        logger.error(f"Error processing request: {e}\n{tb}")
         return JSONResponse(
             status_code=500,
             content={"error": f"Server error: {str(e)}"}
         )
+
+# @app.post("/")
+# async def ocr_endpoint(request: Request):
+#     try:
+#         logger.info(f"Received OCR request with Content-Type: {request.headers.get('content-type')}")
+        
+#         # Get form data
+#         form = await request.form()
+#         logger.info(f"Received form data with keys: {list(form.keys())}")
+        
+#         # Validate required fields
+#         if "image" not in form:
+#             logger.warning("Missing image parameter in request")
+#             return JSONResponse(status_code=400, content={"error": "Missing image parameter"})
+        
+#         if "mode" not in form:
+#             logger.warning("Missing mode parameter in request")
+#             return JSONResponse(status_code=400, content={"error": "Missing mode parameter"})
+        
+#         # Get image and mode
+#         image = form["image"]
+#         mode = form["mode"]
+#         logger.info(f"Processing request in mode: {mode}, image filename: {image.filename}")
+        
+#         # Read image
+#         image_bytes = await image.read()
+        
+#         # Process with timeout protection
+#         try:
+#             cells = await asyncio.to_thread(process_image, image_bytes)
+            
+#             # Return response based on mode
+#             if mode == "quick":
+#                 extracted_text = "\n".join(cell["text"] for cell in cells)
+#                 return {"mode": mode, "extracted_text": extracted_text, "cells": cells}
+#             elif mode == "table":
+#                 return {"mode": mode, "table": cells}
+#             else:
+#                 logger.warning(f"Invalid mode provided: {mode}")
+#                 return JSONResponse(status_code=400, content={"error": "Invalid mode provided"})
+                
+#         except asyncio.TimeoutError:
+#             logger.error("OCR processing timed out")
+#             return JSONResponse(
+#                 status_code=504,
+#                 content={"error": "Processing timed out. Try with a smaller image."}
+#             )
+#     except Exception as e:
+#         import traceback
+#         error_trace = traceback.format_exc()
+#         logger.error(f"Error processing request: {str(e)}")
+#         logger.error(f"Traceback: {error_trace}")
+#         return JSONResponse(
+#             status_code=500,
+#             content={"error": f"Server error: {str(e)}"}
+#         )
 
 # Extracts Drawing number from File Name
 def extract_drawing_number(url: str):
