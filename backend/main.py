@@ -8,6 +8,7 @@ import asyncio
 import logging
 import re
 import httpx  # used to fecth drawing numbers (File name)
+import uuid
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -130,6 +131,18 @@ def advanced_cells_with_rectangles(img):
             continue
         rects.append((x, y, rw, rh))
 
+    # === DEBUG VISUALIZATION START ===
+    # draw all the rects you’ve kept onto a copy of the image
+    debug_img = img.copy()
+    for (x, y, rw, rh) in rects:
+        cv2.rectangle(debug_img, (x, y), (x+rw, y+rh), (0,255,0), 2)
+    # save to a temp file so you can inspect it
+    debug_path = f"/tmp/cell_debug_{uuid.uuid4().hex[:8]}.png"
+    cv2.imwrite(debug_path, debug_img)
+    print("🛠️  Debug cell map written to:", debug_path)
+    # === DEBUG VISUALIZATION END ===    
+
+    
     
     # if we found **no** real rectangles, fall back
     if not rects:
