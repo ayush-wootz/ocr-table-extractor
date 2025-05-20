@@ -117,19 +117,22 @@ def advanced_cells_with_rectangles(img):
                              iterations=1)
     
 
-    # 5) optional: dilate so borders join cleanly into rectangles
-    grid = cv2.dilate(grid, np.ones((3,3), np.uint8), iterations=1)
+    # # 5) optional: dilate so borders join cleanly into rectangles
+    # grid = cv2.dilate(grid, np.ones((3,3), np.uint8), iterations=1)
 
     # 6) find all contours on that grid
-    contours, _ = cv2.findContours(grid, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    contours, _ = cv2.findContours(grid, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     rects = []
     for cnt in contours:
         x, y, rw, rh = cv2.boundingRect(cnt)
         # throw away anything too small to be a cell
-        if rw < w//20 or rh < h//30:
+        if rw < w//40 or rh < h//40:
             continue
         rects.append((x, y, rw, rh))
-
+    
+    # sort top→bottom, left→right
+    rects.sort(key=lambda r: (r[1], r[0]))
+    
     # if we found **no** real rectangles, fall back
     if not rects:
         return simple_cells(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
