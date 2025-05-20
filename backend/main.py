@@ -88,7 +88,8 @@ def advanced_cells_with_rectangles(img):
     _, bw = cv2.threshold(gray, 128, 255, cv2.THRESH_BINARY_INV)
 
     h, w = img.shape[:2]
-    # 2) horizontal strokes (same as you already have)
+
+    # 2) horizontal strokes
     horiz_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (max(5, w//80), 1))
     horiz = cv2.morphologyEx(bw, cv2.MORPH_OPEN, horiz_kernel)
 
@@ -96,19 +97,36 @@ def advanced_cells_with_rectangles(img):
     vert_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (1, max(5, h//80)))
     vert = cv2.morphologyEx(bw, cv2.MORPH_OPEN, vert_kernel)
 
-    # 4) get grid by AND’ing them
+    # —— now CLOSE each so broken segments reconnect —— 
+    horiz = cv2.morphologyEx(horiz,
+                             cv2.MORPH_CLOSE,
+                             np.ones((3,3), np.uint8),
+                             iterations=1)
+    vert  = cv2.morphologyEx(vert,
+                             cv2.MORPH_CLOSE,
+                             np.ones((3,3), np.uint8),
+                             iterations=1)
+
+    # 4) AND them to get only true grid‐lines
     grid = cv2.bitwise_and(horiz, vert)
+
+    # —— final closing so tiny gaps don’t break a cell in two ——
+    grid = cv2.morphologyEx(grid,
+                             cv2.MORPH_CLOSE,
+                             np.ones((5,5), np.uint8),
+                             iterations=1)
+    
 
     # 5) optional: dilate so borders join cleanly into rectangles
     grid = cv2.dilate(grid, np.ones((3,3), np.uint8), iterations=1)
 
     # 6) find all contours on that grid
-    contours, _ = cv2.findContours(grid, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    contours, _ = cv2.findContours(grid, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     rects = []
     for cnt in contours:
         x, y, rw, rh = cv2.boundingRect(cnt)
         # throw away anything too small to be a cell
-        if rw < w//10 or rh < h//20:
+        if rw < w//20 or rh < h//30:
             continue
         rects.append((x, y, rw, rh))
 
