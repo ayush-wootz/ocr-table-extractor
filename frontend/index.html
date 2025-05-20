@@ -276,6 +276,10 @@ function renderSpreadsheet() {
         formData.append("image", file);
         formData.append("mode", "table");
 
++       // Log & tell the backend which column we’re OCR’ing
++       console.log(`🚀 OCR request for column: ${col.id}`);
++       formData.append("column", col.id);
+
         const response = await fetch(API_URL, {
           method: "POST",
           body: formData
