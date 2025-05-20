@@ -55,72 +55,145 @@ def get_ocr_model():
 
 # Process image with OCR
 def process_image(image_bytes):
-    logger.info(f"Processing image of size {len(image_bytes)} bytes")
-    
-    # Convert to OpenCV format
+    import cv2, numpy as np
+
+    # —————————————————————————————
+    # 1) Decode & resize exactly as before
     nparr = np.frombuffer(image_bytes, np.uint8)
     img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-    
-    # Resize image for faster processing
     max_dim = 800
     h, w = img.shape[:2]
     if max(h, w) > max_dim:
         scale = max_dim / max(h, w)
-        img = cv2.resize(img, (int(w * scale), int(h * scale)))
-        logger.info(f"Resized image to {img.shape[1]}×{img.shape[0]}")
+        img = cv2.resize(img, (int(w*scale), int(h*scale)))
     
-    # Convert to RGB and run OCR
-    image_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    logger.info("Starting OCR processing")
-    ocr_model = get_ocr_model()
-    results = ocr_model.ocr(image_rgb, cls=True)
-    raw = results[0] if results and results[0] else []
+    # 2) Prepare a gray/binary image for line detection
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    _, bw = cv2.threshold(gray, 128, 255, cv2.THRESH_BINARY_INV)
     
-    # Build list of (y_center, text, confidence)
-    lines = []
-    for box, (txt, conf) in raw:
-        txt = txt.strip()
-        if not txt:
-            continue
-        # midpoint between top-left and bottom-right
-        y0 = box[0][1]
-        y2 = box[2][1]
-        yc = int((y0 + y2) / 2)
-        lines.append((yc, txt, conf))
+    # 3) Extract long horizontal strokes (the table grid‐lines)
+    horiz_kernel = cv2.getStructuringElement(
+        cv2.MORPH_RECT, (max(20, img.shape[1]//30), 1)
+    )
+    horiz = cv2.morphologyEx(bw, cv2.MORPH_OPEN, horiz_kernel)
     
-    if not lines:
-        return []
+    # 4) Hough‐detect those strokes
+    lines = cv2.HoughLinesP(
+        horiz, rho=1, theta=np.pi/180, threshold=100,
+        minLineLength=img.shape[1]//2, maxLineGap=20
+    )
+    ys = []
+    if lines is not None:
+        for x1, y1, x2, y2 in lines[:,0]:
+            ys += [y1, y2]
+    ys.sort()
     
-    # Sort by y and compute a dynamic threshold
-    lines.sort(key=lambda r: r[0])
-    heights = [(box[2][1] - box[0][1]) for box,(_,_) in raw]
-    avg_h = float(np.mean(heights)) if heights else 20
-    thresh = avg_h * 1.2
-
-    # Cluster adjacent lines whose centers differ ≤ thresh
+    # 5) Cluster y’s that are within 5px of each other → true row boundaries
     clusters = []
-    cur = [lines[0]]
-    for y, t, c in lines[1:]:
-        if y - cur[-1][0] <= thresh:
-            cur.append((y, t, c))
+    for y in ys:
+        if not clusters or abs(y - clusters[-1][0]) > 5:
+            clusters.append([y])
         else:
-            clusters.append(cur)
-            cur = [(y, t, c)]
-    clusters.append(cur)
+            clusters[-1].append(y)
+    row_bounds = sorted(int(sum(c)/len(c)) for c in clusters)
     
-    # Merge each cluster into one cell
-    merged = []
-    for group in clusters:
-        ys, texts, confs = zip(*group)
-        combined_text = " ".join(texts)
-        avg_y = int(np.mean(ys))
-        avg_conf = float(np.mean(confs))
-        merged.append({"y_center": avg_y, "text": combined_text, "confidence": avg_conf})
+    # —————————————————————————————
+    # 6) Finally run your OCR on the (RGB) image
+    image_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    results = get_ocr_model().ocr(image_rgb, cls=True)[0]
     
-    # Final sort and return
-    merged.sort(key=lambda c: c["y_center"])
-    logger.info(f"OCR completed, found {len(merged)} text elements (merged)")
-    return merged
+    # 7) Compute each snippet’s center
+    cells = []
+    for box, (text, conf) in results:
+        if not text.strip(): 
+            continue
+        x_c = int((box[0][0] + box[2][0]) / 2)
+        y_c = int((box[0][1] + box[2][1]) / 2)
+        cells.append({"x": x_c, "y": y_c, "text": text.strip(), "conf": conf})
+    
+    # 8) Group into bands between each consecutive pair of row_bounds
+    rows = []
+    for i in range(len(row_bounds) - 1):
+        top, bot = row_bounds[i], row_bounds[i+1]
+        band = [c for c in cells if top <= c["y"] < bot]
+        if not band:
+            continue
+        band.sort(key=lambda c: c["x"])
+        merged_text = " ".join(c["text"] for c in band)
+        merged_conf = min(c["conf"] for c in band)
+        rows.append({"text": merged_text, "confidence": merged_conf})
+    
+    return rows
+
+
+# Have issue with one top and below newline
+# def process_image(image_bytes):
+#     logger.info(f"Processing image of size {len(image_bytes)} bytes")
+    
+#     # Convert to OpenCV format
+#     nparr = np.frombuffer(image_bytes, np.uint8)
+#     img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+    
+#     # Resize image for faster processing
+#     max_dim = 800
+#     h, w = img.shape[:2]
+#     if max(h, w) > max_dim:
+#         scale = max_dim / max(h, w)
+#         img = cv2.resize(img, (int(w * scale), int(h * scale)))
+#         logger.info(f"Resized image to {img.shape[1]}×{img.shape[0]}")
+    
+#     # Convert to RGB and run OCR
+#     image_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+#     logger.info("Starting OCR processing")
+#     ocr_model = get_ocr_model()
+#     results = ocr_model.ocr(image_rgb, cls=True)
+#     raw = results[0] if results and results[0] else []
+    
+#     # Build list of (y_center, text, confidence)
+#     lines = []
+#     for box, (txt, conf) in raw:
+#         txt = txt.strip()
+#         if not txt:
+#             continue
+#         # midpoint between top-left and bottom-right
+#         y0 = box[0][1]
+#         y2 = box[2][1]
+#         yc = int((y0 + y2) / 2)
+#         lines.append((yc, txt, conf))
+    
+#     if not lines:
+#         return []
+    
+#     # Sort by y and compute a dynamic threshold
+#     lines.sort(key=lambda r: r[0])
+#     heights = [(box[2][1] - box[0][1]) for box,(_,_) in raw]
+#     avg_h = float(np.mean(heights)) if heights else 20
+#     thresh = avg_h * 1.2
+
+#     # Cluster adjacent lines whose centers differ ≤ thresh
+#     clusters = []
+#     cur = [lines[0]]
+#     for y, t, c in lines[1:]:
+#         if y - cur[-1][0] <= thresh:
+#             cur.append((y, t, c))
+#         else:
+#             clusters.append(cur)
+#             cur = [(y, t, c)]
+#     clusters.append(cur)
+    
+#     # Merge each cluster into one cell
+#     merged = []
+#     for group in clusters:
+#         ys, texts, confs = zip(*group)
+#         combined_text = " ".join(texts)
+#         avg_y = int(np.mean(ys))
+#         avg_conf = float(np.mean(confs))
+#         merged.append({"y_center": avg_y, "text": combined_text, "confidence": avg_conf})
+    
+#     # Final sort and return
+#     merged.sort(key=lambda c: c["y_center"])
+#     logger.info(f"OCR completed, found {len(merged)} text elements (merged)")
+#     return merged
     
 # def process_image(image_bytes):
 #     logger.info(f"Processing image of size {len(image_bytes)} bytes")
