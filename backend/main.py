@@ -79,6 +79,77 @@ def simple_cells(img_rgb):
     # drop the y_center before returning
     return [{"text": c["text"], "confidence": c["confidence"]} for c in cells]
 
+
+def advanced_cells_with_rectangles(img):
+    # 1) resize+decode as before...
+    #    (make sure `img` here is your OpenCV BGR image)
+
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    _, bw = cv2.threshold(gray, 128, 255, cv2.THRESH_BINARY_INV)
+
+    h, w = img.shape[:2]
+    # 2) horizontal strokes (same as you already have)
+    horiz_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (max(5, w//80), 1))
+    horiz = cv2.morphologyEx(bw, cv2.MORPH_OPEN, horiz_kernel)
+
+    # 3) vertical strokes
+    vert_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (1, max(5, h//80)))
+    vert = cv2.morphologyEx(bw, cv2.MORPH_OPEN, vert_kernel)
+
+    # 4) get grid by AND’ing them
+    grid = cv2.bitwise_and(horiz, vert)
+
+    # 5) optional: dilate so borders join cleanly into rectangles
+    grid = cv2.dilate(grid, np.ones((3,3), np.uint8), iterations=1)
+
+    # 6) find all contours on that grid
+    contours, _ = cv2.findContours(grid, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    rects = []
+    for cnt in contours:
+        x, y, rw, rh = cv2.boundingRect(cnt)
+        # throw away anything too small to be a cell
+        if rw < w//10 or rh < h//20:
+            continue
+        rects.append((x, y, rw, rh))
+
+    # if we found **no** real rectangles, fall back
+    if not rects:
+        return simple_cells(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
+
+    # 7) sort the rectangles top→bottom, left→right
+    rects.sort(key=lambda r: (r[1], r[0]))
+
+    # 8) do one OCR pass and map each snippet into its containing rect
+    rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    raw = get_ocr_model().ocr(rgb, cls=True)[0]
+    cells = []
+    for box, (text, conf) in raw:
+        if not text.strip(): 
+            continue
+        mx = int((box[0][0] + box[2][0]) / 2)
+        my = int((box[0][1] + box[2][1]) / 2)
+        # find which rectangle contains this midpoint
+        for idx, (x, y, rw, rh) in enumerate(rects):
+            if x <= mx < x+rw and y <= my < y+rh:
+                cells.append((idx, mx, my, text.strip(), conf))
+                break
+
+    # 9) for each rect‐index, collect its bits, sort by x (then y), glue text
+    out = []
+    for i, (x, y, rw, rh) in enumerate(rects):
+        bucket = [(mx, my, t, c) for (idx, mx, my, t, c) in cells if idx == i]
+        if not bucket:
+            out.append({"text": "", "confidence": 0})
+            continue
+        # reading order inside a cell: left→right, top→bottom
+        bucket.sort(key=lambda e: (e[1], e[0]))
+        joined = " ".join(e[2] for e in bucket)
+        conf   = min(e[3] for e in bucket)
+        out.append({"text": joined, "confidence": conf})
+
+    return out
+
+
 def advanced_cells(img):
     # 1) Single OCR pass (RGB)
     rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
@@ -438,7 +509,7 @@ async def ocr_endpoint(request: Request):
                     table_cells = simple_cells(rgb)
                 # everything else uses the fancy line‐based
                 else:
-                    table_cells = advanced_cells(img)
+                    table_cells = advanced_cells_with_rectangles(img)
                 return {"mode": mode, "table": table_cells}
 
             else:
