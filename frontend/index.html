@@ -81,6 +81,19 @@
   </div>
 
   <script>
+
+    // :-----------------------------------------:
+    //  Column key → display title mapping
+    // :-----------------------------------------:
+    const COLUMN_TITLES = {
+      PartNumber:            "Part Number",
+      Quantity:              "Quantity",
+      Description:           "Description",
+      Material:              "Material",
+      "Matched Childpart":   "Matched Drawing Number",
+      Type:                  "Type"
+    };
+    
     let spreadsheetData = [];
     let columnsList = [];
     let columnCount = 0;
@@ -142,95 +155,104 @@
       }
     }
 
-function renderSpreadsheet() {
-  const columns = [];
-  const colHeaders = [];
-
-  columnsList.forEach(key => {
-    const isMatched = key === 'Matched Childpart';
-    const drawingOptions = Array.isArray(window.childParts)
-      ? window.childParts.map(p => p.drawingNumber || '')
-      : [];
-
-    columns.push({
-      // 1) editor & data binding
-      data:       isMatched ? key : `${key}.text`,
-      type:       isMatched ? 'dropdown' : 'text',
-      editor:     isMatched ? 'dropdown' : 'text',
-      source:     isMatched ? drawingOptions : undefined,
-      strict:     isMatched,
-      allowInvalid: false,
-
-      // 2) custom renderer for OCR columns
-      renderer: isMatched
-        ? undefined
-        : function(hotInst, td, row, col, prop, value, cellProps) {
-            // first draw the text
-            Handsontable.renderers.TextRenderer.apply(this, arguments);
-
-            // then pull the original object back out
-            const rowData = hotInst.getSourceDataAtRow(row);
-            const cellObj = rowData[key];  // the {text, confidence} you stored
-
-            if (cellObj && typeof cellObj === 'object') {
-              const conf = parseFloat(cellObj.confidence);
-              if (conf >= 0.9) {
-                td.style.backgroundColor = 'rgba(76, 175, 80, 0.2)';
-              } else if (conf >= 0.7) {
-                td.style.backgroundColor = 'rgba(255, 152, 0, 0.2)';
-              } else {
-                td.style.backgroundColor = 'rgba(244, 67, 54, 0.2)';
+    function renderSpreadsheet() {
+      // ensure the new column is in the right spot
+      if (columnsList.includes("Matched Childpart") && !columnsList.includes("Type")) {
+        const idx = columnsList.indexOf("Matched Childpart");
+        columnsList.splice(idx + 1, 0, "Type");
+      }
+      
+      const columns = [];
+      const colHeaders = [];
+    
+      columnsList.forEach(key => {
+        const title = COLUMN_TITLES[key] || key;
+        const isMatched = key === 'Matched Childpart';
+        const isType    = key === "Type";
+        const drawingOptions = Array.isArray(window.childParts)
+          ? window.childParts.map(p => p.drawingNumber || '')
+          : [];
+    
+        columns.push({
+          // 1) editor & data binding
+          data:       (isMatched || isType) ? key : `${key}.text`,
+          title,
+          type:       (isMatched || isType) ? 'dropdown' : 'text',
+          editor:     (isMatched || isType) ? 'dropdown' : 'text',
+          source:     isMatched ? drawingOptions : isType ? ['Child Part','BO'] : undefined,
+          strict:     (isMatched || isType),
+          allowInvalid: false,
+    
+          // 2) custom renderer for OCR columns
+          renderer: (isMatched || isType)
+            ? undefined
+            : function(hotInst, td, row, col, prop, value, cellProps) {
+                // first draw the text
+                Handsontable.renderers.TextRenderer.apply(this, arguments);
+    
+                // then pull the original object back out
+                const rowData = hotInst.getSourceDataAtRow(row);
+                const cellObj = rowData[key];  // the {text, confidence} you stored
+    
+                if (cellObj && typeof cellObj === 'object') {
+                  const conf = parseFloat(cellObj.confidence);
+                  if (conf >= 0.9) {
+                    td.style.backgroundColor = 'rgba(76, 175, 80, 0.2)';
+                  } else if (conf >= 0.7) {
+                    td.style.backgroundColor = 'rgba(255, 152, 0, 0.2)';
+                  } else {
+                    td.style.backgroundColor = 'rgba(244, 67, 54, 0.2)';
+                  }
+                }
               }
-            }
-          }
-    });
-
-    colHeaders.push(key);
-  });
-
-  const container = document.getElementById('hot');
-  container.style.display = 'block';
-
-  if (hot) hot.destroy();
-  hot = new Handsontable(container, {
-    data: spreadsheetData,
-    columns,
-    colHeaders,
-    rowHeaders: true,
-    minSpareRows: 1,
-    contextMenu: ['remove_row','copy','paste'],
-    licenseKey: 'non-commercial-and-evaluation'
-  });
-  
-  // after you create `hot` in renderSpreadsheet():
-  hot.addHook('afterChange', (changes, source) => {
-    // only care about real user edits
-    if (source !== 'edit' || !changes) return;
-  
-    changes.forEach(([row, prop, oldValue, newValue]) => {
-      // skip if value didn’t actually change
-      if (oldValue === newValue) return;
-  
-      const col = hot.propToCol(prop);
-      // mark this cell as edited
-      hot.setCellMeta(row, col, 'className', 'edited-cell');
-    });
-  
-    // re-render so every flagged cell gets the CSS
-    hot.render();
-  });
-  
-  // hot.addHook('afterChange', (changes, source) => {
-  //   if (source !== 'edit' || !changes) return;
-  //   changes.forEach(([row, prop /*, oldValue, newValue */]) => {
-  //     const col = hot.propToCol(prop);
-  //     const cell = hot.getCell(row, col);
-  //     if (cell) {
-  //       cell.classList.add('edited-cell');
-  //     }
-  //   });
-  // });
-}
+        });
+    
+        colHeaders.push(key);
+      });
+    
+      const container = document.getElementById('hot');
+      container.style.display = 'block';
+    
+      if (hot) hot.destroy();
+      hot = new Handsontable(container, {
+        data: spreadsheetData,
+        columns,
+        colHeaders,
+        rowHeaders: true,
+        minSpareRows: 1,
+        contextMenu: ['remove_row','copy','paste'],
+        licenseKey: 'non-commercial-and-evaluation'
+      });
+      
+      // after you create `hot` in renderSpreadsheet():
+      hot.addHook('afterChange', (changes, source) => {
+        // only care about real user edits
+        if (source !== 'edit' || !changes) return;
+      
+        changes.forEach(([row, prop, oldValue, newValue]) => {
+          // skip if value didn’t actually change
+          if (oldValue === newValue) return;
+      
+          const col = hot.propToCol(prop);
+          // mark this cell as edited
+          hot.setCellMeta(row, col, 'className', 'edited-cell');
+        });
+      
+        // re-render so every flagged cell gets the CSS
+        hot.render();
+      });
+      
+      // hot.addHook('afterChange', (changes, source) => {
+      //   if (source !== 'edit' || !changes) return;
+      //   changes.forEach(([row, prop /*, oldValue, newValue */]) => {
+      //     const col = hot.propToCol(prop);
+      //     const cell = hot.getCell(row, col);
+      //     if (cell) {
+      //       cell.classList.add('edited-cell');
+      //     }
+      //   });
+      // });
+    }
 
     
 
@@ -238,6 +260,7 @@ function renderSpreadsheet() {
       columnsList.push(label);
       if (label === "PartNumber" && !columnsList.includes("Matched Childpart")) {
         columnsList.push("Matched Childpart");
+        columnsList.push("Type");
       }
 
       for (let i = 0; i < newColumnData.length; i++) {
@@ -252,7 +275,21 @@ function renderSpreadsheet() {
           const matchText = result.bestMatch.rating > 0.5 ? result.bestMatch.target : "";
           // spreadsheetData[i]["Matched Childpart"] = { text: matchText, confidence: result.bestMatch.rating };
           spreadsheetData[i]["Matched Childpart"] = matchText; // Just plain string
+          // Type cell: auto‐populate
+          // only set Type if there's actually a PartNumber
+          if (text) {
+            spreadsheetData[i]["Type"] = matchText ? "Child Part" : "BO";
+          }
         }
+
+        for (let i = newColumnData.length; i < spreadsheetData.length; i++) {
+          // only if there's really a PartNumber in that row
+          const part = spreadsheetData[i]["PartNumber"]?.text;
+          if (part) {
+            const hasMatch = spreadsheetData[i]["Matched Childpart"]?.text;
+            spreadsheetData[i]["Type"] = hasMatch ? "Child Part" : "BO";
+          }
+       }
       }
 
       renderSpreadsheet();
