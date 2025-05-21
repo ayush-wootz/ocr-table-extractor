@@ -41,6 +41,12 @@ async def startup_event():
     logger.info(f"Recognition model: {REC_MODEL_DIR} (exists: {os.path.exists(REC_MODEL_DIR)})")
     logger.info(f"Classification model: {CLS_MODEL_DIR} (exists: {os.path.exists(CLS_MODEL_DIR)})")
 
+# Code look for an “O” preceded by whitespace and followed by a digit and replaces it with “Ø”
+def fix_diameter(text: str) -> str:
+    # look for an “O” preceded by whitespace and followed by a digit,
+    # and replace it with “Ø”
+    return re.sub(r'(?<=\s)O(?=\d)', 'Ø', text)
+
 # Initialize OCR model
 def get_ocr_model():
     from paddleocr import PaddleOCR
@@ -65,13 +71,17 @@ def simple_cells(img_rgb):
 
     cells = []
     for box, (text, confidence) in raw:
-        if not text.strip():
-            continue
+        raw_text = text.strip()  #new line added
+        if not raw_text:  #new line added
+            continue      #new line added
+        cleaned = fix_diameter(raw_text)   #new line added       
+        # if not text.strip():
+        #     continue
         # compute the vertical midpoint for sorting
         y_center = int((box[0][1] + box[2][1]) / 2)
         cells.append({
             "y_center": y_center,
-            "text": text.strip(),
+            "text": cleaned,    #text.strip()
             "confidence": confidence
         })
 
@@ -156,14 +166,18 @@ def advanced_cells_with_rectangles(img):
     raw = get_ocr_model().ocr(rgb, cls=True)[0]
     cells = []
     for box, (text, conf) in raw:
-        if not text.strip(): 
+        raw_text = t.strip()
+        # if not text.strip(): 
+        #     continue
+        if not raw_text:
             continue
+        cleaned = fix_diameter(raw_text)
         mx = int((box[0][0] + box[2][0]) / 2)
         my = int((box[0][1] + box[2][1]) / 2)
         # find which rectangle contains this midpoint
         for idx, (x, y, rw, rh) in enumerate(rects):
             if x <= mx < x+rw and y <= my < y+rh:
-                cells.append((idx, mx, my, text.strip(), conf))
+                cells.append((idx, mx, my, cleaned, conf))
                 break
 
     # 9) for each rect‐index, collect its bits, sort by x (then y), glue text
