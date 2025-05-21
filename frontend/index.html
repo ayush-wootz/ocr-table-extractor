@@ -76,13 +76,13 @@
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
 
-    .upload‐grid {
+    .upload-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px,1fr));
+      grid-template-columns: repeat(2, 1fr);
       gap: 1rem;
       margin: 1rem 0;
     }
-    .upload‐area {
+    .upload-area {
       position: relative;
       border: 2px dashed #bbb;
       border-radius: 6px;
@@ -92,34 +92,34 @@
       transition: border-color .2s, background .2s;
       cursor: pointer;
     }
-    .upload‐area.dragover {
+    .upload-area.dragover {
       border-color: #007bff;
       background: #e6f0ff;
     }
-    .upload‐area .upload‐icon {
+    .upload-area .upload‐icon {
       font-size: 2rem;
       color: #777;
     }
-    .upload‐area p {
+    .upload-area p {
       margin: .5rem 0 0;
       font-size: .95rem;
     }
-    .upload‐area .required {
+    .upload-area .required {
       color: #d00;
       margin-left: 2px;
     }
-    .upload‐area input[type=file] {
+    .upload-area input[type=file] {
       display: none;
     }
-    .upload‐area .preview {
+    .upload-area .preview {
       margin-top: .5rem;
     }
-    .upload‐area .preview img {
+    .upload-area .preview img {
       max-width: 100%;
       max-height: 100px;
       border-radius: 4px;
     }
-    .upload‐area .remove‐btn {
+    .upload-area .remove‐btn {
       position: absolute;
       top: 4px; right: 4px;
       background: rgba(0,0,0,0.5);
@@ -132,7 +132,7 @@
       justify-content: center;
       cursor: pointer;
     }
-    .upload‐area.has‐file .remove‐btn {
+    .upload-area.has‐file .remove‐btn {
       display: flex;
     }
 
@@ -167,38 +167,38 @@
 <!-- UI Code End -->
   
   <div class="container">
-    <div class="upload‐grid">
+    <div class="upload-grid">
       <!-- Part Number -->
-      <div class="upload‐area" id="area‐partNumber" data‐field="partNumber">
-        <i class="upload‐icon">📷</i>
+      <div class="upload-area" id="area-partNumber" data-column="partNumber">
+        <i class="upload-icon">📷</i>
         <p>Part Number <span class="required">*</span></p>
-        <input type="file" id="upload‐partnumber" accept="image/*">
+        <input type="file" id="upload-partnumber" accept="image/*">
         <div class="preview"></div>
-        <button class="remove‐btn">&times;</button>
+        <button class="remove-btn">&times;</button>
       </div>
       <!-- Quantity -->
-      <div class="upload‐area" id="area‐quantity" data‐field="quantity">
-        <i class="upload‐icon">📷</i>
+      <div class="upload-area" id="area-quantity" data-column="quantity">
+        <i class="upload-icon">📷</i>
         <p>Quantity <span class="required">*</span></p>
-        <input type="file" id="upload‐quantity" accept="image/*">
+        <input type="file" id="upload-quantity" accept="image/*">
         <div class="preview"></div>
-        <button class="remove‐btn">&times;</button>
+        <button class="remove-btn">&times;</button>
       </div>
       <!-- Description -->
-      <div class="upload‐area" id="area‐description" data‐field="description">
-        <i class="upload‐icon">📷</i>
+      <div class="upload-area" id="area-description" data-column="description">
+        <i class="upload-icon">📷</i>
         <p>Description</p>
-        <input type="file" id="upload‐description" accept="image/*">
+        <input type="file" id="upload-description" accept="image/*">
         <div class="preview"></div>
-        <button class="remove‐btn">&times;</button>
+        <button class="remove-btn">&times;</button>
       </div>
       <!-- Material -->
-      <div class="upload‐area" id="area‐material" data‐field="material">
-        <i class="upload‐icon">📷</i>
+      <div class="upload-area" id="area-material" data-column="material">
+        <i class="upload-icon">📷</i>
         <p>Material</p>
-        <input type="file" id="upload‐material" accept="image/*">
+        <input type="file" id="upload-material" accept="image/*">
         <div class="preview"></div>
-        <button class="remove‐btn">&times;</button>
+        <button class="remove-btn">&times;</button>
       </div>
     </div>
 
@@ -257,7 +257,7 @@
   document.querySelectorAll('.upload-area').forEach(area => {
     const col = area.dataset.column;
     const input = area.querySelector('input[type=file]');
-    const preview = area.querySelector('.upload-preview');
+    const preview = area.querySelector('.preview');
   
     // click anywhere
     area.addEventListener('click', () => input.click());
