@@ -152,6 +152,25 @@
     #process-btn:disabled {
       cursor: not-allowed;
     }
+    #image-preview {
+      position: relative;
+      margin: 1rem 0;
+      text-align: center;
+    }
+    #image-preview img {
+      border-radius: 4px;
+      max-height: 200px;
+    }
+    #image-preview .remove-btn {
+      position: absolute;
+      top: 4px; right: 4px;
+      background: rgba(0,0,0,0.6);
+      color: #fff;
+      border: none;
+      border-radius: 50%;
+      width: 24px; height: 24px;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
@@ -173,34 +192,28 @@
         <i class="upload-icon">📷</i>
         <p>Part Number <span class="required">*</span></p>
         <input type="file" id="upload-partnumber" accept="image/*">
-        <div class="preview"></div>
-        <button class="remove-btn">&times;</button>
       </div>
       <!-- Quantity -->
       <div class="upload-area" id="area-quantity" data-column="quantity">
         <i class="upload-icon">📷</i>
         <p>Quantity <span class="required">*</span></p>
         <input type="file" id="upload-quantity" accept="image/*">
-        <div class="preview"></div>
-        <button class="remove-btn">&times;</button>
       </div>
       <!-- Description -->
       <div class="upload-area" id="area-description" data-column="description">
         <i class="upload-icon">📷</i>
         <p>Description</p>
         <input type="file" id="upload-description" accept="image/*">
-        <div class="preview"></div>
-        <button class="remove-btn">&times;</button>
       </div>
       <!-- Material -->
       <div class="upload-area" id="area-material" data-column="material">
         <i class="upload-icon">📷</i>
         <p>Material</p>
         <input type="file" id="upload-material" accept="image/*">
-        <div class="preview"></div>
-        <button class="remove-btn">&times;</button>
       </div>
     </div>
+<!--     Global Image Preview -->
+    <div id="image-preview"></div>
 
     <button id="process-btn" disabled>Process Images</button>
 <!--     <h1>Extract Drawing info</h1>
@@ -243,76 +256,6 @@
 
   <script>
 
-// New UI code 
-  // —— UI: drag & drop + preview + button enable/disable —— //
-  const processBtn = document.getElementById('process-btn');
-  const requiredCols = ['partNumber','quantity'];
-  
-  function updateProcessButton() {
-    const ok = requiredCols.every(id => uploads[id].files.length > 0);
-    processBtn.disabled = !ok;
-  }
-  
-  // build upload-area behavior
-  document.querySelectorAll('.upload-area').forEach(area => {
-    const col = area.dataset.column;
-    const input = area.querySelector('input[type=file]');
-    const preview = area.querySelector('.preview');
-  
-    // click anywhere
-    area.addEventListener('click', () => input.click());
-  
-    // when file selected via dialog
-    input.addEventListener('change', () => {
-      showUploadPreview(col, input.files[0], preview);
-      updateProcessButton();
-    });
-  
-    // drag-over highlight
-    area.addEventListener('dragover', e => {
-      e.preventDefault();
-      area.classList.add('dragover');
-    });
-    ['dragleave','drop'].forEach(ev => {
-      area.addEventListener(ev, () => area.classList.remove('dragover'));
-    });
-  
-    // handle drop
-    area.addEventListener('drop', e => {
-      e.preventDefault();
-      if (e.dataTransfer.files.length) {
-        input.files = e.dataTransfer.files;
-        showUploadPreview(col, input.files[0], preview);
-        updateProcessButton();
-      }
-    });
-  });
-  
-  function showUploadPreview(col, file, previewEl) {
-    previewEl.innerHTML = '';
-    const reader = new FileReader();
-    reader.onload = evt => {
-      const img = document.createElement('img');
-      img.src = evt.target.result;
-      const btn = document.createElement('button');
-      btn.innerText = '×';
-      btn.className = 'remove-btn';
-      btn.addEventListener('click', e => {
-        e.stopPropagation();
-        previewEl.innerHTML = '';
-        uploads[col].value = '';         // clear the input
-        updateProcessButton();
-      });
-      previewEl.appendChild(img);
-      previewEl.appendChild(btn);
-    };
-    reader.readAsDataURL(file);
-  }
-  
-  // initially disable the button
-  processBtn.disabled = true;
-// New UI code end
-
     // :-----------------------------------------:
     //  Column key → display title mapping
     // :-----------------------------------------:
@@ -343,6 +286,81 @@
       { id: "quantity", label: "Quantity" },
       { id: "material", label: "Material" }
     ];
+
+  // New UI code  -> Latest
+    const processBtn       = document.getElementById("process-btn");
+    const previewContainer = document.getElementById("image-preview");
+    let lastCol           = null;
+  
+    // Enable only when both required files are present
+    function updateProcessButton() {
+      const ok = ["partNumber","quantity"]
+        .every(id => uploads[id].files.length > 0);
+      processBtn.disabled = !ok;
+      processBtn.classList.toggle("enabled", ok);
+    }
+  
+    // Show a single preview below the grid
+    function showUploadPreview(col, file) {
+      lastCol = col;
+      previewContainer.innerHTML = "";
+      const img = document.createElement("img");
+      img.src = URL.createObjectURL(file);
+      img.style.maxWidth = "100%";
+      img.style.display = "block";
+  
+      const btn = document.createElement("button");
+      btn.className = "remove-btn";
+      btn.innerText = "×";
+      btn.addEventListener("click", e => {
+        e.stopPropagation();
+        // clear preview + clear the input
+        previewContainer.innerHTML = "";
+        uploads[lastCol].value = "";
+        lastCol = null;
+        updateProcessButton();
+      });
+  
+      previewContainer.appendChild(img);
+      previewContainer.appendChild(btn);
+    }
+  
+    // Wire up all four upload areas
+    document.querySelectorAll(".upload-area").forEach(area => {
+      const col   = area.dataset.column;      // must match data-column in HTML
+      const input = uploads[col];
+  
+      // click anywhere to open file dialog
+      area.addEventListener("click", () => input.click());
+  
+      // when you choose a file
+      input.addEventListener("change", () => {
+        if (input.files[0]) showUploadPreview(col, input.files[0]);
+        updateProcessButton();
+      });
+  
+      // drag/drop
+      area.addEventListener("dragover", e => {
+        e.preventDefault();
+        area.classList.add("dragover");
+      });
+      area.addEventListener("dragleave", () => {
+        area.classList.remove("dragover");
+      });
+      area.addEventListener("drop", e => {
+        e.preventDefault();
+        area.classList.remove("dragover");
+        if (!e.dataTransfer.files.length) return;
+        input.files = e.dataTransfer.files;
+        showUploadPreview(col, input.files[0]);
+        updateProcessButton();
+      });
+    });
+  
+    // init
+    processBtn.disabled = true;
+  // New UI code end
+
 
     const API_URL = 'https://ocr-table-extractor.onrender.com';
 
