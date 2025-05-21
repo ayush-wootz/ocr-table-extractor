@@ -109,7 +109,12 @@
       margin-left: 2px;
     }
     .upload-area input[type=file] {
-      display: none;
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      opacity: 0;
+      cursor: pointer;
+      z-index: 2;
     }
     .upload-area .preview {
       margin-top: .5rem;
@@ -288,8 +293,8 @@
     ];
 
   // New UI code  -> Latest
+    const globalPreview = document.getElementById("global-preview");
     const processBtn       = document.getElementById("process-btn");
-    const previewContainer = document.getElementById("image-preview");
     let lastCol           = null;
   
     // Enable only when both required files are present
@@ -301,29 +306,25 @@
     }
   
     // Show a single preview below the grid
-    function showUploadPreview(col, file) {
-      lastCol = col;
-      previewContainer.innerHTML = "";
-      const img = document.createElement("img");
-      img.src = URL.createObjectURL(file);
-      img.style.maxWidth = "100%";
-      img.style.display = "block";
-  
-      const btn = document.createElement("button");
-      btn.className = "remove-btn";
-      btn.innerText = "×";
-      btn.addEventListener("click", e => {
-        e.stopPropagation();
-        // clear preview + clear the input
-        previewContainer.innerHTML = "";
-        uploads[lastCol].value = "";
-        lastCol = null;
-        updateProcessButton();
-      });
-  
-      previewContainer.appendChild(img);
-      previewContainer.appendChild(btn);
-    }
+function showGlobalPreview(file) {
+  globalPreview.innerHTML = "";
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = document.createElement("img");
+    img.src = e.target.result;
+    const btn = document.createElement("button");
+    btn.textContent = "×";
+    btn.className   = "remove-btn";
+    btn.onclick     = () => {
+      // clear *all* inputs so user can start fresh if they like
+      Object.values(uploads).forEach(inp => inp.value = "");
+      globalPreview.innerHTML = "";
+      updateProcessButton();
+    };
+    globalPreview.append(img, btn);
+  };
+  reader.readAsDataURL(file);
+}
   
     // Wire up all four upload areas
     document.querySelectorAll(".upload-area").forEach(area => {
