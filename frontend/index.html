@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Extract Drawing info</title>
+  <title>Bulk Upload - Columns</title>
   <link rel="stylesheet" href="style.css">
 
   <!-- Handsontable CSS and JS from CDN -->
@@ -37,12 +37,173 @@
     .edited-cell {
       box-shadow: inset 0 0 0 2px orange !important;
     }
-   
+    
+/*    New UI Chnages */
+    body {
+      font-family: sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f5f5f5;
+      color: #333;
+    }
+    header {
+      background: #004080;
+      color: #fff;
+      padding: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    header .logo {
+      height: 40px;
+      width: 40px;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 1.5rem;
+    }
+    header .instructions {
+      margin-left: auto;
+      font-size: 0.9rem;
+      opacity: 0.9;
+    }
+    .container {
+      max-width: 900px;
+      margin: 2rem auto;
+      padding: 1rem;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .upload‐grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px,1fr));
+      gap: 1rem;
+      margin: 1rem 0;
+    }
+    .upload‐area {
+      position: relative;
+      border: 2px dashed #bbb;
+      border-radius: 6px;
+      padding: 1rem;
+      text-align: center;
+      background: #fafafa;
+      transition: border-color .2s, background .2s;
+      cursor: pointer;
+    }
+    .upload‐area.dragover {
+      border-color: #007bff;
+      background: #e6f0ff;
+    }
+    .upload‐area .upload‐icon {
+      font-size: 2rem;
+      color: #777;
+    }
+    .upload‐area p {
+      margin: .5rem 0 0;
+      font-size: .95rem;
+    }
+    .upload‐area .required {
+      color: #d00;
+      margin-left: 2px;
+    }
+    .upload‐area input[type=file] {
+      display: none;
+    }
+    .upload‐area .preview {
+      margin-top: .5rem;
+    }
+    .upload‐area .preview img {
+      max-width: 100%;
+      max-height: 100px;
+      border-radius: 4px;
+    }
+    .upload‐area .remove‐btn {
+      position: absolute;
+      top: 4px; right: 4px;
+      background: rgba(0,0,0,0.5);
+      color: #fff;
+      border: none;
+      border-radius: 50%;
+      width: 24px; height: 24px;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    .upload‐area.has‐file .remove‐btn {
+      display: flex;
+    }
+
+    #process-btn {
+      background: #007bff;
+      color: #fff;
+      border: none;
+      padding: .75rem 1.5rem;
+      font-size: 1rem;
+      border-radius: 4px;
+      cursor: pointer;
+      opacity: .5;
+    }
+    #process-btn.enabled {
+      opacity: 1;
+    }
+    #process-btn:disabled {
+      cursor: not-allowed;
+    }
   </style>
 </head>
 <body>
+<!--   New UI Code -->
+  <header>
+    <img src="logo.png" alt="Tool Logo" class="logo">
+    <h1>Bulk Upload – Columns</h1>
+    <div class="instructions">
+      Take screenshot of a column and upload in its box.<br>
+      Required fields are marked with <span style="color:#d00">*</span>
+    </div>
+  </header>
+<!-- UI Code End -->
+  
   <div class="container">
-    <h1>Extract Drawing info</h1>
+    <div class="upload‐grid">
+      <!-- Part Number -->
+      <div class="upload‐area" id="area‐partNumber" data‐field="partNumber">
+        <i class="upload‐icon">📷</i>
+        <p>Part Number <span class="required">*</span></p>
+        <input type="file" id="upload‐partnumber" accept="image/*">
+        <div class="preview"></div>
+        <button class="remove‐btn">&times;</button>
+      </div>
+      <!-- Quantity -->
+      <div class="upload‐area" id="area‐quantity" data‐field="quantity">
+        <i class="upload‐icon">📷</i>
+        <p>Quantity <span class="required">*</span></p>
+        <input type="file" id="upload‐quantity" accept="image/*">
+        <div class="preview"></div>
+        <button class="remove‐btn">&times;</button>
+      </div>
+      <!-- Description -->
+      <div class="upload‐area" id="area‐description" data‐field="description">
+        <i class="upload‐icon">📷</i>
+        <p>Description</p>
+        <input type="file" id="upload‐description" accept="image/*">
+        <div class="preview"></div>
+        <button class="remove‐btn">&times;</button>
+      </div>
+      <!-- Material -->
+      <div class="upload‐area" id="area‐material" data‐field="material">
+        <i class="upload‐icon">📷</i>
+        <p>Material</p>
+        <input type="file" id="upload‐material" accept="image/*">
+        <div class="preview"></div>
+        <button class="remove‐btn">&times;</button>
+      </div>
+    </div>
+
+    <button id="process-btn" disabled>Process Images</button>
+<!--     <h1>Extract Drawing info</h1>
 
     <select id="mode-select">
       <option value="table" selected>Column-by-Column Table Extract</option>
@@ -76,11 +237,81 @@
 
     <div id="result-container"></div>
     <button id="download-btn" class="secondary-button" style="display: none;">Download as CSV</button>
-    <div id="hot" style="width: 100%; height: 400px; display: none;"></div>
+    <div id="hot" style="width: 100%; height: 400px; display: none;"></div> -->
     
   </div>
 
   <script>
+
+// New UI code 
+  // —— UI: drag & drop + preview + button enable/disable —— //
+  const processBtn = document.getElementById('process-btn');
+  const requiredCols = ['partNumber','quantity'];
+  
+  function updateProcessButton() {
+    const ok = requiredCols.every(id => uploads[id].files.length > 0);
+    processBtn.disabled = !ok;
+  }
+  
+  // build upload-area behavior
+  document.querySelectorAll('.upload-area').forEach(area => {
+    const col = area.dataset.column;
+    const input = area.querySelector('input[type=file]');
+    const preview = area.querySelector('.upload-preview');
+  
+    // click anywhere
+    area.addEventListener('click', () => input.click());
+  
+    // when file selected via dialog
+    input.addEventListener('change', () => {
+      showUploadPreview(col, input.files[0], preview);
+      updateProcessButton();
+    });
+  
+    // drag-over highlight
+    area.addEventListener('dragover', e => {
+      e.preventDefault();
+      area.classList.add('dragover');
+    });
+    ['dragleave','drop'].forEach(ev => {
+      area.addEventListener(ev, () => area.classList.remove('dragover'));
+    });
+  
+    // handle drop
+    area.addEventListener('drop', e => {
+      e.preventDefault();
+      if (e.dataTransfer.files.length) {
+        input.files = e.dataTransfer.files;
+        showUploadPreview(col, input.files[0], preview);
+        updateProcessButton();
+      }
+    });
+  });
+  
+  function showUploadPreview(col, file, previewEl) {
+    previewEl.innerHTML = '';
+    const reader = new FileReader();
+    reader.onload = evt => {
+      const img = document.createElement('img');
+      img.src = evt.target.result;
+      const btn = document.createElement('button');
+      btn.innerText = '×';
+      btn.className = 'remove-btn';
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        previewEl.innerHTML = '';
+        uploads[col].value = '';         // clear the input
+        updateProcessButton();
+      });
+      previewEl.appendChild(img);
+      previewEl.appendChild(btn);
+    };
+    reader.readAsDataURL(file);
+  }
+  
+  // initially disable the button
+  processBtn.disabled = true;
+// New UI code end
 
     // :-----------------------------------------:
     //  Column key → display title mapping
@@ -331,35 +562,35 @@
 
     const previewContainer = document.getElementById("image-preview");
 
-    // Preview function
-    function showImagePreview(file, label) {
-      const reader = new FileReader();
-      reader.onload = function (event) {
-        const img = new Image();
-        img.src = event.target.result;
-        img.style.maxWidth = "300px";
-        img.alt = label;
+    // // Preview function
+    // function showImagePreview(file, label) {
+    //   const reader = new FileReader();
+    //   reader.onload = function (event) {
+    //     const img = new Image();
+    //     img.src = event.target.result;
+    //     img.style.maxWidth = "300px";
+    //     img.alt = label;
     
-        // Clear previous preview and insert new one
-        previewContainer.innerHTML = `<strong>${label}</strong><br>`;
-        previewContainer.appendChild(img);
-      };
-      reader.readAsDataURL(file);
-    }
+    //     // Clear previous preview and insert new one
+    //     previewContainer.innerHTML = `<strong>${label}</strong><br>`;
+    //     previewContainer.appendChild(img);
+    //   };
+    //   reader.readAsDataURL(file);
+    // }
     
-    // Attach onchange handlers
-    uploads.partNumber.addEventListener("change", (e) => {
-      if (e.target.files[0]) showImagePreview(e.target.files[0], "PartNumber Preview");
-    });
-    uploads.quantity.addEventListener("change", (e) => {
-      if (e.target.files[0]) showImagePreview(e.target.files[0], "Quantity Preview");
-    });
-    uploads.description.addEventListener("change", (e) => {
-      if (e.target.files[0]) showImagePreview(e.target.files[0], "Description Preview");
-    });
-    uploads.material.addEventListener("change", (e) => {
-      if (e.target.files[0]) showImagePreview(e.target.files[0], "Material Preview");
-    });
+    // // Attach onchange handlers
+    // uploads.partNumber.addEventListener("change", (e) => {
+    //   if (e.target.files[0]) showImagePreview(e.target.files[0], "PartNumber Preview");
+    // });
+    // uploads.quantity.addEventListener("change", (e) => {
+    //   if (e.target.files[0]) showImagePreview(e.target.files[0], "Quantity Preview");
+    // });
+    // uploads.description.addEventListener("change", (e) => {
+    //   if (e.target.files[0]) showImagePreview(e.target.files[0], "Description Preview");
+    // });
+    // uploads.material.addEventListener("change", (e) => {
+    //   if (e.target.files[0]) showImagePreview(e.target.files[0], "Material Preview");
+    // });
     
   </script>
 </body>
