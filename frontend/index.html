@@ -517,7 +517,8 @@
           source:     isMatched ? ['', ...drawingOptions] : isType ? ['', 'Child Part','BO'] : undefined, // Add empty option first
           strict:     false, // Allow free text for both dropdown columns
           allowInvalid: true, // Allow invalid/empty values for both columns
-          filter:     isMatched || isType, // Enable filtering for dropdown columns
+          filter:     (isMatched || isType) ? 'dropdown' : false, // Enable dropdown filtering
+          trimDropdown: false, // Show all options initially
     
               // 2) custom renderer for OCR columns
           renderer: (isMatched || isType)
@@ -592,6 +593,8 @@
         minSpareRows: 1,
         contextMenu: ['remove_row','copy','paste'],
         licenseKey: 'non-commercial-and-evaluation',
+        dropdownMenu: true, // Enable dropdown menu
+        filters: true, // Enable filtering
         // Prevent auto-selection in dropdowns
         afterSelectionEnd: function(row, column, row2, column2) {
           const prop = hot.colToProp(column);
@@ -715,10 +718,6 @@
             body: formData
           });
 
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-          }
-
           const data = await response.json();
           console.log(`✅ OCR response for ${col.id}:`, data);
           
@@ -729,7 +728,8 @@
           }
         } catch (error) {
           console.error(`❌ Error processing ${col.id}:`, error);
-          alert(`Error processing ${col.label}: ${error.message}`);
+          // Don't stop processing other columns if one fails
+          console.log(`Continuing with other columns...`);
         }
       }
     };
