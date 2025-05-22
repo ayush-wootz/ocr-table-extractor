@@ -38,14 +38,14 @@
       opacity: 0.8;
     }
 
-    /* 2x2 Grid Layout - Reduced side margins */
+    /* 2x2 Grid Layout - Much smaller for your screen */
     .upload-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
       grid-template-rows: 1fr 1fr;
-      gap: 20px; /* Keep good separation between areas */
+      gap: 12px; /* Further reduced gap */
       margin-bottom: 20px;
-      max-width: 500px; /* Increased from 350px to reduce side space */
+      max-width: 300px; /* Significantly reduced from 400px */
       margin-left: auto;
       margin-right: auto;
     }
@@ -53,37 +53,40 @@
     .upload-area {
       position: relative;
       border: 2px dashed #ccc;
-      border-radius: 8px;
-      padding: 8px; /* Further reduced padding */
+      border-radius: 6px; /* Slightly smaller radius */
+      padding: 6px; /* Reduced padding */
       text-align: center;
       background: #fafafa;
       transition: all 0.3s ease;
       cursor: pointer;
-      min-height: 55px; /* Further reduced height */
-      max-height: 65px; /* Smaller max height */
+      min-height: 50px; /* Reduced height */
+      max-height: 60px; /* Reduced max height */
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       width: 100%;
-      box-sizing: border-box; /* Ensure proper box sizing */
+      box-sizing: border-box;
     }
 
     .upload-area:hover {
       border-color: #007bff;
       background: #f0f8ff;
+      transform: scale(1.02); /* Slight size increase on hover */
     }
 
     .upload-area.dragover {
       border-color: #0056b3;
       background: #e6f3ff;
-      box-shadow: 0 0 10px rgba(0, 123, 255, 0.3);
+      box-shadow: 0 0 15px rgba(0, 123, 255, 0.4);
+      transform: scale(1.05); /* More noticeable size increase */
     }
 
+    /* Remove the green nearby effect - it was confusing */
     .upload-area.nearby {
-      border-color: #28a745;
-      background: #f0fff4;
-      box-shadow: 0 0 8px rgba(40, 167, 69, 0.2);
+      border-color: #007bff; /* Changed to blue instead of green */
+      background: #f0f8ff;
+      transform: scale(1.02);
     }
 
     .upload-area.has-file {
@@ -94,9 +97,9 @@
 
     .upload-label {
       font-weight: bold;
-      margin-bottom: 2px; /* Further reduced margin */
-      font-size: 0.8rem; /* Smaller font */
-      line-height: 1.1; /* Tighter line height */
+      margin-bottom: 2px;
+      font-size: 0.75rem; /* Even smaller font */
+      line-height: 1.1;
     }
 
     .required {
@@ -116,11 +119,11 @@
     }
 
     .file-status {
-      font-size: 0.65rem; /* Even smaller font */
+      font-size: 0.6rem; /* Very small font */
       color: #28a745;
       font-weight: bold;
-      margin-top: 2px; /* Reduced margin */
-      line-height: 1; /* Tight line height */
+      margin-top: 1px;
+      line-height: 1;
     }
 
     /* highlight user-edited cells */
@@ -217,8 +220,6 @@
       <option value="table" selected>Column-by-Column Table Extract</option>
       <option value="quick">Quick Text Copy (Paragraph)</option>
     </select>
-
-    <h3 style="margin-bottom: 15px;">Upload Column Data</h3>
     
     <div class="upload-grid">
       <!-- Part Number -->
