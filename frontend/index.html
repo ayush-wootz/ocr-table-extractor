@@ -114,6 +114,13 @@
       margin-right: auto;
     }
 
+    /* Process button positioning */
+    .process-section {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 10px;
+    }
+
     .upload-area {
       position: relative;
       border: 2px dashed #ccc;
@@ -280,7 +287,7 @@
 
     <div class="instructions">
       <strong>How to use:</strong> Take a screenshot of each column and upload to the respective fields below. For best accuracy, include approximately <strong>15 rows</strong> and ensure the text is clearly zoomed and readable. 
-      <a href="#" class="sample-link">View Sample Part Number Column →</a>
+      <br><a href="#" class="sample-link">View Sample Part Number Column →</a>
     </div>
 
     <!-- Hidden but functional mode select -->
@@ -319,10 +326,13 @@
       </div>
     </div>
 
+    <div class="process-section">
+      <button id="process-btn">Process Image</button>
+    </div>
+
     <div id="image-preview">
       <button class="preview-remove-btn" onclick="clearPreview()">×</button>
     </div>
-    <button id="process-btn">Process Image</button>
 
     <div id="result-container"></div>
     <button id="download-btn" class="secondary-button" style="display: none;">Download as CSV</button>
@@ -572,7 +582,7 @@
     let dragCounter = 0;
 
     // Get nearest upload area based on mouse position
-    function getNearbyUploadArea(x, y, threshold = 100) {
+    function getNearbyUploadArea(x, y, threshold = 120) {
       const areas = document.querySelectorAll('.upload-area');
       let closestArea = null;
       let minDistance = threshold;
@@ -581,11 +591,24 @@
         const rect = area.getBoundingClientRect();
         const centerX = rect.left + rect.width / 2;
         const centerY = rect.top + rect.height / 2;
+        
+        // Calculate distance to center
         const distance = Math.sqrt(
           Math.pow(x - centerX, 2) + Math.pow(y - centerY, 2)
         );
         
-        if (distance < minDistance) {
+        // Also check if cursor is within extended bounds (for corners/edges)
+        const extendedRect = {
+          left: rect.left - 30,
+          right: rect.right + 30,
+          top: rect.top - 30,
+          bottom: rect.bottom + 30
+        };
+        
+        const withinExtendedBounds = x >= extendedRect.left && x <= extendedRect.right &&
+                                   y >= extendedRect.top && y <= extendedRect.bottom;
+        
+        if ((distance < minDistance || withinExtendedBounds) && distance < 150) {
           minDistance = distance;
           closestArea = area;
         }
@@ -617,6 +640,9 @@
       );
       
       if (hasFiles) {
+        // Set the drop effect
+        e.dataTransfer.dropEffect = 'copy';
+        
         const nearbyArea = getNearbyUploadArea(e.clientX, e.clientY);
         
         clearNearbyHighlights();
@@ -662,6 +688,11 @@
           const columnName = area.querySelector('.upload-label').textContent.trim();
           showImagePreview(input.files[0], columnName);
           updateProcessButton();
+        } else {
+          // Reset to initial state when no file is chosen
+          area.classList.remove('has-file');
+          document.getElementById(`status-${col}`).style.display = 'none';
+          updateProcessButton();
         }
       });
 
@@ -669,38 +700,55 @@
       area.addEventListener('dragenter', function(e) {
         e.preventDefault();
         e.stopPropagation();
-        area.classList.add('dragover');
-        clearNearbyHighlights();
+        
+        // Check if we have files being dragged
+        if (e.dataTransfer.types.includes('Files')) {
+          area.classList.add('dragover');
+          clearNearbyHighlights();
+        }
       });
 
       area.addEventListener('dragover', function(e) {
         e.preventDefault();
         e.stopPropagation();
+        
+        // Ensure we're handling files
+        if (e.dataTransfer.types.includes('Files')) {
+          e.dataTransfer.dropEffect = 'copy';
+        }
       });
 
       area.addEventListener('dragleave', function(e) {
         e.preventDefault();
         e.stopPropagation();
-        area.classList.remove('dragover');
+        
+        // Only remove dragover if we're actually leaving the area
+        const rect = area.getBoundingClientRect();
+        const x = e.clientX;
+        const y = e.clientY;
+        
+        if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
+          area.classList.remove('dragover');
+        }
       });
 
       area.addEventListener('drop', function(e) {
         e.preventDefault();
         e.stopPropagation();
         area.classList.remove('dragover');
+        clearNearbyHighlights();
         
+        // Ensure we have files and handle them properly
         if (e.dataTransfer.files.length > 0) {
-          input.files = e.dataTransfer.files;
-          area.classList.add('has-file');
-          document.getElementById(`status-${col}`).style.display = 'block';
+          const dt = new DataTransfer();
+          for (let i = 0; i < e.dataTransfer.files.length; i++) {
+            dt.items.add(e.dataTransfer.files[i]);
+          }
+          input.files = dt.files;
           
-          // Store which column was last uploaded for the clear function
-          previewContainer.dataset.lastColumn = col;
-          
-          // Update preview and button state
-          const columnName = area.querySelector('.upload-label').textContent.trim();
-          showImagePreview(e.dataTransfer.files[0], columnName);
-          updateProcessButton();
+          // Trigger change event manually to ensure all handlers run
+          const changeEvent = new Event('change', { bubbles: true });
+          input.dispatchEvent(changeEvent);
         }
       });
     });
