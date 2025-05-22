@@ -448,6 +448,85 @@
       { id: "material", label: "Material" }
     ];
 
+// Similarity Matching functions
+// Add this BEFORE your existing functions (around line 300)
+function prefixBasedMatching(partNumber, childPart) {
+  if (!partNumber || !childPart) return 0;
+  
+  // Normalize inputs (trim and consistent case)
+  const part = partNumber.trim().toUpperCase();
+  const child = childPart.trim().toUpperCase();
+  
+  // Perfect exact match
+  if (part === child) return 1.0;
+  
+  // Check if PartNumber is a perfect prefix of ChildPart
+  if (child.startsWith(part)) {
+    return 0.98; // High score for any perfect prefix match
+  }
+  
+  // Character-by-character matching for partial prefix matches
+  return calculatePrefixSimilarity(part, child);
+}
+
+function calculatePrefixSimilarity(partNumber, childPart) {
+  const partLen = partNumber.length;
+  const childLen = childPart.length;
+  
+  let matchingChars = 0;
+  let consecutiveMatches = 0;
+  let maxConsecutive = 0;
+  
+  // Compare character by character up to the length of partNumber
+  for (let i = 0; i < partLen; i++) {
+    if (i < childLen && partNumber[i] === childPart[i]) {
+      matchingChars++;
+      consecutiveMatches++;
+      maxConsecutive = Math.max(maxConsecutive, consecutiveMatches);
+    } else {
+      consecutiveMatches = 0;
+      // Break early if we hit a non-match (since we want prefix matching)
+      break;
+    }
+  }
+  
+  // Base similarity from matching characters
+  const baseSimilarity = matchingChars / partLen;
+  
+  // Bonus for consecutive matching from the start
+  const consecutiveBonus = (maxConsecutive / partLen) * 0.1;
+  
+  // Penalty if the match breaks before the end of partNumber
+  const completenessBonus = (matchingChars === partLen) ? 0.05 : 0;
+  
+  return Math.min(1.0, baseSimilarity + consecutiveBonus + completenessBonus);
+}
+
+function findBestPrefixMatch(partNumber, drawingNumbers) {
+  if (!partNumber || !drawingNumbers || drawingNumbers.length === 0) {
+    return {
+      bestMatch: { target: '', rating: 0 },
+      allMatches: []
+    };
+  }
+  
+  const matches = drawingNumbers.map(drawing => ({
+    target: drawing,
+    rating: prefixBasedMatching(partNumber, drawing)
+  }));
+  
+  // Sort by similarity (highest first)
+  matches.sort((a, b) => b.rating - a.rating);
+  
+  return {
+    bestMatch: matches[0],
+    allMatches: matches
+  };
+}
+
+
+
+    
     const API_URL = 'https://ocr-table-extractor.onrender.com';
 
     window.addEventListener("DOMContentLoaded", async () => {
@@ -533,7 +612,7 @@
                   
                   if (partNumberData && partNumberData.text && window.childParts?.length) {
                     const drawingNumbers = window.childParts.map(p => p.drawingNumber || '');
-                    const result = stringSimilarity.findBestMatch(partNumberData.text, drawingNumbers);
+                    const result = findBestPrefixMatch(partNumberData.text, drawingNumbers);
                     
                     // Check if current value matches the best match and get its similarity
                     let similarity = 0;
@@ -541,7 +620,7 @@
                       similarity = result.bestMatch.rating;
                     } else {
                       // If it's not the best match, find similarity for current value
-                      const currentMatch = stringSimilarity.compareTwoStrings(partNumberData.text, value);
+                      const currentMatch = prefixBasedMatching(partNumberData.text, value);
                       similarity = currentMatch;
                     }
                     
@@ -656,7 +735,7 @@
 
         if (label === "PartNumber" && window.childParts?.length) {
           const drawingNumbers = window.childParts.map(p => p.drawingNumber || "");
-          const result = stringSimilarity.findBestMatch(text, drawingNumbers);
+          const result = findBestPrefixMatch(text, drawingNumbers);
           const matchText = result.bestMatch.rating > 0.5 ? result.bestMatch.target : "";
           
           // Store both the match and similarity score for later use
