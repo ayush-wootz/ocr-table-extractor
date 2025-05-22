@@ -114,11 +114,18 @@
       margin-right: auto;
     }
 
-    /* Process button positioning */
+    /* Process button and preview layout */
+    .process-preview-container {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 15px;
+      align-items: start;
+      margin-bottom: 20px;
+    }
+
     .process-section {
       display: flex;
       justify-content: flex-end;
-      margin-bottom: 10px;
     }
 
     .upload-area {
@@ -138,6 +145,34 @@
       justify-content: center;
       width: 100%;
       box-sizing: border-box;
+    }
+
+    .upload-clear-btn {
+      position: absolute;
+      top: 3px;
+      right: 3px;
+      width: 16px;
+      height: 16px;
+      background: #dc3545;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 10px;
+      font-weight: bold;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+      line-height: 1;
+    }
+
+    .upload-clear-btn:hover {
+      background: #c82333;
+    }
+
+    .upload-area.has-file .upload-clear-btn {
+      display: flex;
     }
 
     .upload-area:hover {
@@ -225,13 +260,12 @@
     
     /* Preview container - hidden by default */
     #image-preview {
-      margin: 20px 0;
       padding: 10px;
       border: 1px solid #ddd;
       border-radius: 5px;
-      min-height: 50px;
       position: relative;
       display: none; /* Hidden by default */
+      max-width: 200px; /* Reduced size */
     }
 
     #image-preview.has-image {
@@ -239,7 +273,7 @@
     }
     
     #image-preview img {
-      max-width: 300px;
+      max-width: 100%; /* Responsive within smaller container */
       height: auto;
       display: block;
       margin-top: 10px;
@@ -287,7 +321,7 @@
 
     <div class="instructions">
       <strong>How to use:</strong> Take a screenshot of each column and upload to the respective fields below. For best accuracy, include approximately <strong>15 rows</strong> and ensure the text is clearly zoomed and readable. 
-      <br><a href="#" class="sample-link">View Sample Part Number Column →</a>
+      <a href="#" class="sample-link">View Sample Part Number Column →</a>
     </div>
 
     <!-- Hidden but functional mode select -->
@@ -299,6 +333,7 @@
     <div class="upload-grid">
       <!-- Part Number -->
       <div class="upload-area" id="area-partNumber" data-column="partNumber">
+        <button class="upload-clear-btn" onclick="clearUpload('partNumber')">×</button>
         <div class="upload-label">Part Number <span class="required">*</span></div>
         <input type="file" id="upload-partnumber" accept="image/*" />
         <div class="file-status" id="status-partNumber" style="display: none;">✓ Uploaded</div>
@@ -306,6 +341,7 @@
 
       <!-- Quantity -->
       <div class="upload-area" id="area-quantity" data-column="quantity">
+        <button class="upload-clear-btn" onclick="clearUpload('quantity')">×</button>
         <div class="upload-label">Quantity <span class="required">*</span></div>
         <input type="file" id="upload-quantity" accept="image/*" />
         <div class="file-status" id="status-quantity" style="display: none;">✓ Uploaded</div>
@@ -313,6 +349,7 @@
 
       <!-- Description -->
       <div class="upload-area" id="area-description" data-column="description">
+        <button class="upload-clear-btn" onclick="clearUpload('description')">×</button>
         <div class="upload-label">Description</div>
         <input type="file" id="upload-description" accept="image/*" />
         <div class="file-status" id="status-description" style="display: none;">✓ Uploaded</div>
@@ -320,18 +357,20 @@
 
       <!-- Material -->
       <div class="upload-area" id="area-material" data-column="material">
+        <button class="upload-clear-btn" onclick="clearUpload('material')">×</button>
         <div class="upload-label">Material</div>
         <input type="file" id="upload-material" accept="image/*" />
         <div class="file-status" id="status-material" style="display: none;">✓ Uploaded</div>
       </div>
     </div>
 
-    <div class="process-section">
-      <button id="process-btn">Process Image</button>
-    </div>
-
-    <div id="image-preview">
-      <button class="preview-remove-btn" onclick="clearPreview()">×</button>
+    <div class="process-preview-container">
+      <div id="image-preview">
+        <button class="preview-remove-btn" onclick="clearPreview()">×</button>
+      </div>
+      <div class="process-section">
+        <button id="process-btn">Process Image</button>
+      </div>
     </div>
 
     <div id="result-container"></div>
