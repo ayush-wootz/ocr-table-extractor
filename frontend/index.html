@@ -313,6 +313,38 @@
         grid-template-rows: repeat(4, 1fr);
       }
     }
+
+    /* Subtle dropdown styling to match table UI */
+    .handsontable .htSelectEditor {
+      background: #ffffff !important;
+      border: 1px solid #4a90e2 !important;
+      border-radius: 2px !important;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+      z-index: 1000 !important;
+    }
+
+    .handsontable .htSelectEditor option {
+      padding: 4px 8px !important;
+      background: white !important;
+    }
+
+    .handsontable .htSelectEditor option:hover {
+      background: #f5f5f5 !important;
+    }
+
+    /* Low similarity warning - just icon */
+    .low-similarity-cell {
+      position: relative;
+    }
+
+    .low-similarity-cell::after {
+      content: '⚠️';
+      position: absolute;
+      top: 2px;
+      right: 2px;
+      font-size: 10px;
+      z-index: 10;
+    }
    
   </style>
 </head>
@@ -482,12 +514,33 @@
           type:       (isMatched || isType) ? 'dropdown' : 'text',
           editor:     (isMatched || isType) ? 'dropdown' : 'text',
           source:     isMatched ? drawingOptions : isType ? ['Child Part','BO'] : undefined,
-          strict:     (isMatched || isType),
-          allowInvalid: false,
+          strict:     isType, // Only Type column is strict
+          allowInvalid: !isType, // Allow invalid for Matched Childpart to support empty values
+          filter:     isMatched || isType, // Enable filtering for dropdown columns
     
           // 2) custom renderer for OCR columns
           renderer: (isMatched || isType)
-            ? undefined
+            ? function(hotInst, td, row, col, prop, value, cellProps) {
+                // Default dropdown renderer
+                Handsontable.renderers.DropdownRenderer.apply(this, arguments);
+                
+                // Add low similarity warning for Matched Childpart
+                if (isMatched && value) {
+                  const rowData = hotInst.getSourceDataAtRow(row);
+                  const partNumberData = rowData['PartNumber'];
+                  
+                  if (partNumberData && partNumberData.text && window.childParts?.length) {
+                    const result = stringSimilarity.findBestMatch(partNumberData.text, drawingOptions);
+                    const similarity = result.bestMatch.target === value ? result.bestMatch.rating : 0;
+                    
+                    if (similarity > 0 && similarity < 0.95) {
+                      td.classList.add('low-similarity-cell');
+                    } else {
+                      td.classList.remove('low-similarity-cell');
+                    }
+                  }
+                }
+              }
             : function(hotInst, td, row, col, prop, value, cellProps) {
                 // first draw the text
                 Handsontable.renderers.TextRenderer.apply(this, arguments);
@@ -526,7 +579,7 @@
         licenseKey: 'non-commercial-and-evaluation'
       });
       
-      // after you create `hot` in renderSpreadsheet():
+      // Enhanced change handler
       hot.addHook('afterChange', (changes, source) => {
         // only care about real user edits
         if (source !== 'edit' || !changes) return;
@@ -538,6 +591,20 @@
           const col = hot.propToCol(prop);
           // mark this cell as edited
           hot.setCellMeta(row, col, 'className', 'edited-cell');
+          
+          // Handle Type column auto-population when Matched Childpart changes
+          if (prop === 'Matched Childpart') {
+            const typeCol = hot.propToCol('Type');
+            if (typeCol !== -1) {
+              // Only auto-populate Type if user didn't explicitly set it to empty
+              if (newValue && newValue.trim() !== '') {
+                hot.setDataAtCell(row, typeCol, 'Child Part', 'auto-type-population');
+              } else if (newValue === '' || newValue === null) {
+                // Don't auto-populate when user clears the field
+                hot.setDataAtCell(row, typeCol, 'BO', 'auto-type-population');
+              }
+            }
+          }
         });
       
         // re-render so every flagged cell gets the CSS
@@ -562,8 +629,11 @@
           const drawingNumbers = window.childParts.map(p => p.drawingNumber || "");
           const result = stringSimilarity.findBestMatch(text, drawingNumbers);
           const matchText = result.bestMatch.rating > 0.5 ? result.bestMatch.target : "";
-          // spreadsheetData[i]["Matched Childpart"] = { text: matchText, confidence: result.bestMatch.rating };
-          spreadsheetData[i]["Matched Childpart"] = matchText; // Just plain string
+          
+          // Store both the match and similarity score for later use
+          spreadsheetData[i]["Matched Childpart"] = matchText;
+          spreadsheetData[i]["_similarityScore"] = result.bestMatch.rating; // Store for reference
+          
           // Type cell: auto‐populate
           // only set Type if there's actually a PartNumber
           if (text) {
