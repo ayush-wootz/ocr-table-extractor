@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Extract Drawing info</title>
+  <title>Bulk Add - Column</title>
 
   <!-- Handsontable CSS and JS from CDN -->
   <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/handsontable@12.1.0/dist/handsontable.full.min.css">
@@ -24,6 +24,65 @@
       border-radius: 8px;
       box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     }
+
+    /* Header with logo and title */
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 15px;
+    }
+
+    .logo {
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+    }
+
+    .logo::before {
+      content: '✨';
+      font-size: 18px;
+      filter: brightness(1.2);
+    }
+
+    .header h1 {
+      margin: 0;
+      font-size: 1.5rem;
+      color: #333;
+      font-weight: 600;
+    }
+
+    /* Instructions section */
+    .instructions {
+      background: #f8f9ff;
+      border: 1px solid #e1e5f2;
+      border-radius: 6px;
+      padding: 12px 16px;
+      margin-bottom: 20px;
+      font-size: 0.85rem;
+      line-height: 1.4;
+      color: #4a5568;
+    }
+
+    .instructions strong {
+      color: #2d3748;
+    }
+
+    .sample-link {
+      color: #667eea;
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .sample-link:hover {
+      text-decoration: underline;
+    }
     
     .secondary-button {
       background-color: #ccc;
@@ -38,14 +97,19 @@
       opacity: 0.8;
     }
 
+    /* Hidden mode select - keeps default functionality */
+    #mode-select {
+      display: none;
+    }
+
     /* 2x2 Grid Layout - Larger areas to fill space */
     .upload-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
       grid-template-rows: 1fr 1fr;
-      gap: 12px; /* Slightly increased gap */
+      gap: 12px;
       margin-bottom: 20px;
-      max-width: 320px; /* Increased from 240px */
+      max-width: 320px;
       margin-left: auto;
       margin-right: auto;
     }
@@ -53,14 +117,14 @@
     .upload-area {
       position: relative;
       border: 2px dashed #ccc;
-      border-radius: 6px; /* Slightly larger radius */
-      padding: 8px; /* Increased padding */
+      border-radius: 6px;
+      padding: 8px;
       text-align: center;
       background: #fafafa;
       transition: all 0.3s ease;
       cursor: pointer;
-      min-height: 55px; /* Increased height */
-      max-height: 65px; /* Increased max height */
+      min-height: 55px;
+      max-height: 65px;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -72,14 +136,14 @@
     .upload-area:hover {
       border-color: #007bff;
       background: #f0f8ff;
-      transform: scale(1.05); /* Slight size increase on hover */
+      transform: scale(1.05);
     }
 
     .upload-area.dragover {
       border-color: #0056b3;
       background: #e6f3ff;
       box-shadow: 0 0 15px rgba(0, 123, 255, 0.4);
-      transform: scale(1.1); /* More noticeable size increase */
+      transform: scale(1.1);
     }
 
     .upload-area.nearby {
@@ -97,8 +161,8 @@
 
     .upload-label {
       font-weight: bold;
-      margin-bottom: 3px; /* Increased margin */
-      font-size: 0.8rem; /* Larger font */
+      margin-bottom: 3px;
+      font-size: 0.8rem;
       line-height: 1.1;
     }
 
@@ -119,10 +183,10 @@
     }
 
     .file-status {
-      font-size: 0.7rem; /* Larger font */
+      font-size: 0.7rem;
       color: #28a745;
       font-weight: bold;
-      margin-top: 3px; /* Increased margin */
+      margin-top: 3px;
       line-height: 1;
     }
 
@@ -152,6 +216,7 @@
       cursor: not-allowed;
     }
     
+    /* Preview container - hidden by default */
     #image-preview {
       margin: 20px 0;
       padding: 10px;
@@ -159,6 +224,11 @@
       border-radius: 5px;
       min-height: 50px;
       position: relative;
+      display: none; /* Hidden by default */
+    }
+
+    #image-preview.has-image {
+      display: block; /* Only show when has image */
     }
     
     #image-preview img {
@@ -181,7 +251,7 @@
       cursor: pointer;
       font-size: 12px;
       font-weight: bold;
-      display: none;
+      display: flex;
       align-items: center;
       justify-content: center;
       z-index: 10;
@@ -191,21 +261,10 @@
       background: #c82333;
     }
 
-    #image-preview.has-image .preview-remove-btn {
-      display: flex;
-    }
-    
-    select {
-      padding: 5px 10px;
-      margin-bottom: 20px;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-    }
-
-    /* Responsive design - FIXED: removed the mobile breakpoint that was causing stacking */
-    @media (max-width: 400px) {  /* Changed from 600px to 400px */
+    /* Responsive design */
+    @media (max-width: 400px) {
       .upload-grid {
-        grid-template-columns: 1fr;  /* Only stack on very small screens */
+        grid-template-columns: 1fr;
         grid-template-rows: repeat(4, 1fr);
       }
     }
@@ -214,8 +273,17 @@
 </head>
 <body>
   <div class="container">
-    <h1>Extract Drawing info</h1>
+    <div class="header">
+      <div class="logo"></div>
+      <h1>Bulk Add - Column</h1>
+    </div>
 
+    <div class="instructions">
+      <strong>How to use:</strong> Take a screenshot of each column and upload to the respective fields below. For best accuracy, include approximately <strong>15 rows</strong> and ensure the text is clearly zoomed and readable. 
+      <a href="#" class="sample-link">View Sample Part Number Column →</a>
+    </div>
+
+    <!-- Hidden but functional mode select -->
     <select id="mode-select">
       <option value="table" selected>Column-by-Column Table Extract</option>
       <option value="quick">Quick Text Copy (Paragraph)</option>
