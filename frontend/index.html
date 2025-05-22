@@ -514,7 +514,7 @@
           title,
           type:       (isMatched || isType) ? 'dropdown' : 'text',
           editor:     (isMatched || isType) ? 'dropdown' : 'text',
-          source:     isMatched ? drawingOptions : isType ? ['Child Part','BO'] : undefined,
+          source:     isMatched ? ['', ...drawingOptions] : isType ? ['', 'Child Part','BO'] : undefined, // Add empty option first
           strict:     false, // Allow free text for both dropdown columns
           allowInvalid: true, // Allow invalid/empty values for both columns
           filter:     isMatched || isType, // Enable filtering for dropdown columns
@@ -546,7 +546,7 @@
                     
                     console.log(`Similarity for "${value}": ${similarity}`); // Debug log
                     
-                    if (similarity > 0 && similarity < 0.95) {
+                    if (similarity > 0 && similarity < 0.90) {
                       td.classList.add('low-similarity-cell');
                     } else {
                       td.classList.remove('low-similarity-cell');
@@ -591,7 +591,18 @@
         rowHeaders: true,
         minSpareRows: 1,
         contextMenu: ['remove_row','copy','paste'],
-        licenseKey: 'non-commercial-and-evaluation'
+        licenseKey: 'non-commercial-and-evaluation',
+        // Prevent auto-selection in dropdowns
+        afterSelectionEnd: function(row, column, row2, column2) {
+          const prop = hot.colToProp(column);
+          if (prop === 'Matched Childpart' || prop === 'Type') {
+            // Don't auto-select first item when opening dropdown
+            const editor = hot.getActiveEditor();
+            if (editor && editor.isOpened && editor.isOpened()) {
+              editor.focus();
+            }
+          }
+        }
       });
       
       // Enhanced change handler
