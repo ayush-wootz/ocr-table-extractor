@@ -38,29 +38,35 @@
       opacity: 0.8;
     }
 
-    /* 2x2 Grid Layout */
+    /* 2x2 Grid Layout - Reduced side margins */
     .upload-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
       grid-template-rows: 1fr 1fr;
-      gap: 15px;
+      gap: 20px; /* Keep good separation between areas */
       margin-bottom: 20px;
+      max-width: 500px; /* Increased from 350px to reduce side space */
+      margin-left: auto;
+      margin-right: auto;
     }
 
     .upload-area {
       position: relative;
       border: 2px dashed #ccc;
       border-radius: 8px;
-      padding: 15px;
+      padding: 8px; /* Further reduced padding */
       text-align: center;
       background: #fafafa;
       transition: all 0.3s ease;
       cursor: pointer;
-      min-height: 80px;
+      min-height: 55px; /* Further reduced height */
+      max-height: 65px; /* Smaller max height */
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
+      width: 100%;
+      box-sizing: border-box; /* Ensure proper box sizing */
     }
 
     .upload-area:hover {
@@ -88,19 +94,14 @@
 
     .upload-label {
       font-weight: bold;
-      margin-bottom: 5px;
-      font-size: 0.9rem;
+      margin-bottom: 2px; /* Further reduced margin */
+      font-size: 0.8rem; /* Smaller font */
+      line-height: 1.1; /* Tighter line height */
     }
 
     .required {
       color: #dc3545;
       margin-left: 2px;
-    }
-
-    .upload-hint {
-      font-size: 0.8rem;
-      color: #666;
-      margin-bottom: 8px;
     }
 
     .upload-area input[type="file"] {
@@ -115,10 +116,11 @@
     }
 
     .file-status {
-      font-size: 0.75rem;
+      font-size: 0.65rem; /* Even smaller font */
       color: #28a745;
       font-weight: bold;
-      margin-top: 5px;
+      margin-top: 2px; /* Reduced margin */
+      line-height: 1; /* Tight line height */
     }
 
     /* highlight user-edited cells */
@@ -153,6 +155,7 @@
       border: 1px solid #ddd;
       border-radius: 5px;
       min-height: 50px;
+      position: relative;
     }
     
     #image-preview img {
@@ -160,6 +163,33 @@
       height: auto;
       display: block;
       margin-top: 10px;
+    }
+
+    .preview-remove-btn {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      width: 20px;
+      height: 20px;
+      background: #dc3545;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: bold;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+    }
+
+    .preview-remove-btn:hover {
+      background: #c82333;
+    }
+
+    #image-preview.has-image .preview-remove-btn {
+      display: flex;
     }
     
     select {
@@ -194,37 +224,35 @@
       <!-- Part Number -->
       <div class="upload-area" id="area-partNumber" data-column="partNumber">
         <div class="upload-label">Part Number <span class="required">*</span></div>
-        <div class="upload-hint">Required column</div>
         <input type="file" id="upload-partnumber" accept="image/*" />
-        <div class="file-status" id="status-partNumber" style="display: none;">✓ File uploaded</div>
+        <div class="file-status" id="status-partNumber" style="display: none;">✓ Uploaded</div>
       </div>
 
       <!-- Quantity -->
       <div class="upload-area" id="area-quantity" data-column="quantity">
         <div class="upload-label">Quantity <span class="required">*</span></div>
-        <div class="upload-hint">Required column</div>
         <input type="file" id="upload-quantity" accept="image/*" />
-        <div class="file-status" id="status-quantity" style="display: none;">✓ File uploaded</div>
+        <div class="file-status" id="status-quantity" style="display: none;">✓ Uploaded</div>
       </div>
 
       <!-- Description -->
       <div class="upload-area" id="area-description" data-column="description">
         <div class="upload-label">Description</div>
-        <div class="upload-hint">Optional column</div>
         <input type="file" id="upload-description" accept="image/*" />
-        <div class="file-status" id="status-description" style="display: none;">✓ File uploaded</div>
+        <div class="file-status" id="status-description" style="display: none;">✓ Uploaded</div>
       </div>
 
       <!-- Material -->
       <div class="upload-area" id="area-material" data-column="material">
         <div class="upload-label">Material</div>
-        <div class="upload-hint">Optional column</div>
         <input type="file" id="upload-material" accept="image/*" />
-        <div class="file-status" id="status-material" style="display: none;">✓ File uploaded</div>
+        <div class="file-status" id="status-material" style="display: none;">✓ Uploaded</div>
       </div>
     </div>
 
-    <div id="image-preview"></div>
+    <div id="image-preview">
+      <button class="preview-remove-btn" onclick="clearPreview()">×</button>
+    </div>
     <button id="process-btn">Process Image</button>
 
     <div id="result-container"></div>
@@ -558,6 +586,9 @@
           area.classList.add('has-file');
           document.getElementById(`status-${col}`).style.display = 'block';
           
+          // Store which column was last uploaded for the clear function
+          previewContainer.dataset.lastColumn = col;
+          
           // Update preview and button state
           const columnName = area.querySelector('.upload-label').textContent.trim();
           showImagePreview(input.files[0], columnName);
@@ -594,6 +625,9 @@
           area.classList.add('has-file');
           document.getElementById(`status-${col}`).style.display = 'block';
           
+          // Store which column was last uploaded for the clear function
+          previewContainer.dataset.lastColumn = col;
+          
           // Update preview and button state
           const columnName = area.querySelector('.upload-label').textContent.trim();
           showImagePreview(e.dataTransfer.files[0], columnName);
@@ -611,7 +645,7 @@
     // Initialize button state
     updateProcessButton();
 
-    // Preview function
+    // Preview function with remove button
     function showImagePreview(file, label) {
       const reader = new FileReader();
       reader.onload = function (event) {
@@ -621,30 +655,60 @@
         img.alt = label;
     
         // Clear previous preview and insert new one
-        previewContainer.innerHTML = `<strong>${label}</strong><br>`;
+        previewContainer.innerHTML = `<button class="preview-remove-btn" onclick="clearPreview()">×</button><strong>${label}</strong><br>`;
         previewContainer.appendChild(img);
+        previewContainer.classList.add('has-image');
       };
       reader.readAsDataURL(file);
     }
+
+    // Function to clear preview and reset corresponding upload
+    function clearPreview() {
+      previewContainer.innerHTML = '<button class="preview-remove-btn" onclick="clearPreview()">×</button>';
+      previewContainer.classList.remove('has-image');
+      
+      // Find and clear the last uploaded file
+      const lastUploadedColumn = previewContainer.dataset.lastColumn;
+      if (lastUploadedColumn) {
+        const input = uploads[lastUploadedColumn];
+        if (input) {
+          input.value = '';
+          document.getElementById(`area-${lastUploadedColumn}`).classList.remove('has-file');
+          document.getElementById(`status-${lastUploadedColumn}`).style.display = 'none';
+          updateProcessButton();
+        }
+      }
+    }
+
+    // Make clearPreview globally accessible
+    window.clearPreview = clearPreview;
     
     // Attach onchange handlers (keeping original preview functionality)
     uploads.partNumber.addEventListener("change", (e) => {
       if (e.target.files[0]) {
+        previewContainer.dataset.lastColumn = 'partNumber';
         showImagePreview(e.target.files[0], "PartNumber Preview");
         updateProcessButton();
       }
     });
     uploads.quantity.addEventListener("change", (e) => {
       if (e.target.files[0]) {
+        previewContainer.dataset.lastColumn = 'quantity';
         showImagePreview(e.target.files[0], "Quantity Preview");
         updateProcessButton();
       }
     });
     uploads.description.addEventListener("change", (e) => {
-      if (e.target.files[0]) showImagePreview(e.target.files[0], "Description Preview");
+      if (e.target.files[0]) {
+        previewContainer.dataset.lastColumn = 'description';
+        showImagePreview(e.target.files[0], "Description Preview");
+      }
     });
     uploads.material.addEventListener("change", (e) => {
-      if (e.target.files[0]) showImagePreview(e.target.files[0], "Material Preview");
+      if (e.target.files[0]) {
+        previewContainer.dataset.lastColumn = 'material';
+        showImagePreview(e.target.files[0], "Material Preview");
+      }
     });
     
   </script>
