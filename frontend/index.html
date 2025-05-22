@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Bulk Upload - Columns</title>
+  <title>Extract Drawing info</title>
   <link rel="stylesheet" href="style.css">
 
   <!-- Handsontable CSS and JS from CDN -->
@@ -37,191 +37,12 @@
     .edited-cell {
       box-shadow: inset 0 0 0 2px orange !important;
     }
-    
-/*    New UI Chnages */
-    body {
-      font-family: sans-serif;
-      margin: 0;
-      padding: 0;
-      background: #f5f5f5;
-      color: #333;
-    }
-    header {
-      background: #004080;
-      color: #fff;
-      padding: 1rem;
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-    }
-    header .logo {
-      height: 40px;
-      width: 40px;
-    }
-    header h1 {
-      margin: 0;
-      font-size: 1.5rem;
-    }
-    header .instructions {
-      margin-left: auto;
-      font-size: 0.9rem;
-      opacity: 0.9;
-    }
-    .container {
-      max-width: 900px;
-      margin: 2rem auto;
-      padding: 1rem;
-      background: #fff;
-      border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }
-
-    .upload-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 1rem;
-      margin: 1rem 0;
-    }
-    .upload-area {
-      position: relative;
-      border: 2px dashed #bbb;
-      border-radius: 6px;
-      padding: 1rem;
-      text-align: center;
-      background: #fafafa;
-      transition: border-color .2s, background .2s;
-      cursor: pointer;
-    }
-    .upload-area.dragover {
-      border-color: #007bff;
-      background: #e6f0ff;
-    }
-    .upload-area .upload‐icon {
-      font-size: 2rem;
-      color: #777;
-    }
-    .upload-area p {
-      margin: .5rem 0 0;
-      font-size: .95rem;
-    }
-    .upload-area .required {
-      color: #d00;
-      margin-left: 2px;
-    }
-    .upload-area input[type=file] {
-      position: absolute;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      opacity: 0;
-      cursor: pointer;
-      z-index: 2;
-    }
-    .upload-area .preview {
-      margin-top: .5rem;
-    }
-    .upload-area .preview img {
-      max-width: 100%;
-      max-height: 100px;
-      border-radius: 4px;
-    }
-    .upload-area .remove‐btn {
-      position: absolute;
-      top: 4px; right: 4px;
-      background: rgba(0,0,0,0.5);
-      color: #fff;
-      border: none;
-      border-radius: 50%;
-      width: 24px; height: 24px;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-    }
-    .upload-area.has‐file .remove‐btn {
-      display: flex;
-    }
-
-    #process-btn {
-      background: #007bff;
-      color: #fff;
-      border: none;
-      padding: .75rem 1.5rem;
-      font-size: 1rem;
-      border-radius: 4px;
-      cursor: pointer;
-      opacity: .5;
-    }
-    #process-btn.enabled {
-      opacity: 1;
-    }
-    #process-btn:disabled {
-      cursor: not-allowed;
-    }
-    #image-preview {
-      position: relative;
-      margin: 1rem 0;
-      text-align: center;
-    }
-    #image-preview img {
-      border-radius: 4px;
-      max-height: 200px;
-    }
-    #image-preview .remove-btn {
-      position: absolute;
-      top: 4px; right: 4px;
-      background: rgba(0,0,0,0.6);
-      color: #fff;
-      border: none;
-      border-radius: 50%;
-      width: 24px; height: 24px;
-      cursor: pointer;
-    }
+   
   </style>
 </head>
 <body>
-<!--   New UI Code -->
-  <header>
-    <img src="logo.png" alt="Tool Logo" class="logo">
-    <h1>Bulk Upload – Columns</h1>
-    <div class="instructions">
-      Take screenshot of a column and upload in its box.<br>
-      Required fields are marked with <span style="color:#d00">*</span>
-    </div>
-  </header>
-<!-- UI Code End -->
-  
   <div class="container">
-    <div class="upload-grid">
-      <!-- Part Number -->
-      <div class="upload-area" id="area-partNumber" data-column="partNumber">
-        <i class="upload-icon">📷</i>
-        <p>Part Number <span class="required">*</span></p>
-        <input type="file" id="upload-partnumber" accept="image/*">
-      </div>
-      <!-- Quantity -->
-      <div class="upload-area" id="area-quantity" data-column="quantity">
-        <i class="upload-icon">📷</i>
-        <p>Quantity <span class="required">*</span></p>
-        <input type="file" id="upload-quantity" accept="image/*">
-      </div>
-      <!-- Description -->
-      <div class="upload-area" id="area-description" data-column="description">
-        <i class="upload-icon">📷</i>
-        <p>Description</p>
-        <input type="file" id="upload-description" accept="image/*">
-      </div>
-      <!-- Material -->
-      <div class="upload-area" id="area-material" data-column="material">
-        <i class="upload-icon">📷</i>
-        <p>Material</p>
-        <input type="file" id="upload-material" accept="image/*">
-      </div>
-    </div>
-<!--     Global Image Preview -->
-    <div id="image-preview"></div>
-
-    <button id="process-btn" disabled>Process Images</button>
-<!--     <h1>Extract Drawing info</h1>
+    <h1>Extract Drawing info</h1>
 
     <select id="mode-select">
       <option value="table" selected>Column-by-Column Table Extract</option>
@@ -255,7 +76,7 @@
 
     <div id="result-container"></div>
     <button id="download-btn" class="secondary-button" style="display: none;">Download as CSV</button>
-    <div id="hot" style="width: 100%; height: 400px; display: none;"></div> -->
+    <div id="hot" style="width: 100%; height: 400px; display: none;"></div>
     
   </div>
 
@@ -291,77 +112,6 @@
       { id: "quantity", label: "Quantity" },
       { id: "material", label: "Material" }
     ];
-
-  // New UI code  -> Latest
-    const globalPreview = document.getElementById("global-preview");
-    const processBtn       = document.getElementById("process-btn");
-    let lastCol           = null;
-  
-    // Enable only when both required files are present
-    function updateProcessButton() {
-      const ok = ["partNumber","quantity"]
-        .every(id => uploads[id].files.length > 0);
-      processBtn.disabled = !ok;
-      processBtn.classList.toggle("enabled", ok);
-    }
-  
-    // Show a single preview below the grid
-function showGlobalPreview(file) {
-  globalPreview.innerHTML = "";
-  const reader = new FileReader();
-  reader.onload = e => {
-    const img = document.createElement("img");
-    img.src = e.target.result;
-    const btn = document.createElement("button");
-    btn.textContent = "×";
-    btn.className   = "remove-btn";
-    btn.onclick     = () => {
-      // clear *all* inputs so user can start fresh if they like
-      Object.values(uploads).forEach(inp => inp.value = "");
-      globalPreview.innerHTML = "";
-      updateProcessButton();
-    };
-    globalPreview.append(img, btn);
-  };
-  reader.readAsDataURL(file);
-}
-  
-    // Wire up all four upload areas
-    document.querySelectorAll(".upload-area").forEach(area => {
-      const col   = area.dataset.column;      // must match data-column in HTML
-      const input = uploads[col];
-  
-      // click anywhere to open file dialog
-      area.addEventListener("click", () => input.click());
-  
-      // when you choose a file
-      input.addEventListener("change", () => {
-        if (input.files[0]) showUploadPreview(col, input.files[0]);
-        updateProcessButton();
-      });
-  
-      // drag/drop
-      area.addEventListener("dragover", e => {
-        e.preventDefault();
-        area.classList.add("dragover");
-      });
-      area.addEventListener("dragleave", () => {
-        area.classList.remove("dragover");
-      });
-      area.addEventListener("drop", e => {
-        e.preventDefault();
-        area.classList.remove("dragover");
-        if (!e.dataTransfer.files.length) return;
-        input.files = e.dataTransfer.files;
-        showUploadPreview(col, input.files[0]);
-        updateProcessButton();
-      });
-    });
-  
-    // init
-    processBtn.disabled = true;
-  // New UI code end
-
 
     const API_URL = 'https://ocr-table-extractor.onrender.com';
 
@@ -581,35 +331,35 @@ function showGlobalPreview(file) {
 
     const previewContainer = document.getElementById("image-preview");
 
-    // // Preview function
-    // function showImagePreview(file, label) {
-    //   const reader = new FileReader();
-    //   reader.onload = function (event) {
-    //     const img = new Image();
-    //     img.src = event.target.result;
-    //     img.style.maxWidth = "300px";
-    //     img.alt = label;
+    // Preview function
+    function showImagePreview(file, label) {
+      const reader = new FileReader();
+      reader.onload = function (event) {
+        const img = new Image();
+        img.src = event.target.result;
+        img.style.maxWidth = "300px";
+        img.alt = label;
     
-    //     // Clear previous preview and insert new one
-    //     previewContainer.innerHTML = `<strong>${label}</strong><br>`;
-    //     previewContainer.appendChild(img);
-    //   };
-    //   reader.readAsDataURL(file);
-    // }
+        // Clear previous preview and insert new one
+        previewContainer.innerHTML = `<strong>${label}</strong><br>`;
+        previewContainer.appendChild(img);
+      };
+      reader.readAsDataURL(file);
+    }
     
-    // // Attach onchange handlers
-    // uploads.partNumber.addEventListener("change", (e) => {
-    //   if (e.target.files[0]) showImagePreview(e.target.files[0], "PartNumber Preview");
-    // });
-    // uploads.quantity.addEventListener("change", (e) => {
-    //   if (e.target.files[0]) showImagePreview(e.target.files[0], "Quantity Preview");
-    // });
-    // uploads.description.addEventListener("change", (e) => {
-    //   if (e.target.files[0]) showImagePreview(e.target.files[0], "Description Preview");
-    // });
-    // uploads.material.addEventListener("change", (e) => {
-    //   if (e.target.files[0]) showImagePreview(e.target.files[0], "Material Preview");
-    // });
+    // Attach onchange handlers
+    uploads.partNumber.addEventListener("change", (e) => {
+      if (e.target.files[0]) showImagePreview(e.target.files[0], "PartNumber Preview");
+    });
+    uploads.quantity.addEventListener("change", (e) => {
+      if (e.target.files[0]) showImagePreview(e.target.files[0], "Quantity Preview");
+    });
+    uploads.description.addEventListener("change", (e) => {
+      if (e.target.files[0]) showImagePreview(e.target.files[0], "Description Preview");
+    });
+    uploads.material.addEventListener("change", (e) => {
+      if (e.target.files[0]) showImagePreview(e.target.files[0], "Material Preview");
+    });
     
   </script>
 </body>
