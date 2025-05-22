@@ -314,22 +314,22 @@
       }
     }
 
-    /* Subtle dropdown styling to match table UI */
+    /* More prominent but subtle dropdown styling */
     .handsontable .htSelectEditor {
       background: #ffffff !important;
-      border: 1px solid #4a90e2 !important;
-      border-radius: 2px !important;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+      border: 1px solid #2196f3 !important;
+      border-radius: 3px !important;
+      box-shadow: 0 2px 4px rgba(33, 150, 243, 0.15) !important;
       z-index: 1000 !important;
     }
 
     .handsontable .htSelectEditor option {
-      padding: 4px 8px !important;
+      padding: 5px 10px !important;
       background: white !important;
     }
 
     .handsontable .htSelectEditor option:hover {
-      background: #f5f5f5 !important;
+      background: #e3f2fd !important;
     }
 
     /* Low similarity warning - just icon */
@@ -340,10 +340,11 @@
     .low-similarity-cell::after {
       content: '⚠️';
       position: absolute;
-      top: 2px;
-      right: 2px;
-      font-size: 10px;
+      top: 1px;
+      right: 1px;
+      font-size: 11px;
       z-index: 10;
+      pointer-events: none;
     }
    
   </style>
@@ -514,24 +515,36 @@
           type:       (isMatched || isType) ? 'dropdown' : 'text',
           editor:     (isMatched || isType) ? 'dropdown' : 'text',
           source:     isMatched ? drawingOptions : isType ? ['Child Part','BO'] : undefined,
-          strict:     isType, // Only Type column is strict
-          allowInvalid: !isType, // Allow invalid for Matched Childpart to support empty values
+          strict:     false, // Allow free text for both dropdown columns
+          allowInvalid: true, // Allow invalid/empty values for both columns
           filter:     isMatched || isType, // Enable filtering for dropdown columns
     
-          // 2) custom renderer for OCR columns
+              // 2) custom renderer for OCR columns
           renderer: (isMatched || isType)
             ? function(hotInst, td, row, col, prop, value, cellProps) {
                 // Default dropdown renderer
                 Handsontable.renderers.DropdownRenderer.apply(this, arguments);
                 
                 // Add low similarity warning for Matched Childpart
-                if (isMatched && value) {
+                if (isMatched && value && value.trim() !== '') {
                   const rowData = hotInst.getSourceDataAtRow(row);
                   const partNumberData = rowData['PartNumber'];
                   
                   if (partNumberData && partNumberData.text && window.childParts?.length) {
-                    const result = stringSimilarity.findBestMatch(partNumberData.text, drawingOptions);
-                    const similarity = result.bestMatch.target === value ? result.bestMatch.rating : 0;
+                    const drawingNumbers = window.childParts.map(p => p.drawingNumber || '');
+                    const result = stringSimilarity.findBestMatch(partNumberData.text, drawingNumbers);
+                    
+                    // Check if current value matches the best match and get its similarity
+                    let similarity = 0;
+                    if (result.bestMatch.target === value) {
+                      similarity = result.bestMatch.rating;
+                    } else {
+                      // If it's not the best match, find similarity for current value
+                      const currentMatch = stringSimilarity.compareTwoStrings(partNumberData.text, value);
+                      similarity = currentMatch;
+                    }
+                    
+                    console.log(`Similarity for "${value}": ${similarity}`); // Debug log
                     
                     if (similarity > 0 && similarity < 0.95) {
                       td.classList.add('low-similarity-cell');
@@ -539,6 +552,8 @@
                       td.classList.remove('low-similarity-cell');
                     }
                   }
+                } else {
+                  td.classList.remove('low-similarity-cell');
                 }
               }
             : function(hotInst, td, row, col, prop, value, cellProps) {
@@ -662,11 +677,18 @@
       for (const col of columnOrder) {
         const fileInput = uploads[col.id];
         const file = fileInput.files[0];
+        
+        // Check required fields
         if (!file && (col.id === "partNumber" || col.id === "quantity")) {
           alert(`Please upload an image for ${col.label}`);
           return;
         }
-        if (!file) continue;
+        
+        // Skip if no file for optional fields
+        if (!file) {
+          console.log(`⏭️ Skipping ${col.id} - no file uploaded`);
+          continue;
+        }
 
         const formData = new FormData();
         formData.append("image", file);
@@ -676,14 +698,27 @@
         console.log(`🚀 OCR request for column: ${col.id}`);
         formData.append("column", col.id);
 
-        const response = await fetch(API_URL, {
-          method: "POST",
-          body: formData
-        });
+        try {
+          const response = await fetch(API_URL, {
+            method: "POST",
+            body: formData
+          });
 
-        const data = await response.json();
-        if (data.table) {
-          addColumn(data.table, col.label);
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+
+          const data = await response.json();
+          console.log(`✅ OCR response for ${col.id}:`, data);
+          
+          if (data.table && Array.isArray(data.table)) {
+            addColumn(data.table, col.label);
+          } else {
+            console.warn(`⚠️ No table data returned for ${col.id}`);
+          }
+        } catch (error) {
+          console.error(`❌ Error processing ${col.id}:`, error);
+          alert(`Error processing ${col.label}: ${error.message}`);
         }
       }
     };
