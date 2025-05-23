@@ -425,7 +425,7 @@
       Quantity:              "Quantity",
       Description:           "Description",
       Material:              "Material",
-      "Matched Childpart":   "Matched Drawing Number",
+      "Matched Childpart":   "Select Drawing Number",
       Type:                  "Type"
     };
     
@@ -583,12 +583,13 @@ function findBestSequentialMatch(partNumber, drawingNumbers) {
           data:       (isMatched || isType) ? key : `${key}.text`,
           title,
           type:       (isMatched || isType) ? 'dropdown' : 'text',
-          editor:     (isMatched || isType) ? 'dropdown' : 'text',
+          // editor:     (isMatched || isType) ? 'dropdown' : 'text',
+          editor: isMatched ? 'autocomplete' : isType ? 'dropdown' : 'text',
           source:     isMatched ? ['', ...drawingOptions] : isType ? ['', 'Child Part','BO'] : undefined, // Add empty option first
           strict:     false, // Allow free text for both dropdown columns
           allowInvalid: true, // Allow invalid/empty values for both columns
-          filter:     (isMatched || isType) ? 'dropdown' : false, // Enable dropdown filtering
-          trimDropdown: false, // Show all options initially
+          // filter:     (isMatched || isType) ? 'dropdown' : false, // Enable dropdown filtering
+          // trimDropdown: false, // Show all options initially
     
               // 2) custom renderer for OCR columns
           renderer: (isMatched || isType)
@@ -678,24 +679,6 @@ function findBestSequentialMatch(partNumber, drawingNumbers) {
             }
           }
         },
-        // Add this to improve dropdown behavior
-        afterBeginEditing: function(row, column) {
-          const prop = hot.colToProp(column);
-          if (prop === 'Matched Childpart') {
-            // Ensure the dropdown editor gets the correct filtered source
-            const editor = hot.getActiveEditor();
-            if (editor && editor.selectStyle) {
-              // Force the editor to filter options based on current value
-              setTimeout(() => {
-                if (editor.TEXTAREA && editor.TEXTAREA.value) {
-                  // Trigger filtering by simulating input event
-                  const event = new Event('input', { bubbles: true });
-                  editor.TEXTAREA.dispatchEvent(event);
-                }
-              }, 0);
-            }
-          }
-        }
       });
       
       // Enhanced change handler
@@ -728,27 +711,6 @@ function findBestSequentialMatch(partNumber, drawingNumbers) {
       
         // re-render so every flagged cell gets the CSS
         hot.render();
-      });
-
-      // Add custom dropdown filtering for Matched Childpart column
-      hot.addHook('beforeKeyDown', function(event) {
-        const selection = hot.getSelected();
-        if (!selection) return;
-        
-        const [row, col] = selection[0];
-        const prop = hot.colToProp(col);
-        
-        if (prop === 'Matched Childpart') {
-          const editor = hot.getActiveEditor();
-          if (editor && editor.isOpened && editor.isOpened()) {
-            // Allow the dropdown to handle its own filtering
-            // This ensures typing filters the dropdown options
-            if (event.key && event.key.length === 1) {
-              // Let the dropdown editor handle single character inputs
-              event.stopImmediatePropagation();
-            }
-          }
-        }
       });
     }
 
