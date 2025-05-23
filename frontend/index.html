@@ -621,7 +621,13 @@ function findBestSequentialMatch(partNumber, drawingNumbers) {
           allowInvalid: true, // Allow invalid/empty values for both columns
           // filter:     (isMatched || isType) ? 'dropdown' : false, // Enable dropdown filtering
           // trimDropdown: false, // Show all options initially
-    
+          // ADD THESE LINES for autocomplete:
+          visibleRows: 10,
+          sortByRelevance: false,
+          // This is crucial - forces dropdown mode:
+          dropdownMenu: isMatched ? true : false,
+
+          
               // 2) custom renderer for OCR columns
           renderer: (isMatched || isType)
             ? function(hotInst, td, row, col, prop, value, cellProps) {
