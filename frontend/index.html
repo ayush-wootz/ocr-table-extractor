@@ -347,28 +347,35 @@
       pointer-events: none;
     }
 
-    /* Autocomplete dropdown styling */
-    .handsontable .autocompleteEditor_list {
+   /* Autocomplete dropdown container */
+    .handsontable .htAutocompleteWrapper {
+      position: absolute !important;
+    }
+    
+    .handsontable .htAutocompleteWrapper .htAutocomplete {
       border: 2px solid #2196f3 !important;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
       background: #ffffff !important;
       border-radius: 4px !important;
       margin-top: 2px !important;
       max-height: 200px !important;
-      z-index: 10000 !important;
+      overflow-y: auto !important;
     }
     
-    .handsontable .autocompleteEditor_list .current {
-      background: #e3f2fd !important;
+    /* Style individual options */
+    .handsontable .htAutocompleteWrapper .htAutocomplete tbody tr:hover {
+      background-color: #e3f2fd !important;
     }
     
-    .handsontable .autocompleteEditor_list .item {
+    .handsontable .htAutocompleteWrapper .htAutocomplete tbody tr.current {
+      background-color: #2196f3 !important;
+      color: white !important;
+    }
+    
+    /* Add padding to options */
+    .handsontable .htAutocompleteWrapper .htAutocomplete tbody td {
       padding: 6px 10px !important;
       border-bottom: 1px solid #f0f0f0 !important;
-    }
-    
-    .handsontable .autocompleteEditor_list .item:hover {
-      background: #f5f5f5 !important;
     }
   
   </style>
