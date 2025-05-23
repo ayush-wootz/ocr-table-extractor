@@ -665,6 +665,8 @@ function findBestSequentialMatch(partNumber, drawingNumbers) {
         licenseKey: 'non-commercial-and-evaluation',
         dropdownMenu: true, // Enable dropdown menu
         filters: true, // Enable filtering
+        // Add autocomplete settings for better dropdown filtering
+        autoColumnSize: true,        
         // Prevent auto-selection in dropdowns
         afterSelectionEnd: function(row, column, row2, column2) {
           const prop = hot.colToProp(column);
@@ -673,6 +675,24 @@ function findBestSequentialMatch(partNumber, drawingNumbers) {
             const editor = hot.getActiveEditor();
             if (editor && editor.isOpened && editor.isOpened()) {
               editor.focus();
+            }
+          }
+        },
+        // Add this to improve dropdown behavior
+        afterBeginEditing: function(row, column) {
+          const prop = hot.colToProp(column);
+          if (prop === 'Matched Childpart') {
+            // Ensure the dropdown editor gets the correct filtered source
+            const editor = hot.getActiveEditor();
+            if (editor && editor.selectStyle) {
+              // Force the editor to filter options based on current value
+              setTimeout(() => {
+                if (editor.TEXTAREA && editor.TEXTAREA.value) {
+                  // Trigger filtering by simulating input event
+                  const event = new Event('input', { bubbles: true });
+                  editor.TEXTAREA.dispatchEvent(event);
+                }
+              }, 0);
             }
           }
         }
@@ -708,6 +728,27 @@ function findBestSequentialMatch(partNumber, drawingNumbers) {
       
         // re-render so every flagged cell gets the CSS
         hot.render();
+      });
+
+      // Add custom dropdown filtering for Matched Childpart column
+      hot.addHook('beforeKeyDown', function(event) {
+        const selection = hot.getSelected();
+        if (!selection) return;
+        
+        const [row, col] = selection[0];
+        const prop = hot.colToProp(col);
+        
+        if (prop === 'Matched Childpart') {
+          const editor = hot.getActiveEditor();
+          if (editor && editor.isOpened && editor.isOpened()) {
+            // Allow the dropdown to handle its own filtering
+            // This ensures typing filters the dropdown options
+            if (event.key && event.key.length === 1) {
+              // Let the dropdown editor handle single character inputs
+              event.stopImmediatePropagation();
+            }
+          }
+        }
       });
     }
 
