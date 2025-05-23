@@ -332,33 +332,41 @@
       background: #e3f2fd !important;
     } */
 
-/* Style the autocomplete dropdown container */
-.handsontableInputHolder {
-  border: 2px solid #2196f3 !important;
-  border-radius: 4px !important;
-  box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3) !important;
-  background: white !important;
-  margin-top: 2px !important;
-}
+    /* Style the autocomplete dropdown container */
+    .handsontableInputHolder {
+      border: 1px solid #2196f3 !important;
+      border-radius: 3px !important;
+      box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3) !important;
+      background: white !important;
+      margin-top: 2px !important;
+      min-width: 100% !important;
+      width: auto !important;
+    }
+    
+    /* Style the autocomplete dropdown table */
+    .handsontableInputHolder .htCore {
+      border: none !important;
+    }
 
-/* Style the autocomplete dropdown table */
-.handsontableInputHolder .htCore {
-  border: none !important;
-}
-
-.handsontableInputHolder td {
-  border-color: #f0f0f0 !important;
-  padding: 6px 10px !important;
-}
-
-.handsontableInputHolder tr:hover td {
-  background-color: #e3f2fd !important;
-}
-
-.handsontableInputHolder .current td {
-  background-color: #2196f3 !important;
-  color: white !important;
-}
+    /* Ensure the inner table takes full width */
+    .handsontableInputHolder .ht_master {
+      width: 100% !important;
+    }
+    
+    .handsontableInputHolder td {
+      border-color: #f0f0f0 !important;
+      padding: 4px 8px !important;
+      line-height: 1.2 !important;
+    }
+    
+    .handsontableInputHolder tr:hover td {
+      background-color: #e3f2fd !important;
+    }
+    
+    .handsontableInputHolder .current td {
+      background-color: #2196f3 !important;
+      color: white !important;
+    }
 
     /* Low similarity warning - just icon */
     .low-similarity-cell {
@@ -374,37 +382,6 @@
       z-index: 10;
       pointer-events: none;
     }
-
-   /* Autocomplete dropdown container */
-/*     .handsontable .htAutocompleteWrapper {
-      position: absolute !important;
-    }
-    
-    .handsontable .htAutocompleteWrapper .htAutocomplete {
-      border: 2px solid #2196f3 !important;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
-      background: #ffffff !important;
-      border-radius: 4px !important;
-      margin-top: 2px !important;
-      max-height: 200px !important;
-      overflow-y: auto !important;
-    } */
-    
-    /* Style individual options */
-/*     .handsontable .htAutocompleteWrapper .htAutocomplete tbody tr:hover {
-      background-color: #e3f2fd !important;
-    }
-    
-    .handsontable .htAutocompleteWrapper .htAutocomplete tbody tr.current {
-      background-color: #2196f3 !important;
-      color: white !important;
-    } */
-    
-    /* Add padding to options */
-/*     .handsontable .htAutocompleteWrapper .htAutocomplete tbody td {
-      padding: 6px 10px !important;
-      border-bottom: 1px solid #f0f0f0 !important;
-    } */
   
   </style>
 </head>
@@ -507,74 +484,72 @@
       { id: "material", label: "Material" }
     ];
 
-// Similarity Matching functions
-// ============================================
-// SEQUENTIAL CHARACTER MATCHING (CORRECTED)
-// ============================================
-
-function sequentialCharacterMatch(partNumber, childPart) {
-  if (!partNumber || !childPart) return 0;
-  
-  // Normalize inputs
-  const part = partNumber.trim().toUpperCase();
-  const child = childPart.trim().toUpperCase();
-  
-  // Exact match
-  if (part === child) return 1.0;
-  
-  // Check if PartNumber exists as a substring anywhere in ChildPart
-  if (child.includes(part)) {
-    return 0.99; // Perfect substring match - PartNumber found anywhere in ChildPart
-  }
-  
-  // Sequential character matching - find all characters of PartNumber in order
-  let partIndex = 0;
-  let childIndex = 0;
-  let matchedChars = 0;
-  
-  // Go through each character in childPart
-  while (childIndex < child.length && partIndex < part.length) {
-    if (part[partIndex] === child[childIndex]) {
-      matchedChars++;
-      partIndex++;
+    // Similarity Matching functions
+    // ============================================
+    // SEQUENTIAL CHARACTER MATCHING (CORRECTED)
+    // ============================================
+    
+    function sequentialCharacterMatch(partNumber, childPart) {
+      if (!partNumber || !childPart) return 0;
+      
+      // Normalize inputs
+      const part = partNumber.trim().toUpperCase();
+      const child = childPart.trim().toUpperCase();
+      
+      // Exact match
+      if (part === child) return 1.0;
+      
+      // Check if PartNumber exists as a substring anywhere in ChildPart
+      if (child.includes(part)) {
+        return 0.99; // Perfect substring match - PartNumber found anywhere in ChildPart
+      }
+      
+      // Sequential character matching - find all characters of PartNumber in order
+      let partIndex = 0;
+      let childIndex = 0;
+      let matchedChars = 0;
+      
+      // Go through each character in childPart
+      while (childIndex < child.length && partIndex < part.length) {
+        if (part[partIndex] === child[childIndex]) {
+          matchedChars++;
+          partIndex++;
+        }
+        childIndex++;
+      }
+      
+      // Calculate similarity based on how much of partNumber was found
+      const similarity = matchedChars / part.length;
+      
+      // Bonus if we found ALL characters of partNumber in order (but not as exact substring)
+      if (matchedChars === part.length) {
+        return 0.95; // All characters found in order
+      }
+      
+      return similarity;
     }
-    childIndex++;
-  }
-  
-  // Calculate similarity based on how much of partNumber was found
-  const similarity = matchedChars / part.length;
-  
-  // Bonus if we found ALL characters of partNumber in order (but not as exact substring)
-  if (matchedChars === part.length) {
-    return 0.95; // All characters found in order
-  }
-  
-  return similarity;
-}
-
-function findBestSequentialMatch(partNumber, drawingNumbers) {
-  if (!partNumber || !drawingNumbers || drawingNumbers.length === 0) {
-    return {
-      bestMatch: { target: '', rating: 0 },
-      allMatches: []
-    };
-  }
-  
-  const matches = drawingNumbers.map(drawing => ({
-    target: drawing,
-    rating: sequentialCharacterMatch(partNumber, drawing)
-  }));
-  
-  // Sort by similarity (highest first)
-  matches.sort((a, b) => b.rating - a.rating);
-  
-  return {
-    bestMatch: matches[0],
-    allMatches: matches
-  };
-}
-
-
+    
+    function findBestSequentialMatch(partNumber, drawingNumbers) {
+      if (!partNumber || !drawingNumbers || drawingNumbers.length === 0) {
+        return {
+          bestMatch: { target: '', rating: 0 },
+          allMatches: []
+        };
+      }
+      
+      const matches = drawingNumbers.map(drawing => ({
+        target: drawing,
+        rating: sequentialCharacterMatch(partNumber, drawing)
+      }));
+      
+      // Sort by similarity (highest first)
+      matches.sort((a, b) => b.rating - a.rating);
+      
+      return {
+        bestMatch: matches[0],
+        allMatches: matches
+      };
+    }
 
     
     const API_URL = 'https://ocr-table-extractor.onrender.com';
@@ -678,6 +653,8 @@ function findBestSequentialMatch(partNumber, drawingNumbers) {
                     }
                     
                     console.log(`Similarity for "${value}": ${similarity}`); // Debug log
+                    // Add this right before the similarity check:
+                    console.log(`Rendering ${value}, similarity: ${similarity}, classes: ${td.className}`);
                     
                     if (similarity > 0 && similarity < 0.95) {
                       td.classList.add('low-similarity-cell');
