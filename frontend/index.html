@@ -1070,14 +1070,14 @@
       // Get the last column BEFORE clearing it
       const lastUploadedColumn = previewContainer.dataset.lastColumn;
       
-      previewContainer.innerHTML = '
-        <button class="preview-remove-btn" onclick="clearPreview()">×</button>
+      previewContainer.innerHTML = `
+        <button class="preview-remove-btn" onclick="clearPreview()" style="display: none;">×</button>
         
         <div id="sample-preview">
           <strong>Sample Column Screenshot</strong><br>
           <img src="https://drive.google.com/uc?export=view&id=1oCeTwHlf_Au5vkiHn4UxbEZjmhiDfunN" alt="Sample column screenshot">
         </div>
-      ';
+      `;
         
       previewContainer.classList.remove('has-image');
       previewContainer.dataset.lastColumn = ''; // <-- This is needed!
