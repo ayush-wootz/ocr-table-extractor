@@ -290,13 +290,13 @@
       border: 1px solid #ddd;
       border-radius: 5px;
       position: relative;
-      display: none; /* Hidden by default */
+      display: block; /* Hidden by default */
       max-width: 200px; /* Reduced size */
     }
-
-    #image-preview.has-image {
-      display: block; /* Only show when has image */
-    }
+    /* Only show when has image */
+/*     #image-preview.has-image {
+      display: block; 
+    } */
     
     #image-preview img {
       max-width: 100%; /* Responsive within smaller container */
@@ -451,10 +451,10 @@
     </div>
 
     <div id="image-preview">
-      <button class="preview-remove-btn" onclick="clearPreview()">×</button>
+      <button class="preview-remove-btn" onclick="clearPreview()" style="display: none;">×</button>
       <div id="sample-preview">
         <strong>Sample Column Screenshot</strong><br>
-        <img src="https://drive.google.com/file/d/1oCeTwHlf_Au5vkiHn4UxbEZjmhiDfunN/view" alt="Sample column screenshot">
+        <img src="https://drive.google.com/uc?export=view&id=1oCeTwHlf_Au5vkiHn4UxbEZjmhiDfunN" alt="Sample column screenshot">
       </div>    
     </div>
 
@@ -1075,7 +1075,7 @@
         
         <div id="sample-preview">
           <strong>Sample Column Screenshot</strong><br>
-          <img src="https://drive.google.com/file/d/1oCeTwHlf_Au5vkiHn4UxbEZjmhiDfunN/view" alt="Sample column screenshot">
+          <img src="https://drive.google.com/uc?export=view&id=1oCeTwHlf_Au5vkiHn4UxbEZjmhiDfunN" alt="Sample column screenshot">
         </div>
       ';
         
