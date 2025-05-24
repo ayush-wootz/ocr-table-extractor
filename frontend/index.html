@@ -452,6 +452,10 @@
 
     <div id="image-preview">
       <button class="preview-remove-btn" onclick="clearPreview()">×</button>
+      <div id="sample-preview">
+        <strong>Sample Column Screenshot</strong><br>
+        <img src="https://drive.google.com/file/d/1oCeTwHlf_Au5vkiHn4UxbEZjmhiDfunN/view" alt="Sample column screenshot">
+      </div>    
     </div>
 
     <div id="result-container"></div>
@@ -1048,7 +1052,11 @@
         img.src = event.target.result;
         img.style.maxWidth = "300px";
         img.alt = label;
-    
+
+        // Hide sample
+        document.getElementById('sample-preview').style.display = 'none';
+        // show remove button
+        document.querySelector('.preview-remove-btn').style.display = 'flex';        
         // Clear previous preview and insert new one
         previewContainer.innerHTML = `<button class="preview-remove-btn" onclick="clearPreview()">×</button><strong>${label}</strong><br>`;
         previewContainer.appendChild(img);
@@ -1062,7 +1070,15 @@
       // Get the last column BEFORE clearing it
       const lastUploadedColumn = previewContainer.dataset.lastColumn;
       
-      previewContainer.innerHTML = '<button class="preview-remove-btn" onclick="clearPreview()">×</button>';
+      previewContainer.innerHTML = '
+        <button class="preview-remove-btn" onclick="clearPreview()">×</button>
+        
+        <div id="sample-preview">
+          <strong>Sample Column Screenshot</strong><br>
+          <img src="https://drive.google.com/file/d/1oCeTwHlf_Au5vkiHn4UxbEZjmhiDfunN/view" alt="Sample column screenshot">
+        </div>
+      ';
+        
       previewContainer.classList.remove('has-image');
       previewContainer.dataset.lastColumn = ''; // <-- This is needed!
       
