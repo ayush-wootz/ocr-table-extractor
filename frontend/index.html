@@ -9,6 +9,7 @@
   <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/handsontable@12.1.0/dist/handsontable.full.min.css">
   <script src="https://cdn.jsdelivr.net/npm/handsontable@12.1.0/dist/handsontable.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/string-similarity@4.0.4/umd/string-similarity.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
   
   <style>
     body {
@@ -146,6 +147,27 @@
       width: 100%;
       box-sizing: border-box;
     }
+
+    /* Subtle upload icon styling */
+    .upload-icon {
+      color: #9ca3af;
+      margin-bottom: 2px;
+      transition: all 0.3s ease;
+    }
+    
+    .upload-icon i {
+      width: 12px;
+      height: 12px;
+    }
+    
+    .upload-area:hover .upload-icon {
+      color: #6b7280;
+    }
+    
+    .upload-area.has-file .upload-icon {
+      color: #10b981;
+    }
+    
 
     .upload-clear-btn {
       position: absolute;
@@ -401,6 +423,9 @@
       <!-- Part Number -->
       <div class="upload-area" id="area-partNumber" data-column="partNumber">
         <button class="upload-clear-btn" onclick="clearUpload('partNumber')">×</button>
+        <div class="upload-icon">
+          <i data-lucide="upload"></i>
+        </div>
         <div class="upload-label">Part Number <span class="required">*</span></div>
         <input type="file" id="upload-partnumber" accept="image/*" />
         <div class="file-status" id="status-partNumber" style="display: none;">✓ Uploaded</div>
@@ -409,6 +434,9 @@
       <!-- Quantity -->
       <div class="upload-area" id="area-quantity" data-column="quantity">
         <button class="upload-clear-btn" onclick="clearUpload('quantity')">×</button>
+        <div class="upload-icon">
+          <i data-lucide="upload"></i>
+        </div>
         <div class="upload-label">Quantity <span class="required">*</span></div>
         <input type="file" id="upload-quantity" accept="image/*" />
         <div class="file-status" id="status-quantity" style="display: none;">✓ Uploaded</div>
@@ -417,6 +445,9 @@
       <!-- Description -->
       <div class="upload-area" id="area-description" data-column="description">
         <button class="upload-clear-btn" onclick="clearUpload('description')">×</button>
+        <div class="upload-icon">
+          <i data-lucide="upload"></i>
+        </div>        
         <div class="upload-label">Description</div>
         <input type="file" id="upload-description" accept="image/*" />
         <div class="file-status" id="status-description" style="display: none;">✓ Uploaded</div>
@@ -425,6 +456,9 @@
       <!-- Material -->
       <div class="upload-area" id="area-material" data-column="material">
         <button class="upload-clear-btn" onclick="clearUpload('material')">×</button>
+        <div class="upload-icon">
+          <i data-lucide="upload"></i>
+        </div>        
         <div class="upload-label">Material</div>
         <input type="file" id="upload-material" accept="image/*" />
         <div class="file-status" id="status-material" style="display: none;">✓ Uploaded</div>
