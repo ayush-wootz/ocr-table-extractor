@@ -422,7 +422,7 @@
     <div class="upload-grid">
       <!-- Part Number -->
       <div class="upload-area" id="area-partNumber" data-column="partNumber">
-        <button class="upload-clear-btn" onclick="clearUpload('partNumber')">×</button>
+        <button class="upload-clear-btn" onclick="clearUpload('partNumber', event)">×</button>
         <div class="upload-icon">
           <i data-lucide="upload"></i>
         </div>
@@ -433,7 +433,7 @@
 
       <!-- Quantity -->
       <div class="upload-area" id="area-quantity" data-column="quantity">
-        <button class="upload-clear-btn" onclick="clearUpload('quantity')">×</button>
+        <button class="upload-clear-btn" onclick="clearUpload('quantity', event)">×</button>
         <div class="upload-icon">
           <i data-lucide="upload"></i>
         </div>
@@ -444,7 +444,7 @@
 
       <!-- Description -->
       <div class="upload-area" id="area-description" data-column="description">
-        <button class="upload-clear-btn" onclick="clearUpload('description')">×</button>
+        <button class="upload-clear-btn" onclick="clearUpload('description', event)">×</button>
         <div class="upload-icon">
           <i data-lucide="upload"></i>
         </div>        
@@ -455,7 +455,7 @@
 
       <!-- Material -->
       <div class="upload-area" id="area-material" data-column="material">
-        <button class="upload-clear-btn" onclick="clearUpload('material')">×</button>
+        <button class="upload-clear-btn" onclick="clearUpload('material', event)">×</button>
         <div class="upload-icon">
           <i data-lucide="upload"></i>
         </div>        
@@ -1078,11 +1078,14 @@
 
     // Function to clear preview and reset corresponding upload
     function clearPreview() {
+      // Get the last column BEFORE clearing it
+      const lastUploadedColumn = previewContainer.dataset.lastColumn;
+      
       previewContainer.innerHTML = '<button class="preview-remove-btn" onclick="clearPreview()">×</button>';
       previewContainer.classList.remove('has-image');
+      previewContainer.dataset.lastColumn = ''; // <-- This is needed!
       
       // Find and clear the last uploaded file
-      const lastUploadedColumn = previewContainer.dataset.lastColumn;
       if (lastUploadedColumn) {
         const input = uploads[lastUploadedColumn];
         if (input) {
@@ -1095,7 +1098,11 @@
     }
 
     // Function to clear specific upload area
-    function clearUpload(columnId) {
+    function clearUpload(columnId, event) {
+      if (event) {
+        event.stopPropagation(); // Prevent bubbling to parent upload area
+      }
+
       const input = uploads[columnId];
       const area = document.getElementById(`area-${columnId}`);
       const status = document.getElementById(`status-${columnId}`);
