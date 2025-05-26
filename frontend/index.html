@@ -1303,6 +1303,13 @@ function validateRequiredFields() {
     if (!type || type === '') {
       missingFields.push(`Row ${index + 1}: Type`);
     }
+    // 🔧 NEW: Additional validation for Child Part type
+    if (type === 'Child Part') {
+      const selectDrawingNumber = row['Matched Childpart']?.trim();
+      if (!selectDrawingNumber || selectDrawingNumber === '') {
+        missingFields.push(`Row ${index + 1}: Select Drawing Number (required when Type is "Child Part")`);
+      }
+    } 
   });
 
   return {
