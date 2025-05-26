@@ -461,6 +461,7 @@
 
     <div id="result-container"></div>
     <button id="download-btn" class="secondary-button" style="display: none;">Download as CSV</button>
+    <button id="add-data-btn" class="secondary-button" style="display: none;">Add Data</button>
     <div id="hot" style="width: 100%; height: 400px; display: none;"></div>
     
   </div>
@@ -706,6 +707,10 @@
     
       const container = document.getElementById('hot');
       container.style.display = 'block';
+      
+      // Show the Add Data button when spreadsheet is rendered
+      document.getElementById('add-data-btn').style.display = 'inline-block';
+
     
       if (hot) hot.destroy();
       hot = new Handsontable(container, {
@@ -1044,7 +1049,7 @@
 
     // Initialize button state
     updateProcessButton();
-
+    
     // Preview function with remove button
     function showImagePreview(file, label) {
       const reader = new FileReader();
@@ -1128,6 +1133,121 @@
     // Make clearPreview and clearUpload globally accessible
     window.clearPreview = clearPreview;
     window.clearUpload = clearUpload;
+
+    
+    // Post Data to Backend 
+// Function to send data to backend
+async function sendDataToBackend() {
+  // Validate required fields first
+  const validation = validateRequiredFields();
+  if (!validation.isValid) {
+    alert(`Missing Required Fields: ${validation.missingFields.join(', ')}\n\nRequired fields: Part Number, Quantity, and Type`);
+    return;
+  }
+
+  // Separate data by Type
+  const childPartsData = [];
+  const boData = [];
+
+  spreadsheetData.forEach((row, index) => {
+    // Skip empty rows
+    const partNumber = row.PartNumber?.text?.trim();
+    const quantity = row.Quantity?.text?.trim();
+    
+    if (!partNumber || !quantity) return;
+
+    // Prepare row data
+    const rowData = {
+      partNumber: partNumber,
+      quantity: quantity,
+      description: row.Description?.text?.trim() || '',
+      material: row.Material?.text?.trim() || '',
+      matchedChildpart: row['Matched Childpart'] || '',
+      type: row.Type || 'BO'
+    };
+
+    // Separate by Type
+    if (row.Type === 'Child Part') {
+      childPartsData.push(rowData);
+    } else {
+      boData.push(rowData);
+    }
+  });
+
+  try {
+    // Send Child Parts data
+    if (childPartsData.length > 0) {
+      console.log('🚀 Sending Child Parts data:', childPartsData);
+      const childResponse = await fetch('https://ocr-table-extractor.onrender.com/add-child-parts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          rows: childPartsData,
+          project: new URLSearchParams(window.location.search).get('project')
+        })
+      });
+      
+      if (!childResponse.ok) throw new Error('Failed to add Child Parts');
+      console.log('✅ Child Parts added successfully');
+    }
+
+    // Send BO data
+    if (boData.length > 0) {
+      console.log('🚀 Sending BO data:', boData);
+      const boResponse = await fetch('https://ocr-table-extractor.onrender.com/add-bo-parts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          rows: boData,
+          project: new URLSearchParams(window.location.search).get('project')
+        })
+      });
+      
+      if (!boResponse.ok) throw new Error('Failed to add BO Parts');
+      console.log('✅ BO Parts added successfully');
+    }
+
+    alert(`Data added successfully!\n- Child Parts: ${childPartsData.length}\n- BO Parts: ${boData.length}`);
+    
+  } catch (error) {
+    console.error('❌ Error sending data:', error);
+    alert('Error adding data. Please try again.');
+  }
+}
+
+// Function to validate required fields
+function validateRequiredFields() {
+  const missingFields = [];
+  let hasValidRows = false;
+
+  spreadsheetData.forEach((row, index) => {
+    const partNumber = row.PartNumber?.text?.trim();
+    const quantity = row.Quantity?.text?.trim();
+    const type = row.Type?.trim();
+
+    // Only skip rows if BOTH Part Number AND Quantity are missing
+    // (because if either is present, user intended to add this row)
+    if (!partNumber && !quantity) return;
+
+    hasValidRows = true;
+
+    // Check required fields for rows that have at least Part Number OR Quantity
+    if (!partNumber) {
+      missingFields.push(`Row ${index + 1}: Part Number`);
+    }
+    if (!quantity) {
+      missingFields.push(`Row ${index + 1}: Quantity`);
+    }
+    if (!type || type === '') {
+      missingFields.push(`Row ${index + 1}: Type`);
+    }
+  });
+
+  return {
+    isValid: hasValidRows && missingFields.length === 0,
+    missingFields: missingFields
+  };
+}
     
     // Attach onchange handlers (keeping original preview functionality)
     uploads.partNumber.addEventListener("change", (e) => {
@@ -1159,6 +1279,9 @@
 
     // Initialize Lucide icons
     lucide.createIcons();
+
+    // Add Data button event listener
+    document.getElementById('add-data-btn').addEventListener('click', sendDataToBackend);
     
   </script>
 </body>
