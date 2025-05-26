@@ -716,9 +716,9 @@
     
                 if (cellObj && typeof cellObj === 'object') {
                   const conf = parseFloat(cellObj.confidence);
-                  if (conf >= 0.9) {
+                  if (conf >= 0.95) {
                     td.style.backgroundColor = 'rgba(76, 175, 80, 0.2)';
-                  } else if (conf >= 0.7) {
+                  } else if (conf >= 0.8) {
                     td.style.backgroundColor = 'rgba(255, 152, 0, 0.2)';
                   } else {
                     td.style.backgroundColor = 'rgba(244, 67, 54, 0.2)';
@@ -810,7 +810,7 @@
         spreadsheetData[i][label] = { text, confidence };
 
         if (label === "PartNumber" && window.childParts?.length) {
-          const drawingNumbers = window.childParts.map(p => p.drawingNumber || "");
+          const drawingNumbers = window.childParts.map(p => decodeURIComponent(p.drawingNumber || ""));
           const result = findBestSequentialMatch(text, drawingNumbers);
           const matchText = result.bestMatch.rating > 0.85 ? result.bestMatch.target : "";
           
