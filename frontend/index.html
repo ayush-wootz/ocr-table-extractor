@@ -648,7 +648,7 @@
         const isMatched = key === 'Matched Childpart';
         const isType    = key === "Type";
         const drawingOptions = Array.isArray(window.childParts)
-          ? window.childParts.map(p => p.drawingNumber || '')
+          ? window.childParts.map(p => decodeURIComponent(p.drawingNumber || ''))
           : [];
     
         columns.push({
@@ -824,14 +824,14 @@
           }
         }
 
-        for (let i = newColumnData.length; i < spreadsheetData.length; i++) {
-          // only if there's really a PartNumber in that row
-          const part = spreadsheetData[i]["PartNumber"]?.text;
-          if (part) {
-            const hasMatch = spreadsheetData[i]["Matched Childpart"]?.text;
-            spreadsheetData[i]["Type"] = hasMatch ? "Child Part" : "BO";
-          }
-       }
+       //  for (let i = newColumnData.length; i < spreadsheetData.length; i++) {
+       //    // only if there's really a PartNumber in that row
+       //    const part = spreadsheetData[i]["PartNumber"]?.text;
+       //    if (part) {
+       //      const hasMatch = spreadsheetData[i]["Matched Childpart"]?.text;
+       //      spreadsheetData[i]["Type"] = hasMatch ? "Child Part" : "BO";
+       //    }
+       // }
       }
 
       renderSpreadsheet();
