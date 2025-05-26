@@ -1217,6 +1217,14 @@ async function sendDataToBackend() {
     }
   });
 
+  console.log(`📊 Data prepared: ${childPartsData.length} Child Parts, ${boData.length} BO Parts`);
+
+  // Show confirmation dialog
+  const confirmMessage = `Ready to submit:\n- Child Parts: ${childPartsData.length}\n- BO Parts: ${boData.length}\n\nProceed?`;
+  if (!confirm(confirmMessage)) {
+    return;
+  }
+
   try {
     // Send Child Parts data
     if (childPartsData.length > 0) {
@@ -1231,12 +1239,12 @@ async function sendDataToBackend() {
           partNumber: partNumber // Actual Part Number for DB from URL
         })
       });
-      
+
+      const childResult = await childResponse.json();
       if (!childResponse.ok) {
-        const errorData = await childResponse.text();
-        throw new Error(`Failed to add Child Parts: ${errorData}`);
+        throw new Error(`Child Parts: ${childResult.error || 'Unknown error'}`);
       }
-      console.log('✅ Child Parts added successfully');
+      console.log('✅ Child Parts added successfully: ', childResult);
     }
 
     // Send BO data
@@ -1252,12 +1260,12 @@ async function sendDataToBackend() {
           partNumber: partNumber // Overall Part Number for BO table
         })
       });
-      
+
+      const boResult = await boResponse.json();
       if (!boResponse.ok) {
-        const errorData = await boResponse.text();
-        throw new Error(`Failed to add BO Parts: ${errorData}`);
+        throw new Error(`BO Parts: ${boResult.error || 'Unknown error'}`);
       }
-      console.log('✅ BO Parts added successfully');
+      console.log('✅ BO Parts added successfully: ', boResult);
     }
 
     alert(`Data added successfully!\n- Child Parts: ${childPartsData.length}\n- BO Parts: ${boData.length}`);
