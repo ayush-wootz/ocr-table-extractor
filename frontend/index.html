@@ -678,7 +678,7 @@
                   const partNumberData = rowData['PartNumber'];
                   
                   if (partNumberData && partNumberData.text && window.childParts?.length) {
-                    const drawingNumbers = window.childParts.map(p => p.drawingNumber || '');
+                    const drawingNumbers = window.childParts.map(p => decodeURIComponent(p.drawingNumber || ''));
                     const result = findBestSequentialMatch(partNumberData.text, drawingNumbers);
                     
                     // Check if current value matches the best match and get its similarity
@@ -694,8 +694,9 @@
                     console.log(`Similarity for "${value}": ${similarity}`); // Debug log
                     // Add this right before the similarity check:
                     console.log(`Rendering ${value}, similarity: ${similarity}, classes: ${td.className}`);
-                    
-                    if (similarity > 0 && similarity < 0.95) {
+
+                    // Show warning for ALL non-perfect matches
+                    if (similarity < 0.95) {
                       td.classList.add('low-similarity-cell');
                     } else {
                       td.classList.remove('low-similarity-cell');
