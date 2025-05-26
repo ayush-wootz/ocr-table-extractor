@@ -1169,65 +1169,94 @@ async function sendDataToBackend() {
     return;
   }
 
+  // Get URL parameters (needed for backend)
+  const urlParams = new URLSearchParams(window.location.search);
+  const project = urlParams.get("project");
+  const parentDrawingNumber = urlParams.get("parentdrgnum");
+  const partNumber = urlParams.get("part"); // This is the actual Part Number for DB
+
+  if (!project || !parentDrawingNumber || !partNumber) {
+    alert("Missing project, parent drawing number, or part number information");
+    return;
+  }
+
   // Separate data by Type
   const childPartsData = [];
   const boData = [];
 
   spreadsheetData.forEach((row, index) => {
     // Skip empty rows
-    const partNumber = row.PartNumber?.text?.trim();
+    const frontendPartNumber = row.PartNumber?.text?.trim(); // Used for reference/matching
     const quantity = row.Quantity?.text?.trim();
+    const type = row.Type?.trim();
     
-    if (!partNumber || !quantity) return;
+    if (!frontendPartNumber || !quantity || !type) return;
 
-    // Prepare row data
-    const rowData = {
-      partNumber: partNumber,
-      quantity: quantity,
-      description: row.Description?.text?.trim() || '',
-      material: row.Material?.text?.trim() || '',
-      matchedChildpart: row['Matched Childpart'] || '',
-      type: row.Type || 'BO'
-    };
-
-    // Separate by Type
-    if (row.Type === 'Child Part') {
-      childPartsData.push(rowData);
-    } else {
-      boData.push(rowData);
+    if (type === 'Child Part') {
+      // Child Parts data (frontend Part Number NOT included)
+      const childRowData = {
+        quantity: quantity,
+        description: row.Description?.text?.trim() || '',
+        material: row.Material?.text?.trim() || '',
+        drawingNumber: row['Matched Childpart'] || '', // Select Drawing Number
+      };
+      childPartsData.push(childRowData);
+      
+    } else if (type === 'BO') {
+      // BO data with special logic for Boughtout Part number
+      const matchedDrawingNumber = row['Matched Childpart']?.trim();
+      
+      const boRowData = {
+        quantity: quantity,
+        description: row.Description?.text?.trim() || '',
+        material: row.Material?.text?.trim() || '', // This goes to MOC field
+        // Logic: Use Drawing Number if found, otherwise use Frontend Part Number
+        boughtoutPartNumber: matchedDrawingNumber || frontendPartNumber,
+      };
+      boData.push(boRowData);
     }
   });
 
   try {
     // Send Child Parts data
     if (childPartsData.length > 0) {
-      console.log('🚀 Sending Child Parts data:', childPartsData);
+      console.log('🚀 Sending Child Parts data to backend...');
       const childResponse = await fetch('https://ocr-table-extractor.onrender.com/add-child-parts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           rows: childPartsData,
-          project: new URLSearchParams(window.location.search).get('project')
+          project: project,
+          parentDrawingNumber: parentDrawingNumber,
+          partNumber: partNumber // Actual Part Number for DB from URL
         })
       });
       
-      if (!childResponse.ok) throw new Error('Failed to add Child Parts');
+      if (!childResponse.ok) {
+        const errorData = await childResponse.text();
+        throw new Error(`Failed to add Child Parts: ${errorData}`);
+      }
       console.log('✅ Child Parts added successfully');
     }
 
     // Send BO data
     if (boData.length > 0) {
-      console.log('🚀 Sending BO data:', boData);
+      console.log('🚀 Sending BO data to backend...');
       const boResponse = await fetch('https://ocr-table-extractor.onrender.com/add-bo-parts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           rows: boData,
-          project: new URLSearchParams(window.location.search).get('project')
+          project: project,
+          parentDrawingNumber: parentDrawingNumber,
+          partNumber: partNumber // Overall Part Number for BO table
         })
       });
       
-      if (!boResponse.ok) throw new Error('Failed to add BO Parts');
+      if (!boResponse.ok) {
+        const errorData = await boResponse.text();
+        throw new Error(`Failed to add BO Parts: ${errorData}`);
+      }
       console.log('✅ BO Parts added successfully');
     }
 
@@ -1235,7 +1264,7 @@ async function sendDataToBackend() {
     
   } catch (error) {
     console.error('❌ Error sending data:', error);
-    alert('Error adding data. Please try again.');
+    alert(`Error adding data: ${error.message}`);
   }
 }
 
