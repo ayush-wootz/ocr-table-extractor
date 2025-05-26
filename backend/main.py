@@ -582,62 +582,6 @@ async def ocr_endpoint(request: Request):
             content={"error": f"Server error: {str(e)}"}
         )
 
-# @app.post("/")
-# async def ocr_endpoint(request: Request):
-#     try:
-#         logger.info(f"Received OCR request with Content-Type: {request.headers.get('content-type')}")
-        
-#         # Get form data
-#         form = await request.form()
-#         logger.info(f"Received form data with keys: {list(form.keys())}")
-        
-#         # Validate required fields
-#         if "image" not in form:
-#             logger.warning("Missing image parameter in request")
-#             return JSONResponse(status_code=400, content={"error": "Missing image parameter"})
-        
-#         if "mode" not in form:
-#             logger.warning("Missing mode parameter in request")
-#             return JSONResponse(status_code=400, content={"error": "Missing mode parameter"})
-        
-#         # Get image and mode
-#         image = form["image"]
-#         mode = form["mode"]
-#         logger.info(f"Processing request in mode: {mode}, image filename: {image.filename}")
-        
-#         # Read image
-#         image_bytes = await image.read()
-        
-#         # Process with timeout protection
-#         try:
-#             cells = await asyncio.to_thread(process_image, image_bytes)
-            
-#             # Return response based on mode
-#             if mode == "quick":
-#                 extracted_text = "\n".join(cell["text"] for cell in cells)
-#                 return {"mode": mode, "extracted_text": extracted_text, "cells": cells}
-#             elif mode == "table":
-#                 return {"mode": mode, "table": cells}
-#             else:
-#                 logger.warning(f"Invalid mode provided: {mode}")
-#                 return JSONResponse(status_code=400, content={"error": "Invalid mode provided"})
-                
-#         except asyncio.TimeoutError:
-#             logger.error("OCR processing timed out")
-#             return JSONResponse(
-#                 status_code=504,
-#                 content={"error": "Processing timed out. Try with a smaller image."}
-#             )
-#     except Exception as e:
-#         import traceback
-#         error_trace = traceback.format_exc()
-#         logger.error(f"Error processing request: {str(e)}")
-#         logger.error(f"Traceback: {error_trace}")
-#         return JSONResponse(
-#             status_code=500,
-#             content={"error": f"Server error: {str(e)}"}
-#         )
-
 # Extracts Drawing number from File Name
 def extract_drawing_number(url: str):
     if not url:
@@ -725,6 +669,203 @@ async def fetch_drawings(request: Request):
         print("❌ Exception occurred:")
         print(traceback.format_exc())
         return JSONResponse(status_code=500, content={"error": str(e)})
+
+
+# Add these endpoints to your existing FastAPI backend (main.py)
+@app.post("/add-child-parts")
+async def add_child_parts(request: Request):
+    """Add child parts data to Glide Child Parts table"""
+    print("🎯 /add-child-parts endpoint hit")
+    
+    try:
+        payload = await request.json()
+        rows_data = payload.get("rows", [])
+        project = payload.get("project")
+        parent_drawing_number = payload.get("parentDrawingNumber")
+        part_number = payload.get("partNumber")  # Overall Part Number from URL
+        
+        print(f"📦 Child Parts Request: project={project}, parent={parent_drawing_number}, part={part_number}")
+        print(f"📊 Rows to add: {len(rows_data)}")
+        
+        if not project or not parent_drawing_number or not part_number:
+            return JSONResponse(
+                status_code=400, 
+                content={"error": "Missing required parameters: project, parentDrawingNumber, or partNumber"}
+            )
+        
+        if not rows_data:
+            return JSONResponse(
+                status_code=400,
+                content={"error": "No rows data provided"}
+            )
+        
+        # Build mutations for Child Parts table
+        mutations = []
+        for row in rows_data:         
+            mutation = {
+                "kind": "add-row-to-table",
+                "tableName": "native-table-3HZdeQgfDL37ac2rc3kF",  # Child Parts table
+                "columnValues": {
+                    "remote\u001dPart number": part_number,  # Overall Part Number from URL
+                    "remote\u001dParent drawing number": parent_drawing_number,
+                    "remote\u001dDrawing number": row.get("drawingNumber", ""),  # Select Drawing Number
+                    "remote\u001dQuantity": str(row.get("quantity", "")),
+                    "remote\u001dProject Name": project,
+                    # Note: Item # is not being sent as per your requirement
+                }
+            }
+            mutations.append(mutation)
+        
+        if not mutations:
+            return JSONResponse(
+                status_code=400,
+                content={"error": "No valid rows to add (missing required fields)"}
+            )
+        
+        # Prepare Glide API request
+        glide_body = {
+            "appID": GLIDE_APP_ID,
+            "mutations": mutations
+        }
+        
+        print(f"📤 Sending {len(mutations)} child parts to Glide...")
+        
+        # Send to Glide API
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.post(
+                "https://api.glideapp.io/api/function/mutateTables",
+                headers={
+                    "Authorization": f"Bearer {GLIDE_API_KEY}",
+                    "Content-Type": "application/json"
+                },
+                json=glide_body
+            )
+        
+        response.raise_for_status()
+        result = response.json()
+        
+        print("✅ Child Parts added successfully:", result)
+        return {
+            "success": True, 
+            "message": f"Successfully added {len(mutations)} child parts",
+            "glide_response": result
+        }
+        
+    except httpx.HTTPStatusError as e:
+        error_text = await e.response.aread()
+        print(f"❌ Glide API Error: {e.response.status_code} - {error_text.decode()}")
+        return JSONResponse(
+            status_code=e.response.status_code,
+            content={"error": f"Glide API error: {error_text.decode()}"}
+        )
+    except Exception as e:
+        import traceback
+        print("❌ Exception in add_child_parts:")
+        print(traceback.format_exc())
+        return JSONResponse(
+            status_code=500,
+            content={"error": f"Server error: {str(e)}"}
+        )
+
+
+@app.post("/add-bo-parts")
+async def add_bo_parts(request: Request):
+    """Add BO (Bought Out) parts data to Glide BO Parts table"""
+    print("🎯 /add-bo-parts endpoint hit")
+    
+    try:
+        payload = await request.json()
+        rows_data = payload.get("rows", [])
+        project = payload.get("project")
+        parent_drawing_number = payload.get("parentDrawingNumber")
+        part_number = payload.get("partNumber")  # Overall Part Number from URL
+        
+        print(f"📦 BO Parts Request: project={project}, parent={parent_drawing_number}, part={part_number}")
+        print(f"📊 Rows to add: {len(rows_data)}")
+        
+        if not project or not parent_drawing_number or not part_number:
+            return JSONResponse(
+                status_code=400,
+                content={"error": "Missing required parameters: project, parentDrawingNumber, or partNumber"}
+            )
+        
+        if not rows_data:
+            return JSONResponse(
+                status_code=400,
+                content={"error": "No rows data provided"}
+            )
+        
+        # Build mutations for BO Parts table
+        mutations = []
+        for row in rows_data:       
+            mutation = {
+                "kind": "add-row-to-table",
+                "tableName": "native-table-l2JX33tUJwUKYmNz7ZEs",  # BO Parts table
+                "columnValues": {
+                    "remote\u001dProject name": project,
+                    "remote\u001dOverall Part number": part_number,  # Overall Part Number from URL
+                    "remote\u001dParent drawing": parent_drawing_number,
+                    "remote\u001dBoughout Part number": row.get("boughtoutPartNumber", ""),  # Drawing Number or Frontend Part Number
+                    "remote\u001dDescription": row.get("description", ""),
+                    "remote\u001dMOC": row.get("material", ""),  # Material goes to MOC field
+                    "remote\u001dQuantity": str(row.get("quantity", "")),
+                    # Note: cbN8e (Last updated at), remote\u001dItem number, and 8Kjom (Boughtout rate) are not being sent
+                }
+            }
+            mutations.append(mutation)
+        
+        if not mutations:
+            return JSONResponse(
+                status_code=400,
+                content={"error": "No valid rows to add (missing required fields)"}
+            )
+        
+        # Prepare Glide API request
+        glide_body = {
+            "appID": GLIDE_APP_ID,
+            "mutations": mutations
+        }
+        
+        print(f"📤 Sending {len(mutations)} BO parts to Glide...")
+        
+        # Send to Glide API
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.post(
+                "https://api.glideapp.io/api/function/mutateTables",
+                headers={
+                    "Authorization": f"Bearer {GLIDE_API_KEY}",
+                    "Content-Type": "application/json"
+                },
+                json=glide_body
+            )
+        
+        response.raise_for_status()
+        result = response.json()
+        
+        print("✅ BO Parts added successfully:", result)
+        return {
+            "success": True,
+            "message": f"Successfully added {len(mutations)} BO parts", 
+            "glide_response": result
+        }
+        
+    except httpx.HTTPStatusError as e:
+        error_text = await e.response.aread()
+        print(f"❌ Glide API Error: {e.response.status_code} - {error_text.decode()}")
+        return JSONResponse(
+            status_code=e.response.status_code,
+            content={"error": f"Glide API error: {error_text.decode()}"}
+        )
+    except Exception as e:
+        import traceback
+        print("❌ Exception in add_bo_parts:")
+        print(traceback.format_exc())
+        return JSONResponse(
+            status_code=500,
+            content={"error": f"Server error: {str(e)}"}
+        )
+# Childpart & BO Data Post Ends here
+
 
 @app.get("/debug")
 async def debug():
