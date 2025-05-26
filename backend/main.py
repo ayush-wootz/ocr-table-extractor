@@ -69,10 +69,18 @@ def simple_cells(img_rgb):
     ocr_model = get_ocr_model()
     raw = ocr_model.ocr(img_rgb, cls=True)[0]
 
+    print(f"🔍 simple_cells: OCR detected {len(raw) if raw else 0} items")
+    
+    if not raw:
+        print("❌ OCR returned no results at all")
+        return []
+
     cells = []
-    for box, (text, confidence) in raw:
+    for i, (box, (text, confidence)) in enumerate(raw):
+        print(f"  Item {i}: '{text}' (conf: {confidence:.2f})")
         raw_text = text.strip()  #new line added
         if not raw_text:  #new line added
+            print(f"    ⚠️ Skipped: empty text")
             continue      #new line added
         cleaned = fix_diameter(raw_text)   #new line added       
         # if not text.strip():
@@ -85,6 +93,7 @@ def simple_cells(img_rgb):
             "confidence": confidence
         })
 
+    print(f"📊 simple_cells: Returning {len(cells)} valid cells")
     # stable sort top→bottom
     cells.sort(key=lambda c: c["y_center"])
     # drop the y_center before returning
@@ -156,6 +165,7 @@ def advanced_cells_with_rectangles(img):
     
     # if we found **no** real rectangles, fall back
     if not rects:
+        print("⚠️  No rectangles detected, falling back to simple_cells")
         return simple_cells(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
 
     # 7) sort the rectangles top→bottom, left→right
