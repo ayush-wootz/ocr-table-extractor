@@ -823,7 +823,7 @@
         if (label === "PartNumber" && window.childParts?.length) {
           const drawingNumbers = window.childParts.map(p => decodeURIComponent(p.drawingNumber || ""));
           const result = findBestSequentialMatch(text, drawingNumbers);
-          const matchText = result.bestMatch.rating > 0.85 ? result.bestMatch.target : "";
+          const matchText = result.bestMatch.rating > 0.6 ? result.bestMatch.target : "";
           
           // Store both the match and similarity score for later use
           spreadsheetData[i]["Matched Childpart"] = matchText;
