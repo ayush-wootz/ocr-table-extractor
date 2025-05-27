@@ -813,6 +813,13 @@
         if (!spreadsheetData[i]) spreadsheetData[i] = {};
         spreadsheetData[i][label] = { text, confidence };
 
+          // 🔍 DEBUG: Check what's being stored
+        console.log(`Row ${i}, ${label}:`, {
+          text: text,
+          confidence: confidence,
+          storedData: spreadsheetData[i][label]
+        });
+
         if (label === "PartNumber" && window.childParts?.length) {
           const drawingNumbers = window.childParts.map(p => decodeURIComponent(p.drawingNumber || ""));
           const result = findBestSequentialMatch(text, drawingNumbers);
