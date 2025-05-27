@@ -559,14 +559,18 @@ async def ocr_endpoint(request: Request):
 
             # table mode: choose by column tag
             elif mode == "table":
-                # quantity gets the old per‐line logic
-                if column_id == "quantity":
-                    rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-                    table_cells = simple_cells(rgb)
-                # everything else uses the fancy line‐based
-                else:
-                    table_cells = advanced_cells_with_rectangles(img)
+                rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+                table_cells = simple_cells(rgb)
+                logger.info(f"Using simple_cells for column: {column_id}")
                 return {"mode": mode, "table": table_cells}
+                # # quantity gets the old per‐line logic
+                # if column_id == "quantity":
+                #     rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+                #     table_cells = simple_cells(rgb)
+                # # everything else uses the fancy line‐based
+                # else:
+                #     table_cells = advanced_cells_with_rectangles(img)
+                # return {"mode": mode, "table": table_cells}
 
             else:
                 raise ValueError(f"Invalid mode provided: {mode}")
