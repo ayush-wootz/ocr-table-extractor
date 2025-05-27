@@ -176,7 +176,7 @@ def advanced_cells_with_rectangles(img):
     raw = get_ocr_model().ocr(rgb, cls=True)[0]
     cells = []
     for box, (text, conf) in raw:
-        raw_text = t.strip()
+        raw_text = text.strip()
         # if not text.strip(): 
         #     continue
         if not raw_text:
