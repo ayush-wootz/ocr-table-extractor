@@ -561,12 +561,17 @@
         childIndex++;
       }
       
-      // Calculate similarity based on how much of partNumber was found
-      const similarity = matchedChars / part.length;
+      // 🔧 IMPROVED SIMILARITY: Add length penalty for very different lengths
+      const baseSimilarity = matchedChars / part.length;
       
-      // Bonus if we found ALL characters of partNumber in order (but not as exact substring)
+      // Apply length penalty only for significantly different lengths
+      const lengthDiff = Math.abs(part.length - child.length);
+      const lengthPenalty = lengthDiff > 1 ? (lengthDiff - 1) * 0.1 : 0;
+      const similarity = Math.max(0, baseSimilarity - lengthPenalty);
+      
+      // Bonus if we found ALL characters of partNumber in order
       if (matchedChars === part.length) {
-        return 0.95; // All characters found in order
+        return Math.max(0.85, similarity); // Minimum 0.85 for complete sequential match
       }
       
       return similarity;
@@ -823,7 +828,7 @@
         if (label === "PartNumber" && window.childParts?.length) {
           const drawingNumbers = window.childParts.map(p => decodeURIComponent(p.drawingNumber || ""));
           const result = findBestSequentialMatch(text, drawingNumbers);
-          const matchText = result.bestMatch.rating > 0.6 ? result.bestMatch.target : "";
+          const matchText = result.bestMatch.rating > 0.85 ? result.bestMatch.target : "";
           
           // Store both the match and similarity score for later use
           spreadsheetData[i]["Matched Childpart"] = matchText;
