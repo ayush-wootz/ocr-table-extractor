@@ -312,7 +312,9 @@
       border-radius: 5px;
       position: relative;
       display: block; /* Hidden by default */
-      max-width: 200px; /* Reduced size */
+      min-width: 150px;  /* Minimum size */
+      max-width: min(400px, 90vw);  /* Larger maximum */
+      width: fit-content; /* Adapts to content */
     }
     /* Only show when has image */
 /*     #image-preview.has-image {
@@ -324,6 +326,7 @@
       height: auto;
       display: block;
       margin-top: 10px;
+      width: auto; /* Let image determine its own width within max-width */
     }
 
     .preview-remove-btn {
@@ -1081,7 +1084,7 @@
       reader.onload = function (event) {
         const img = new Image();
         img.src = event.target.result;
-        img.style.maxWidth = "300px";
+        // img.style.maxWidth = "300px";
         img.alt = label;
 
         // Safely hide sample preview (check if it exists first)
