@@ -284,13 +284,14 @@
       position: relative;
     }
     
-    .edited-cell::before {
+    .edited-cell::after {
       content: '•';
       position: absolute;
-      top: 2px;
-      right: 3px;
+      top: 1px;
+      right: 1px;
       color: #607D8B; /* Blue-gray */
-      font-size: 8px;
+      font-size: 10px;
+      font-weight: bold;
       pointer-events: none;
       z-index: 10;
     }    
@@ -481,9 +482,18 @@
       </div>
     </div>
 
-    <div style="text-align: right; margin: 10px 0;">
-      <button id="process-btn">Process Image</button>
+    <div style="text-align: right; margin: 20px 0 10px 0;">
+      <div style="display: flex; align-items: center; justify-content: flex-end; gap: 10px;">
+        <div id="process-status" style="display: none; color: #007bff; font-size: 0.9rem;">
+          <span id="status-icon">⏳</span> <span id="status-text">Processing...</span>
+        </div>
+        <button id="process-btn">Process Image</button>
+      </div>
     </div>
+
+<!--     <div style="text-align: right; margin: 10px 0;">
+      <button id="process-btn">Process Image</button>
+    </div> -->
 
     <div id="image-preview">
       <button class="preview-remove-btn" onclick="clearPreview()" style="display: none;">×</button>
@@ -786,7 +796,34 @@
         dropdownMenu: true, // Enable dropdown menu
         filters: true, // Enable filtering
         // Add autocomplete settings for better dropdown filtering
-        autoColumnSize: true,        
+        autoColumnSize: true,
+
+// In renderSpreadsheet() function, replace the afterSelectionEnd hook:
+afterSelectionEnd: function(row, column, row2, column2) {
+  // Clear any stuck selections
+  if (row === row2 && column === column2) {
+    // Single cell selection - this is normal, do nothing
+    return;
+  }
+  
+  // Handle dropdown columns without interfering with selection
+  const prop = hot.colToProp(column);
+  if (prop === 'Matched Childpart' || prop === 'Type') {
+    // Small delay to prevent selection conflicts
+    setTimeout(() => {
+      try {
+        const editor = hot.getActiveEditor();
+        if (editor && typeof editor.isOpened === 'function' && editor.isOpened()) {
+          editor.focus();
+        }
+      } catch (e) {
+        // Ignore errors to prevent selection issues
+        console.log('Editor focus error (safe to ignore):', e);
+      }
+    }, 10);
+  }
+},        
+        
         // Prevent auto-selection in dropdowns
         // afterSelectionEnd: function(row, column, row2, column2) {
         //   const prop = hot.colToProp(column);
@@ -896,105 +933,148 @@
       renderSpreadsheet();
     }
 
-     document.getElementById("process-btn").onclick = async function () {
-      // Determine which columns to process
-      const columnsToProcess = columnOrder.filter(col => {
-        // First time: process all uploaded columns
-        if (!hasProcessedOnce) {
-          return uploads[col.id].files[0];
-        }
-        // Subsequent times: only process columns with new uploads
-        return newUploads[col.id] && uploads[col.id].files[0];
-      });
-    
-      console.log("Processing columns:", columnsToProcess.map(c => c.id));
-    
-      for (const col of columnsToProcess) {
-        const fileInput = uploads[col.id];
-        const file = fileInput.files[0];
-        
-        // Check required fields (only on first run)
-        if (!hasProcessedOnce && !file && (col.id === "partNumber" || col.id === "quantity")) {
-          alert(`Please upload an image for ${col.label}`);
-          return;
-        }
-        
-        // Skip if no file
-        if (!file) {
-          console.log(`⏭️ Skipping ${col.id} - no file uploaded`);
-          continue;
-        }
-    
-        const formData = new FormData();
-        formData.append("image", file);
-        formData.append("mode", "table");
-        formData.append("column", col.id);
-    
-        console.log(`🚀 OCR request for column: ${col.id}`);
-    
-        try {
-          const response = await fetch(API_URL, {
-            method: "POST",
-            body: formData
-          });
-    
-          const data = await response.json();
-          console.log(`✅ OCR response for ${col.id}:`, data);
-          
-          if (data.table && Array.isArray(data.table)) {
-            addColumn(data.table, col.label);
-          } else {
-            console.warn(`⚠️ No table data returned for ${col.id}`);
-          }
-        } catch (error) {
-          console.error(`❌ Error processing ${col.id}:`, error);
-          console.log(`Continuing with other columns...`);
-        }
-      }
-    
-      // 🔧 NEW: Reset tracking after processing
-      Object.keys(newUploads).forEach(key => {
-        newUploads[key] = false;
-      });
-      hasProcessedOnce = true;
-      updateProcessButton(); // This will disable the button
-    };  
-    
-    // document.getElementById("process-btn").onclick = async function () {
-    //   spreadsheetData = [];
-    //   columnsList = [];
-    //   columnCount = 0;
+document.getElementById("process-btn").onclick = async function () {
+  // 🔧 NEW: Get status elements and show extracting status
+  const processBtn = document.getElementById("process-btn");
+  const statusDiv = document.getElementById("process-status");
+  const statusIcon = document.getElementById("status-icon");
+  const statusText = document.getElementById("status-text");
 
-    //   for (const col of columnOrder) {
+  // Show extracting status and disable button immediately
+  processBtn.disabled = true;
+  statusDiv.style.display = "inline-block";
+  statusIcon.textContent = "⏳";
+  statusText.textContent = "Processing...";
+
+  try {
+    // Determine which columns to process (UNCHANGED)
+    const columnsToProcess = columnOrder.filter(col => {
+      // First time: process all uploaded columns
+      if (!hasProcessedOnce) {
+        return uploads[col.id].files[0];
+      }
+      // Subsequent times: only process columns with new uploads
+      return newUploads[col.id] && uploads[col.id].files[0];
+    });
+
+    console.log("Processing columns:", columnsToProcess.map(c => c.id));
+
+    // Processing loop (UNCHANGED)
+    for (const col of columnsToProcess) {
+      const fileInput = uploads[col.id];
+      const file = fileInput.files[0];
+      
+      // Check required fields (only on first run)
+      if (!hasProcessedOnce && !file && (col.id === "partNumber" || col.id === "quantity")) {
+        alert(`Please upload an image for ${col.label}`);
+        // 🔧 MODIFIED: Hide status on early return
+        statusDiv.style.display = "none";
+        processBtn.disabled = false;
+        return;
+      }
+      
+      // Skip if no file
+      if (!file) {
+        console.log(`⏭️ Skipping ${col.id} - no file uploaded`);
+        continue;
+      }
+
+      const formData = new FormData();
+      formData.append("image", file);
+      formData.append("mode", "table");
+      formData.append("column", col.id);
+
+      console.log(`🚀 OCR request for column: ${col.id}`);
+
+      // OCR processing (UNCHANGED)
+      const response = await fetch(API_URL, {
+        method: "POST",
+        body: formData
+      });
+
+      const data = await response.json();
+      console.log(`✅ OCR response for ${col.id}:`, data);
+      
+      if (data.table && Array.isArray(data.table)) {
+        addColumn(data.table, col.label);
+      } else {
+        console.warn(`⚠️ No table data returned for ${col.id}`);
+      }
+    }
+
+    // 🔧 NEW: Show success status
+    statusIcon.textContent = "✅";
+    statusText.textContent = "Processed!";
+    
+    // Hide status after 2 seconds
+    setTimeout(() => {
+      statusDiv.style.display = "none";
+    }, 2000);
+
+  } catch (error) {
+    console.error(`❌ Error processing:`, error);
+    
+    // 🔧 NEW: Show error status
+    statusIcon.textContent = "❌";
+    statusText.textContent = "Failed!";
+    
+    // Hide status after 3 seconds
+    setTimeout(() => {
+      statusDiv.style.display = "none";
+    }, 3000);
+    
+  } finally {
+    // Reset tracking after processing (UNCHANGED)
+    Object.keys(newUploads).forEach(key => {
+      newUploads[key] = false;
+    });
+    hasProcessedOnce = true;
+    updateProcessButton(); // This will set proper enabled/disabled state
+  }
+};
+    
+    //  document.getElementById("process-btn").onclick = async function () {
+    //   // Determine which columns to process
+    //   const columnsToProcess = columnOrder.filter(col => {
+    //     // First time: process all uploaded columns
+    //     if (!hasProcessedOnce) {
+    //       return uploads[col.id].files[0];
+    //     }
+    //     // Subsequent times: only process columns with new uploads
+    //     return newUploads[col.id] && uploads[col.id].files[0];
+    //   });
+    
+    //   console.log("Processing columns:", columnsToProcess.map(c => c.id));
+    
+    //   for (const col of columnsToProcess) {
     //     const fileInput = uploads[col.id];
     //     const file = fileInput.files[0];
         
-    //     // Check required fields
-    //     if (!file && (col.id === "partNumber" || col.id === "quantity")) {
+    //     // Check required fields (only on first run)
+    //     if (!hasProcessedOnce && !file && (col.id === "partNumber" || col.id === "quantity")) {
     //       alert(`Please upload an image for ${col.label}`);
     //       return;
     //     }
         
-    //     // Skip if no file for optional fields
+    //     // Skip if no file
     //     if (!file) {
     //       console.log(`⏭️ Skipping ${col.id} - no file uploaded`);
     //       continue;
     //     }
-
+    
     //     const formData = new FormData();
     //     formData.append("image", file);
     //     formData.append("mode", "table");
-
-    //     // Log & tell the backend which column we're OCR'ing
-    //     console.log(`🚀 OCR request for column: ${col.id}`);
     //     formData.append("column", col.id);
-
+    
+    //     console.log(`🚀 OCR request for column: ${col.id}`);
+    
     //     try {
     //       const response = await fetch(API_URL, {
     //         method: "POST",
     //         body: formData
     //       });
-
+    
     //       const data = await response.json();
     //       console.log(`✅ OCR response for ${col.id}:`, data);
           
@@ -1005,11 +1085,18 @@
     //       }
     //     } catch (error) {
     //       console.error(`❌ Error processing ${col.id}:`, error);
-    //       // Don't stop processing other columns if one fails
     //       console.log(`Continuing with other columns...`);
     //     }
     //   }
-    // };
+    
+    //   // 🔧 NEW: Reset tracking after processing
+    //   Object.keys(newUploads).forEach(key => {
+    //     newUploads[key] = false;
+    //   });
+    //   hasProcessedOnce = true;
+    //   updateProcessButton(); // This will disable the button
+    // };  
+    
 
     const previewContainer = document.getElementById("image-preview");
 
