@@ -401,6 +401,29 @@
       background-color: #2196f3 !important;
       color: white !important;
     }
+
+/* Definitive selection border fix */
+.handsontable .wtBorder.current {
+  border: 2px solid #4285f4 !important;
+  background: none !important;
+  box-shadow: inset 0 0 0 1px #4285f4 !important;
+}
+
+.handsontable .wtBorder.area {
+  border: 1px solid #4285f4 !important;
+  background: rgba(66, 133, 244, 0.1) !important;
+}
+
+/* Force clean selection transitions */
+.handsontable td {
+  transition: none !important;
+}
+
+/* Remove any lingering selection artifacts */
+.handsontable .wtBorder[style*="display: block"][style*="width: 0"] {
+  display: none !important;
+}
+    
     
     /* Low similarity warning - just icon */
     .low-similarity-cell {
@@ -795,32 +818,51 @@
         // Add autocomplete settings for better dropdown filtering
         autoColumnSize: true,
 
-        // Remove the current afterSelectionEnd hook entirely and replace with:
-        afterSelection: function(row, column, row2, column2, preventScrolling, selectionLayerLevel) {
-          // This fires when selection starts - more reliable than afterSelectionEnd
-          // Clear any stuck selections from previous interactions
-          if (selectionLayerLevel === 0) { // Only handle primary selections
-            // Let Handsontable handle selection normally
-            return;
-          }
-        },
-        
-        afterDeselect: function() {
-          // This fires when a cell is deselected - perfect for cleanup
-          // Force clear any stuck border states
+        // 🔧 FIX: Proper selection management
+        outsideClickDeselects: true,
+        selectionMode: 'single',
+
+        // 🔧 FIX: Clean cell rendering without selection interference
+        afterRender: function() {
+          // Force clear any stuck borders after each render
           setTimeout(() => {
-            const borders = document.querySelectorAll('.wtBorder');
-            borders.forEach(border => {
-              if (border.style.display !== 'none') {
-                // Only hide if it appears stuck (no active selection)
-                const activeCell = hot.getActiveEditor();
-                if (!activeCell || !activeCell.isOpened()) {
-                  border.style.display = 'none';
-                }
+            const stuckBorders = document.querySelectorAll('.wtBorder.current, .wtBorder.area');
+            stuckBorders.forEach(border => {
+              const rect = border.getBoundingClientRect();
+              // If border has no dimensions or is positioned oddly, it's likely stuck
+              if (rect.width === 0 || rect.height === 0 || rect.top < 0 || rect.left < 0) {
+                border.style.display = 'none';
               }
             });
-          }, 50);
-        },        
+          }, 10);
+        }
+        
+        // // Remove the current afterSelectionEnd hook entirely and replace with:
+        // afterSelection: function(row, column, row2, column2, preventScrolling, selectionLayerLevel) {
+        //   // This fires when selection starts - more reliable than afterSelectionEnd
+        //   // Clear any stuck selections from previous interactions
+        //   if (selectionLayerLevel === 0) { // Only handle primary selections
+        //     // Let Handsontable handle selection normally
+        //     return;
+        //   }
+        // },
+        
+        // afterDeselect: function() {
+        //   // This fires when a cell is deselected - perfect for cleanup
+        //   // Force clear any stuck border states
+        //   setTimeout(() => {
+        //     const borders = document.querySelectorAll('.wtBorder');
+        //     borders.forEach(border => {
+        //       if (border.style.display !== 'none') {
+        //         // Only hide if it appears stuck (no active selection)
+        //         const activeCell = hot.getActiveEditor();
+        //         if (!activeCell || !activeCell.isOpened()) {
+        //           border.style.display = 'none';
+        //         }
+        //       }
+        //     });
+        //   }, 50);
+        // }        
                 
         // Prevent auto-selection in dropdowns
         // afterSelectionEnd: function(row, column, row2, column2) {
