@@ -1500,22 +1500,22 @@ async function sendDataToBackend() {
   try {
     // Show loading immediately
     addDataBtn.disabled = true;
-    processStatusDiv.style.display = "inline-block";
-    statusIcon.textContent = "📤";
-    statusText.textContent = "Adding Data...";
+    addDataStatusDiv.style.display = "inline-block";
+    addStatusIcon.textContent = "📤";
+    addStatusText.textContent = "Adding Data...";
 
     // Validation with status feedback
     const validation = validateRequiredFields();
     if (!validation.isValid) {
-      statusIcon.textContent = "⚠️";
-      statusText.textContent = "Validation Failed!";
+      addStatusIcon.textContent = "⚠️";
+      addStatusText.textContent = "Validation Failed!";
       
       // Show validation error popup
       alert(`Missing Required Fields: ${validation.missingFields.join(', ')}\n\nRequired fields:\n- Part Number, Quantity, Type (always required)\n- Select Drawing Number (required when Type is "Child Part")`);
       
       // Hide status after showing error
       setTimeout(() => {
-        processStatusDiv.style.display = "none";
+        addDataStatusDiv.style.display = "none";
       }, 3000);
       return;
     }
@@ -1563,8 +1563,8 @@ async function sendDataToBackend() {
     });
 
     // Update status for sending
-    statusIcon.textContent = "🔄";
-    statusText.textContent = "Sending to Database...";
+    addStatusIcon.textContent = "🔄";
+    addStatusText.textContent = "Sending to Database...";
 
     let successfulRequests = 0;
     let totalRequests = 0;
@@ -1625,15 +1625,15 @@ async function sendDataToBackend() {
 
     // Success only after ALL requests complete
     if (successfulRequests === totalRequests && totalRequests > 0) {
-      statusIcon.textContent = "✅";
-      statusText.textContent = "Added Successfully!";
+      addStatusIcon.textContent = "✅";
+      addStatusText.textContent = "Added Successfully!";
       
       // Success popup with actual data
       alert(`Data added successfully!\n- Child Parts: ${childPartsData.length}\n- BO Parts: ${boData.length}`);
       
       // Hide status after success
       setTimeout(() => {
-        processStatusDiv.style.display = "none";
+        addDataStatusDiv.style.display = "none";
       }, 3000);
     } else {
       throw new Error("No data was processed");
@@ -1643,15 +1643,15 @@ async function sendDataToBackend() {
     console.error('❌ Error sending data:', error);
     
     // Error status
-    statusIcon.textContent = "❌";
-    statusText.textContent = "Addition Failed!";
+    addStatusIcon.textContent = "❌";
+    addStatusText.textContent = "Addition Failed!";
     
     // Error popup
     alert(`Error adding data: ${error.message}`);
     
     // Hide status after error
     setTimeout(() => {
-      processStatusDiv.style.display = "none";
+      addDataStatusDiv.style.display = "none";
     }, 3000);
     
   } finally {
