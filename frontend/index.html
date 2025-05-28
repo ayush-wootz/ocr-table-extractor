@@ -1003,28 +1003,35 @@ document.getElementById("process-btn").onclick = async function () {
         console.warn(`⚠️ No table data returned for ${col.id}`);
       }
     }
+    
+    statusIcon.textContent = "✅";
+    statusText.textContent = "Processed!";
 
-    // 🔧 FIX: Only show success if we actually processed something
-    if (hasAnySuccess) {
-      // 🔧 NEW: Show success status
-      statusIcon.textContent = "✅";
-      statusText.textContent = "Processed!";
-  
-      // // 🔧 NEW: Hide preview on completion
-      // previewContainer.innerHTML = '';
-      // previewContainer.style.display = 'none'; // ← Completely hidden
-      // previewContainer.classList.remove('has-image');
-      // previewContainer.dataset.lastColumn = '';
-      // document.getElementById('sample-preview').style.display = 'none';    
+    // 🔧 SAFE: Hide preview with error checking
+    try {
+      if (previewContainer) {
+        previewContainer.innerHTML = '';
+        previewContainer.style.display = 'none';
+        if (previewContainer.classList.contains('has-image')) {
+          previewContainer.classList.remove('has-image');
+        }
+        if (previewContainer.dataset.lastColumn) {
+          previewContainer.dataset.lastColumn = '';
+        }
+      }
       
-      
-      // Hide status after 2 seconds
-      setTimeout(() => {
-        statusDiv.style.display = "none";
-      }, 2000);
-    } else {
-      throw new Error("No data was extracted from any column");
-    }
+      const samplePreview = document.getElementById('sample-preview');
+      if (samplePreview) {
+        samplePreview.style.display = 'none';
+      }
+    } catch (previewError) {
+      console.log('Preview hiding error (safe to ignore):', previewError);
+    } 
+
+    // Hide status after 2 seconds
+    setTimeout(() => {
+      statusDiv.style.display = "none";
+    }, 2000);        
 
   } catch (error) {
     console.error(`❌ Error processing:`, error);
