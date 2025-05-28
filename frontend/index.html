@@ -527,6 +527,16 @@
       { id: "material", label: "Material" }
     ];
 
+    // Track which columns have new uploads since last processing
+    let newUploads = {
+      partNumber: false,
+      description: false,
+      quantity: false,
+      material: false
+    };
+    
+    let hasProcessedOnce = false; // Track if we've processed at least once
+    
     // Similarity Matching functions
     // ============================================
     // SEQUENTIAL CHARACTER MATCHING (CORRECTED)
@@ -861,41 +871,48 @@
       renderSpreadsheet();
     }
 
-    document.getElementById("process-btn").onclick = async function () {
-      spreadsheetData = [];
-      columnsList = [];
-      columnCount = 0;
-
-      for (const col of columnOrder) {
+     document.getElementById("process-btn").onclick = async function () {
+      // Determine which columns to process
+      const columnsToProcess = columnOrder.filter(col => {
+        // First time: process all uploaded columns
+        if (!hasProcessedOnce) {
+          return uploads[col.id].files[0];
+        }
+        // Subsequent times: only process columns with new uploads
+        return newUploads[col.id] && uploads[col.id].files[0];
+      });
+    
+      console.log("Processing columns:", columnsToProcess.map(c => c.id));
+    
+      for (const col of columnsToProcess) {
         const fileInput = uploads[col.id];
         const file = fileInput.files[0];
         
-        // Check required fields
-        if (!file && (col.id === "partNumber" || col.id === "quantity")) {
+        // Check required fields (only on first run)
+        if (!hasProcessedOnce && !file && (col.id === "partNumber" || col.id === "quantity")) {
           alert(`Please upload an image for ${col.label}`);
           return;
         }
         
-        // Skip if no file for optional fields
+        // Skip if no file
         if (!file) {
           console.log(`⏭️ Skipping ${col.id} - no file uploaded`);
           continue;
         }
-
+    
         const formData = new FormData();
         formData.append("image", file);
         formData.append("mode", "table");
-
-        // Log & tell the backend which column we're OCR'ing
-        console.log(`🚀 OCR request for column: ${col.id}`);
         formData.append("column", col.id);
-
+    
+        console.log(`🚀 OCR request for column: ${col.id}`);
+    
         try {
           const response = await fetch(API_URL, {
             method: "POST",
             body: formData
           });
-
+    
           const data = await response.json();
           console.log(`✅ OCR response for ${col.id}:`, data);
           
@@ -906,11 +923,68 @@
           }
         } catch (error) {
           console.error(`❌ Error processing ${col.id}:`, error);
-          // Don't stop processing other columns if one fails
           console.log(`Continuing with other columns...`);
         }
       }
-    };
+    
+      // 🔧 NEW: Reset tracking after processing
+      Object.keys(newUploads).forEach(key => {
+        newUploads[key] = false;
+      });
+      hasProcessedOnce = true;
+      updateProcessButton(); // This will disable the button
+    };  
+    
+    // document.getElementById("process-btn").onclick = async function () {
+    //   spreadsheetData = [];
+    //   columnsList = [];
+    //   columnCount = 0;
+
+    //   for (const col of columnOrder) {
+    //     const fileInput = uploads[col.id];
+    //     const file = fileInput.files[0];
+        
+    //     // Check required fields
+    //     if (!file && (col.id === "partNumber" || col.id === "quantity")) {
+    //       alert(`Please upload an image for ${col.label}`);
+    //       return;
+    //     }
+        
+    //     // Skip if no file for optional fields
+    //     if (!file) {
+    //       console.log(`⏭️ Skipping ${col.id} - no file uploaded`);
+    //       continue;
+    //     }
+
+    //     const formData = new FormData();
+    //     formData.append("image", file);
+    //     formData.append("mode", "table");
+
+    //     // Log & tell the backend which column we're OCR'ing
+    //     console.log(`🚀 OCR request for column: ${col.id}`);
+    //     formData.append("column", col.id);
+
+    //     try {
+    //       const response = await fetch(API_URL, {
+    //         method: "POST",
+    //         body: formData
+    //       });
+
+    //       const data = await response.json();
+    //       console.log(`✅ OCR response for ${col.id}:`, data);
+          
+    //       if (data.table && Array.isArray(data.table)) {
+    //         addColumn(data.table, col.label);
+    //       } else {
+    //         console.warn(`⚠️ No table data returned for ${col.id}`);
+    //       }
+    //     } catch (error) {
+    //       console.error(`❌ Error processing ${col.id}:`, error);
+    //       // Don't stop processing other columns if one fails
+    //       console.log(`Continuing with other columns...`);
+    //     }
+    //   }
+    // };
 
     const previewContainer = document.getElementById("image-preview");
 
@@ -1016,6 +1090,9 @@
         if (input.files[0]) {
           area.classList.add('has-file');
           document.getElementById(`status-${col}`).style.display = 'block';
+
+          // 🔧 NEW: Mark this column as having new upload
+          newUploads[col] = true;
           
           // Store which column was last uploaded for the clear function
           previewContainer.dataset.lastColumn = col;
@@ -1092,7 +1169,20 @@
     // Enable/disable process button based on required files
     function updateProcessButton() {
       const hasRequired = uploads.partNumber.files.length > 0 && uploads.quantity.files.length > 0;
-      document.getElementById("process-btn").disabled = !hasRequired;
+      const hasNewUploads = Object.values(newUploads).some(isNew => isNew);
+      
+      // Enable if: has required files AND (first time OR has new uploads)
+      const shouldEnable = hasRequired && (!hasProcessedOnce || hasNewUploads);
+      
+      document.getElementById("process-btn").disabled = !shouldEnable;
+
+      // 🔍 DEBUG: Log button state
+      console.log("Process button state:", {
+        hasRequired,
+        hasNewUploads,
+        hasProcessedOnce,
+        shouldEnable
+      });    
     }
 
     // Initialize button state
@@ -1168,6 +1258,10 @@
         input.value = '';
         area.classList.remove('has-file');
         status.style.display = 'none';
+
+        // 🔧 NEW: Mark as no longer having new upload
+        newUploads[columnId] = false;
+        
         updateProcessButton();
         
         // Clear preview if this was the last uploaded file
