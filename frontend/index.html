@@ -290,7 +290,7 @@
       top: 1px;
       right: 1px;
       color: #607D8B; /* Blue-gray */
-      font-size: 10px;
+      font-size: 12px;
       font-weight: bold;
       pointer-events: none;
       z-index: 10;
@@ -401,20 +401,6 @@
       background-color: #2196f3 !important;
       color: white !important;
     }
-
-/* Temporary test - add this CSS */
-.handsontable td.current {
-  background-color: transparent !important;
-  border: none !important;
-}
-
-.handsontable .wtBorder {
-  display: none !important;
-}
-
-.handsontable .area {
-  background-color: transparent !important;
-}
     
     /* Low similarity warning - just icon */
     .low-similarity-cell {
@@ -812,32 +798,33 @@
         // Add autocomplete settings for better dropdown filtering
         autoColumnSize: true,
 
-// In renderSpreadsheet() function, replace the afterSelectionEnd hook:
-afterSelectionEnd: function(row, column, row2, column2) {
-  // Clear any stuck selections
-  if (row === row2 && column === column2) {
-    // Single cell selection - this is normal, do nothing
-    return;
-  }
-  
-  // Handle dropdown columns without interfering with selection
-  const prop = hot.colToProp(column);
-  if (prop === 'Matched Childpart' || prop === 'Type') {
-    // Small delay to prevent selection conflicts
-    setTimeout(() => {
-      try {
-        const editor = hot.getActiveEditor();
-        if (editor && typeof editor.isOpened === 'function' && editor.isOpened()) {
-          editor.focus();
-        }
-      } catch (e) {
-        // Ignore errors to prevent selection issues
-        console.log('Editor focus error (safe to ignore):', e);
-      }
-    }, 10);
-  }
-},        
+        // Remove the current afterSelectionEnd hook entirely and replace with:
+        afterSelection: function(row, column, row2, column2, preventScrolling, selectionLayerLevel) {
+          // This fires when selection starts - more reliable than afterSelectionEnd
+          // Clear any stuck selections from previous interactions
+          if (selectionLayerLevel === 0) { // Only handle primary selections
+            // Let Handsontable handle selection normally
+            return;
+          }
+        },
         
+        afterDeselect: function() {
+          // This fires when a cell is deselected - perfect for cleanup
+          // Force clear any stuck border states
+          setTimeout(() => {
+            const borders = document.querySelectorAll('.wtBorder');
+            borders.forEach(border => {
+              if (border.style.display !== 'none') {
+                // Only hide if it appears stuck (no active selection)
+                const activeCell = hot.getActiveEditor();
+                if (!activeCell || !activeCell.isOpened()) {
+                  border.style.display = 'none';
+                }
+              }
+            });
+          }, 50);
+        },        
+                
         // Prevent auto-selection in dropdowns
         // afterSelectionEnd: function(row, column, row2, column2) {
         //   const prop = hot.colToProp(column);
