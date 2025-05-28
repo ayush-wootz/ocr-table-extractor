@@ -823,7 +823,21 @@
     }
 
     function addColumn(newColumnData, label) {
-      columnsList.push(label);
+      // 🔧 FIX: If column already exists, remove it first (replacement)
+      const existingIndex = columnsList.indexOf(label);
+      if (existingIndex > -1) {
+        console.log(`Replacing existing column: ${label}`);
+        // Clear existing data for this column
+        spreadsheetData.forEach(row => {
+          if (row[label]) {
+            delete row[label];
+          }
+        });
+      } else {
+        // Only add to columnsList if it's truly new
+        columnsList.push(label);
+      }
+      
       if (label === "PartNumber" && !columnsList.includes("Matched Childpart")) {
         columnsList.push("Matched Childpart");
         columnsList.push("Type");
