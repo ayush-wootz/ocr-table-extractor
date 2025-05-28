@@ -402,16 +402,14 @@
       color: white !important;
     }
 
-/* Remove any lingering selection artifacts */
-.handsontable .wtBorder{
-  display: none !important;
-}
+
        
 /* Definitive selection border fix */
 .handsontable .wtBorder.current {
   border: 1px solid #4285f4 !important;
   background: none !important;
   box-shadow: none !important;
+  z-index: 10 !important;
 }
 
 /* Remove specific extra border types */
@@ -421,16 +419,19 @@
   display: none !important; /* Hide these extra border types */
 } 
     
-/* Ensure no double borders from table cells */
-.handsontable td.current {
-  border: none !important; /* Remove cell-level borders */
-  box-shadow: none !important;
-}
     
 /* Force clean selection transitions */
 .handsontable td {
+  border-right: 1px solid #ccc !important; /* Keep vertical lines */
+  border-bottom: 1px solid #ccc !important; /* Keep horizontal lines */
   transition: none !important;
 }
+
+/* Remove any lingering selection artifacts */
+.handsontable .wtBorder[style*="display: block"][style*="width: 0"]{
+  display: none !important;
+}    
+    
 
  
     
