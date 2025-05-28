@@ -957,6 +957,9 @@ document.getElementById("process-btn").onclick = async function () {
 
     console.log("Processing columns:", columnsToProcess.map(c => c.id));
 
+    // 🔧 ADD THIS LINE:
+    let hasAnySuccess = false;  
+    
     // Processing loop (UNCHANGED)
     for (const col of columnsToProcess) {
       const fileInput = uploads[col.id];
@@ -995,27 +998,33 @@ document.getElementById("process-btn").onclick = async function () {
       
       if (data.table && Array.isArray(data.table)) {
         addColumn(data.table, col.label);
+        hasAnySuccess = true; // 🔧 ADD THIS LINE
       } else {
         console.warn(`⚠️ No table data returned for ${col.id}`);
       }
     }
 
-    // 🔧 NEW: Show success status
-    statusIcon.textContent = "✅";
-    statusText.textContent = "Processed!";
-
-    // 🔧 NEW: Hide preview on completion
-    previewContainer.innerHTML = '';
-    previewContainer.style.display = 'none'; // ← Completely hidden
-    previewContainer.classList.remove('has-image');
-    previewContainer.dataset.lastColumn = '';
-    document.getElementById('sample-preview').style.display = 'none';    
-    
-    
-    // Hide status after 2 seconds
-    setTimeout(() => {
-      statusDiv.style.display = "none";
-    }, 2000);
+    // 🔧 FIX: Only show success if we actually processed something
+    if (hasAnySuccess) {
+      // 🔧 NEW: Show success status
+      statusIcon.textContent = "✅";
+      statusText.textContent = "Processed!";
+  
+      // 🔧 NEW: Hide preview on completion
+      previewContainer.innerHTML = '';
+      previewContainer.style.display = 'none'; // ← Completely hidden
+      previewContainer.classList.remove('has-image');
+      previewContainer.dataset.lastColumn = '';
+      document.getElementById('sample-preview').style.display = 'none';    
+      
+      
+      // Hide status after 2 seconds
+      setTimeout(() => {
+        statusDiv.style.display = "none";
+      }, 2000);
+    } else {
+      throw new Error("No data was extracted from any column");
+    }
 
   } catch (error) {
     console.error(`❌ Error processing:`, error);
@@ -1185,12 +1194,22 @@ document.getElementById("process-btn").onclick = async function () {
       if (dragCounter <= 0) {
         dragCounter = 0;
         clearNearbyHighlights();
+        
+        // 🔧 FIX: Force clear all stuck states
+        document.querySelectorAll('.upload-area').forEach(area => {
+          area.classList.remove('dragover', 'nearby');
+        });
       }
     });
 
     document.addEventListener('drop', function(e) {
       dragCounter = 0;
       clearNearbyHighlights();
+      
+      // 🔧 FIX: Force clear all stuck states on any drop
+      document.querySelectorAll('.upload-area').forEach(area => {
+        area.classList.remove('dragover', 'nearby');
+      });
     });
 
     // Setup individual upload areas
