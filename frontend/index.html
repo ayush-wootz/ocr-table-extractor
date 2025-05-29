@@ -410,14 +410,10 @@
   background: none !important;
   box-shadow: none !important;
   z-index: 10 !important;
-}
 
-/* Remove the inner border elements that create double lines */
-.handsontable .wtBorder.current::before,
-.handsontable .wtBorder.current::after {
-  content: none !important;
-  display: none !important;
-}    
+  /* Force thin borders */
+  border-width: 1px !important;
+}  
 
 /* Remove specific extra border types */
 .handsontable .wtBorder.corner,
@@ -434,12 +430,7 @@
   transition: none !important;
 }
 
-/* Remove any lingering selection artifacts */
-.handsontable .wtBorder[style*="display: block"][style*="width: 0"]{
-  display: none !important;
-}    
     
-
  
     
     /* Low similarity warning - just icon */
