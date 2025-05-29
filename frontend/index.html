@@ -401,21 +401,26 @@
       background-color: #2196f3 !important;
       color: white !important;
     }
-
-
-/* Remove specific extra border types */
-.handsontable .wtBorder.corner,
-.handsontable .wtBorder.fill {
-  display: none !important; /* Hide these extra border types */
-} 
     
+    /* Fix editor width to prevent background text showing */
+    .handsontable .handsontableInput {
+      width: 100% !important; /* Make editor fill entire cell width */
+      box-sizing: border-box !important;
+    }
     
-/* Force clean selection transitions */
-.handsontable td {
-  border-right: 1px solid #ccc !important; /* Keep vertical lines */
-  border-bottom: 1px solid #ccc !important; /* Keep horizontal lines */
-  transition: none !important;
-}
+    /* Remove specific extra border types */
+    .handsontable .wtBorder.corner,
+    .handsontable .wtBorder.fill {
+      display: none !important; /* Hide these extra border types */
+    } 
+        
+        
+    /* Force clean selection transitions */
+    .handsontable td {
+      border-right: 1px solid #ccc !important; /* Keep vertical lines */
+      border-bottom: 1px solid #ccc !important; /* Keep horizontal lines */
+      transition: none !important;
+    }
 
     
  
