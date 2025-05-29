@@ -157,7 +157,7 @@
       padding: 8px;
       text-align: center;
       background: #fafafa;
-      transition: all 0.3s ease;
+      transition: all 0.2s ease;
       cursor: pointer;
       min-height: 55px;
       max-height: 65px;
@@ -1182,7 +1182,7 @@ document.getElementById("process-btn").onclick = async function () {
     let dragCounter = 0;
 
     // Get nearest upload area based on mouse position
-    function getNearbyUploadArea(x, y, threshold = 120) {
+    function getNearbyUploadArea(x, y, threshold = 60) {
       const areas = document.querySelectorAll('.upload-area');
       let closestArea = null;
       let minDistance = threshold;
@@ -1259,9 +1259,9 @@ document.getElementById("process-btn").onclick = async function () {
         clearNearbyHighlights();
         
         // 🔧 FIX: Force clear all stuck states
-        // document.querySelectorAll('.upload-area').forEach(area => {
-        //   area.classList.remove('dragover', 'nearby');
-        // });
+        document.querySelectorAll('.upload-area').forEach(area => {
+          area.classList.remove('dragover', 'nearby');
+        });
       }
     });
 
@@ -1270,9 +1270,9 @@ document.getElementById("process-btn").onclick = async function () {
       clearNearbyHighlights();
       
       // // 🔧 FIX: Force clear all stuck states on any drop
-      // document.querySelectorAll('.upload-area').forEach(area => {
-      //   area.classList.remove('dragover', 'nearby');
-      // });
+      document.querySelectorAll('.upload-area').forEach(area => {
+        area.classList.remove('dragover', 'nearby');
+      });
     });
 
     // Setup individual upload areas
