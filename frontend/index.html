@@ -1219,8 +1219,14 @@ document.getElementById("process-btn").onclick = async function () {
 
     // Clear all nearby highlights
     function clearNearbyHighlights() {
-      document.querySelectorAll('.upload-area').forEach(area => {
+      document.querySelectorAll('.upload-area.nearby').forEach(area => {
         area.classList.remove('nearby');
+      });
+    }
+
+    function clearAllDragStates() {
+      document.querySelectorAll('.upload-area').forEach(area => {
+        area.classList.remove('dragover', 'nearby');
       });
     }
 
@@ -1256,12 +1262,15 @@ document.getElementById("process-btn").onclick = async function () {
       dragCounter--;
       if (dragCounter <= 0) {
         dragCounter = 0;
-        clearNearbyHighlights();
-        
-        // 🔧 FIX: Force clear all stuck states
-        document.querySelectorAll('.upload-area').forEach(area => {
-          area.classList.remove('dragover', 'nearby');
-        });
+        // Add a small delay to prevent flickering
+        setTimeout(() => {
+          if (dragCounter === 0) {
+            clearNearbyHighlights();
+            
+            // Force clear all stuck states
+            clearAllDragStates();
+          }
+        }, 50);
       }
     });
 
@@ -1269,10 +1278,8 @@ document.getElementById("process-btn").onclick = async function () {
       dragCounter = 0;
       clearNearbyHighlights();
       
-      // // 🔧 FIX: Force clear all stuck states on any drop
-      document.querySelectorAll('.upload-area').forEach(area => {
-        area.classList.remove('dragover', 'nearby');
-      });
+      // Force clear all stuck states on any drop
+      clearAllDragStates();
     });
 
     // Setup individual upload areas
@@ -1280,8 +1287,15 @@ document.getElementById("process-btn").onclick = async function () {
       const col = area.dataset.column;
       const input = uploads[col];
 
+      if (!input) {
+        console.error(`Input not found for column: ${col}`);
+        return;
+      }
+
       // Click to upload
       area.addEventListener('click', function(e) {
+        // Don't trigger if clicking the clear button
+        if (e.target.closest('.upload-clear-btn')) return;
         input.click();
       });
 
@@ -1328,6 +1342,10 @@ document.getElementById("process-btn").onclick = async function () {
         // Ensure we're handling files
         if (e.dataTransfer.types.includes('Files')) {
           e.dataTransfer.dropEffect = 'copy';
+
+          if (!area.classList.contains('dragover')) {
+            area.classList.add('dragover');
+          }
         }
       });
 
@@ -1348,9 +1366,11 @@ document.getElementById("process-btn").onclick = async function () {
       area.addEventListener('drop', function(e) {
         e.preventDefault();
         e.stopPropagation();
-        area.classList.remove('dragover');
-        clearNearbyHighlights();
-        
+        area.classList.remove('dragover', 'nearby');
+        clearAllDragStates();
+        // clearNearbyHighlights();
+
+        dragCounter = 0;
         // Ensure we have files and handle them properly
         if (e.dataTransfer.files.length > 0) {
           const dt = new DataTransfer();
