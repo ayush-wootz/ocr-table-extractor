@@ -459,10 +459,10 @@
       <h3>Upload Column ScreenShots</h3>
     </div>
 
-    <div class="instructions">
+<!--     <div class="instructions">
         🔢 Include 10 rows | 🔍 Make zoom & sharp | 🚫 No headers 
     </div>
-
+ -->
     <!-- Hidden but functional mode select -->
     <select id="mode-select">
       <option value="table" selected>Column-by-Column Table Extract</option>
@@ -835,7 +835,6 @@
 
         // 🔧 FIX: Proper selection management
         outsideClickDeselects: true,
-        selectionMode: 'single',
 
         // 🔧 FIX: Clean cell rendering without selection interference
         afterRender: function() {
@@ -1260,9 +1259,9 @@ document.getElementById("process-btn").onclick = async function () {
         clearNearbyHighlights();
         
         // 🔧 FIX: Force clear all stuck states
-        document.querySelectorAll('.upload-area').forEach(area => {
-          area.classList.remove('dragover', 'nearby');
-        });
+        // document.querySelectorAll('.upload-area').forEach(area => {
+        //   area.classList.remove('dragover', 'nearby');
+        // });
       }
     });
 
@@ -1270,10 +1269,10 @@ document.getElementById("process-btn").onclick = async function () {
       dragCounter = 0;
       clearNearbyHighlights();
       
-      // 🔧 FIX: Force clear all stuck states on any drop
-      document.querySelectorAll('.upload-area').forEach(area => {
-        area.classList.remove('dragover', 'nearby');
-      });
+      // // 🔧 FIX: Force clear all stuck states on any drop
+      // document.querySelectorAll('.upload-area').forEach(area => {
+      //   area.classList.remove('dragover', 'nearby');
+      // });
     });
 
     // Setup individual upload areas
