@@ -412,6 +412,13 @@
   z-index: 10 !important;
 }
 
+/* Remove the inner border elements that create double lines */
+.handsontable .wtBorder.current::before,
+.handsontable .wtBorder.current::after {
+  content: none !important;
+  display: none !important;
+}    
+
 /* Remove specific extra border types */
 .handsontable .wtBorder.corner,
 .handsontable .wtBorder.fill,
@@ -836,20 +843,20 @@
         // 🔧 FIX: Proper selection management
         outsideClickDeselects: true,
 
-        // 🔧 FIX: Clean cell rendering without selection interference
-        afterRender: function() {
-          // Force clear any stuck borders after each render
-          setTimeout(() => {
-            const stuckBorders = document.querySelectorAll('.wtBorder.current, .wtBorder.area');
-            stuckBorders.forEach(border => {
-              const rect = border.getBoundingClientRect();
-              // If border has no dimensions or is positioned oddly, it's likely stuck
-              if (rect.width === 0 || rect.height === 0 || rect.top < 0 || rect.left < 0) {
-                border.style.display = 'none';
-              }
-            });
-          }, 10);
-        }
+        // // 🔧 FIX: Clean cell rendering without selection interference
+        // afterRender: function() {
+        //   // Force clear any stuck borders after each render
+        //   setTimeout(() => {
+        //     const stuckBorders = document.querySelectorAll('.wtBorder.current, .wtBorder.area');
+        //     stuckBorders.forEach(border => {
+        //       const rect = border.getBoundingClientRect();
+        //       // If border has no dimensions or is positioned oddly, it's likely stuck
+        //       if (rect.width === 0 || rect.height === 0 || rect.top < 0 || rect.left < 0) {
+        //         border.style.display = 'none';
+        //       }
+        //     });
+        //   }, 10);
+        // }
         
         // // Remove the current afterSelectionEnd hook entirely and replace with:
         // afterSelection: function(row, column, row2, column2, preventScrolling, selectionLayerLevel) {
