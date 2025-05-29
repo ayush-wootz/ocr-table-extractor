@@ -403,22 +403,9 @@
     }
 
 
-       
-/* Definitive selection border fix */
-.handsontable .wtBorder.current {
-  border: 1px solid #4285f4 !important;
-  background: none !important;
-  box-shadow: none !important;
-  z-index: 10 !important;
-
-  /* Force thin borders */
-  border-width: 1px !important;
-}  
-
 /* Remove specific extra border types */
 .handsontable .wtBorder.corner,
-.handsontable .wtBorder.fill,
-.handsontable .wtBorder.area {
+.handsontable .wtBorder.fill {
   display: none !important; /* Hide these extra border types */
 } 
     
@@ -835,25 +822,25 @@
         outsideClickDeselects: true,
 
   // Add this debug hook
-  afterSelectionEnd: function(row, column, row2, column2) {
-    setTimeout(() => {
-      console.log('=== BORDER DEBUG ===');
-      const allBorders = document.querySelectorAll('.wtBorder');
+afterSelectionEnd: function(row, column, row2, column2) {
+  // Simple fix: directly modify the border elements
+  setTimeout(() => {
+    const currentBorders = document.querySelectorAll('.wtBorder.current[style*="display: block"]');
+    currentBorders.forEach(border => {
+      const style = border.getAttribute('style');
       
-      allBorders.forEach((border, index) => {
-        const rect = border.getBoundingClientRect();
-        const computed = getComputedStyle(border);
-        
-        console.log(`Border ${index}:`, {
-          classes: border.className,
-          position: `top:${rect.top}, left:${rect.left}, width:${rect.width}, height:${rect.height}`,
-          borderStyle: computed.border,
-          display: computed.display,
-          zIndex: computed.zIndex
-        });
-      });
-    }, 100);
-  }
+      // Fix width: 4 to width: 1
+      if (style.includes('width: 4')) {
+        border.setAttribute('style', style.replace('width: 4px', 'width: 1px'));
+      }
+      
+      // Fix height: 4 to height: 1  
+      if (style.includes('height: 4')) {
+        border.setAttribute('style', style.replace('height: 4px', 'height: 1px'));
+      }
+    });
+  }, 0);
+}
 
         // // 🔧 FIX: Clean cell rendering without selection interference
         // afterRender: function() {
