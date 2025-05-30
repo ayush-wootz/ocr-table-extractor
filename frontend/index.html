@@ -422,7 +422,26 @@
       transition: none !important;
     }
 
-    
+
+/* Location: Add to your CSS section */
+.help-icon {
+  margin-left: 8px;
+  cursor: pointer;
+  position: relative;
+}
+
+#sample-preview.help-mode {
+  position: absolute;
+  top: 30px;
+  right: 0;
+  z-index: 1000;
+  border: 1px solid #ddd;
+  background: white;
+  padding: 10px;
+  border-radius: 5px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  display: block !important;
+}    
  
     
     /* Low similarity warning - just icon */
@@ -449,10 +468,11 @@
       <h3>Upload Column ScreenShots</h3>
     </div>
 
-<!--     <div class="instructions">
-        🔢 Include 10 rows | 🔍 Make zoom & sharp | 🚫 No headers 
+    <div class="instructions">
+        🔢 < 20 rows | 🔍 zoom & sharp | 🚫 no headers 
+        <span id="help-icon" class="help-icon">ℹ️</span>
     </div>
- -->
+
     <!-- Hidden but functional mode select -->
     <select id="mode-select">
       <option value="table" selected>Column-by-Column Table Extract</option>
@@ -1897,6 +1917,18 @@ async function sendDataToBackend() {
 
     // Add Data button event listener
     document.getElementById('add-data-btn').addEventListener('click', sendDataToBackend);
+
+// Location: Add at the end of your script section
+document.getElementById('help-icon').addEventListener('click', function() {
+  const samplePreview = document.getElementById('sample-preview');
+  const isVisible = samplePreview.classList.contains('help-mode');
+  
+  if (isVisible) {
+    samplePreview.classList.remove('help-mode');
+  } else {
+    samplePreview.classList.add('help-mode');
+  }
+});    
     
   </script>
 </body>
