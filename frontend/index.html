@@ -424,7 +424,10 @@
 
 
 .help-icon {
-  margin-left: 8px;
+  /* margin-left: 8px; */
+  float: right; /* Move to right edge */
+  margin-left: 0; /* Remove left margin */
+  margin-right: 0; /* No right margin */
   cursor: pointer;
   opacity: 0.7;
   transition: opacity 0.2s ease;
@@ -559,10 +562,10 @@
 
     <div id="image-preview">
 <!--       <button class="preview-remove-btn" onclick="clearPreview()" style="display: none;">×</button> -->
-      <div id="sample-preview">
+<!--       <div id="sample-preview">
         <strong>Sample Screenshot</strong><br>
         <img src= "sample-screenshot.png" alt="Sample column screenshot">
-      </div>    
+      </div>     -->
     </div>
 
     <div style="text-align: right; margin: 20px 0 10px 0;">
