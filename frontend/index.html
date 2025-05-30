@@ -65,7 +65,7 @@
       border: 1px solid #e1e5f2;
       border-radius: 6px;
       padding: 12px 16px;
-      margin-bottom: 20px;
+      margin-bottom: 25px;
       font-size: 0.85rem;
       line-height: 1.4;
       color: #4a5568;
@@ -431,9 +431,11 @@
   cursor: pointer;
   opacity: 0.7;
   transition: opacity 0.2s ease;
-  display: inline-flex;
-  align-items: center;
-  vertical-align: middle; /* Add this for text alignment */
+
+  /* Add these to pull it up: */
+  position: relative;
+  top: -3px; /* Adjust this value to align perfectly */
+  line-height: 1; /* Remove extra line spacing */
 }
 
 .help-icon i {
@@ -489,7 +491,7 @@
     </div>
 
     <div class="instructions">
-        🔢 < 20 rows | 🔍 zoom & sharp | 🚫 no headers
+        🔢 < 20 rows | 🔍 zoom & sharp | 🚫 no header
         <span id="help-icon" class="help-icon"> <i data-lucide="info"></i> </span>
         <!-- Add the popover right after instructions -->
         <div id="help-popover" class="help-popover" style="display: none;">
