@@ -1,16 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Hybrid OCR & Manual Entry Tool</title>
 
   <!-- Handsontable CSS and JS from CDN -->
-  <link
-    rel="stylesheet"
-    type="text/css"
-    href="https://cdn.jsdelivr.net/npm/handsontable@12.1.0/dist/handsontable.full.min.css"
-  />
+  <link rel="stylesheet" type="text/css"
+    href="https://cdn.jsdelivr.net/npm/handsontable@12.1.0/dist/handsontable.full.min.css" />
   <script src="https://cdn.jsdelivr.net/npm/handsontable@12.1.0/dist/handsontable.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/string-similarity@4.0.4/umd/string-similarity.min.js"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
@@ -23,19 +21,24 @@
       font-family: 'Inter', sans-serif;
       background: #0d0d0d;
       color: #ffffff;
-      overflow: hidden; /* Prevent body scroll */
+      overflow: hidden;
+      /* Prevent body scroll */
     }
+
     #hybrid-tool-container {
       width: 100%;
-      max-width: 100%;      /* reduced to allow Handsontable padding */
+      max-width: 100%;
+      /* reduced to allow Handsontable padding */
       max-height: 758px;
       background-color: #0d0d0d;
       padding: 0 24px;
       box-sizing: border-box;
       display: flex;
       flex-direction: column;
-      overflow-x: auto;       /* Allow horizontal scroll if needed */
+      overflow-x: auto;
+      /* Allow horizontal scroll if needed */
     }
+
     #main-container {
       display: flex;
       flex-direction: column;
@@ -50,11 +53,13 @@
       margin-top: 16px;
       margin-bottom: 16px;
     }
+
     #tool-heading {
       font-size: 16px;
       font-weight: 500;
       color: #ffffff;
     }
+
     #top-row-right {
       display: flex;
       gap: 12px;
@@ -100,16 +105,20 @@
       margin-right: 16px;
       overflow: auto;
     }
+
     /* Override cell borders to #444 */
     #handsontable-container .wtBorder {
       border-color: #444 !important;
     }
+
     /* Wrap long text in cells */
     .handsontable td .htCore {
       white-space: normal !important;
-      word-break: break-word;         /* allow long words or strings to wrap */
+      word-break: break-word;
+      /* allow long words or strings to wrap */
       overflow-wrap: break-word;
     }
+
     /* Instructions bar above the table */
     .instructions {
       background: #2a2a2a;
@@ -121,9 +130,11 @@
       line-height: 1.4;
       color: #ccc;
     }
+
     .instructions strong {
       color: #fff;
     }
+
     .help-icon {
       float: right;
       cursor: pointer;
@@ -131,9 +142,11 @@
       position: relative;
       top: -3px;
     }
+
     .help-icon:hover {
       opacity: 1;
     }
+
     .help-popover {
       position: absolute;
       background: #fff;
@@ -157,29 +170,37 @@
       height: 100%;
       box-sizing: border-box;
       overflow-y: auto;
-      overflow: visible; /* allow dropdown popups */
-      display: none;     /* hidden by default */
+      overflow: visible;
+      /* allow dropdown popups */
+      display: none;
+      /* hidden by default */
       flex-direction: column;
       color: #fff;
       z-index: 10;
     }
+
     #ocr-panel.open {
-      display: flex; /* show as flex child */
+      display: flex;
+      /* show as flex child */
     }
+
     #ocr-panel-header {
       display: flex;
       justify-content: flex-end;
     }
+
     #ocr-close-btn {
       font-size: 20px;
       cursor: pointer;
     }
+
     #ocr-panel-body {
       margin-top: 16px;
       display: flex;
       flex-direction: column;
       gap: 16px;
     }
+
     #ocr-column-select {
       width: 100%;
       padding: 6px;
@@ -191,10 +212,12 @@
       position: relative;
       z-index: 1000;
     }
+
     .dark-label {
       font-size: 14px;
       margin-bottom: 4px;
     }
+
     #ocr-upload-area {
       border: 2px dashed #555;
       border-radius: 6px;
@@ -205,10 +228,12 @@
       position: relative;
       cursor: pointer;
     }
+
     #ocr-upload-area .upload-icon {
       margin-bottom: 8px;
       color: #555;
     }
+
     #ocr-upload-area input[type="file"] {
       position: absolute;
       top: 0;
@@ -218,22 +243,28 @@
       opacity: 0;
       cursor: pointer;
     }
+
     #ocr-status {
       font-size: 0.8rem;
       margin-top: 8px;
       color: #28a745;
       display: none;
     }
+
     /* Expand the preview area to use full OCR panel width and larger preview height */
     #ocr-image-preview {
-      width: 100%;                          /* fill OCR panel width */
-      max-width: 100%;                    
-      max-height: 50vh;      /* larger preview height (1.5×) */
+      width: 100%;
+      /* fill OCR panel width */
+      max-width: 100%;
+      max-height: 50vh;
+      /* larger preview height (1.5×) */
       display: flex;
       justify-content: center;
       align-items: center;
-      overflow: hidden;                     /* hide overflow */
-      background-color: #222;               /* dark background */
+      overflow: hidden;
+      /* hide overflow */
+      background-color: #222;
+      /* dark background */
       margin-top: 12px;
       /* border-radius removed to make preview square */
     }
@@ -246,6 +277,7 @@
       height: auto;
       display: block;
     }
+
     #ocr-process-btn {
       background-color: #007bff;
       color: #fff;
@@ -254,6 +286,7 @@
       padding: 8px 12px;
       cursor: pointer;
     }
+
     #ocr-process-btn:disabled {
       background-color: #444;
       cursor: not-allowed;
@@ -264,6 +297,7 @@
       #table-and-ocr-wrapper {
         flex-direction: column;
       }
+
       #ocr-panel {
         position: fixed;
         width: 100%;
@@ -271,16 +305,20 @@
         top: 0;
         height: 100vh;
       }
+
       #ocr-panel.open {
         right: 0;
       }
+
       #handsontable-container {
         margin-right: 0;
       }
+
       #top-row-right {
         flex-wrap: wrap;
         gap: 8px;
       }
+
       #top-row-right button {
         width: 100%;
       }
@@ -376,38 +414,39 @@
     let spreadsheetData = [];
     let columnsList = [];
     let hot;
-    let windowChildParts = []; // will hold dropdown options from backend
+    window.windowChildParts = []; // expose on window for debugging
 
     // Fetch query-params (project, part, parentdrgnum) on load and fetch childParts
-window.addEventListener("DOMContentLoaded", async () => {
-  const urlParams = new URLSearchParams(window.location.search);
-  const project = urlParams.get("project");
-  const partNumber = urlParams.get("part");
-  const parentDrgNum = urlParams.get("parentdrgnum");
-  if (!project || !partNumber || !parentDrgNum) {
-    alert("Missing required query params: project/part/parentdrgnum");
-    // Do not return; always initialize table even if params are missing
-  } else {
-    try {
-      const resp = await fetch(
-        "https://ocr-table-extractor.onrender.com/fetch-drawings",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ project, part: partNumber }),
+    window.addEventListener("DOMContentLoaded", async () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const project = urlParams.get("project");
+      const partNumber = urlParams.get("part");
+      const parentDrgNum = urlParams.get("parentdrgnum");
+      if (!project || !partNumber || !parentDrgNum) {
+        alert("Missing required query params: project/part/parentdrgnum");
+        // Do not return; always initialize table even if params are missing
+      } else {
+        try {
+          const resp = await fetch(
+            "https://ocr-table-extractor.onrender.com/fetch-drawings",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ project, part: partNumber }),
+            }
+          );
+          const data = await resp.json();
+          windowChildParts = data.rows.map((r) =>
+            decodeURIComponent(r.drawingNumber || "")
+          );
+          console.log("✅ Fetched windowChildParts:", window.windowChildParts);
+        } catch (err) {
+          console.error("Error fetching drawing data:", err);
         }
-      );
-      const data = await resp.json();
-      windowChildParts = data.rows.map((r) =>
-        decodeURIComponent(r.drawingNumber || "")
-      );
-    } catch (err) {
-      console.error("Error fetching drawing data:", err);
-    }
-  }
-  // Always initialize Handsontable, even if fetch fails or params are missing
-  initializeHandsontable();
-});
+      }
+      // Always initialize Handsontable, even if fetch fails or params are missing
+      initializeHandsontable();
+    });
 
     // Sequential character matching + best‐match utility
     function sequentialCharacterMatch(part, child) {
@@ -464,6 +503,7 @@ window.addEventListener("DOMContentLoaded", async () => {
 
       // Only the 4 columns initially: mapping + 3 OCR
       columnsList = [
+        "Type",
         "Matched Childpart",
         "Quantity",
         "Description",
@@ -479,6 +519,7 @@ window.addEventListener("DOMContentLoaded", async () => {
     function renderSpreadsheet() {
       // Prepare column definitions for Handsontable
       const drawingOptions = windowChildParts.slice(); // from fetched backend
+      console.log("🔍 renderSpreadsheet: drawingOptions =", drawingOptions);
       const columns = columnsList.map((key) => {
         const title = COLUMN_TITLES[key] || key;
         const isMatched = key === "Matched Childpart";
@@ -494,13 +535,13 @@ window.addEventListener("DOMContentLoaded", async () => {
           editor: isMatched
             ? "autocomplete"
             : isType
-            ? "dropdown"
-            : "text",
+              ? "dropdown"
+              : "text",
           source: isMatched
             ? ["", ...drawingOptions]
             : isType
-            ? ["", "Child Part", "BO"]
-            : undefined,
+              ? ["", "Child Part", "BO"]
+              : undefined,
           strict: false,
           allowInvalid: true,
           readOnly: false, // all columns remain editable
@@ -569,8 +610,8 @@ window.addEventListener("DOMContentLoaded", async () => {
         dropdownMenu: true,
         filters: true,
         autoColumnSize: true, // ← allow text to wrap
-        wordWrap: true, 
-        autoRowSize: true,             
+        wordWrap: true,
+        autoRowSize: true,
         // autoWrapRow: true,
         manualColumnResize: true,
         outsideClickDeselects: true,
@@ -620,35 +661,43 @@ window.addEventListener("DOMContentLoaded", async () => {
     // addColumn: used by OCR processing to inject a new column's OCR data
     // ─────────────────────────────────────────────────────────────────────
     function addColumn(newColumnData, label) {
-      // If label already in columnsList, remove existing column entry & data
-      const existingIdx = columnsList.indexOf(label);
-      if (existingIdx > -1) {
-        columnsList.splice(existingIdx, 1);
-        spreadsheetData.forEach((row) => {
-          delete row[label];
-        });
-      }
-      // Push label at the end
-      columnsList.push(label);
-
-      // If OCR for PartNumber arrives, also inject mapping columns:
-      if (label === "PartNumber" && !columnsList.includes("Matched Childpart")) {
-        columnsList.push("Matched Childpart");
-        columnsList.push("Type");
+      // If this column is not yet in columnsList, add it (at the end).
+      if (!columnsList.includes(label)) {
+        columnsList.push(label);
+        // If injecting PartNumber, also ensure mapping columns exist
+        if (label === "PartNumber") {
+          console.log("🔍 addColumn: received OCR data for PartNumber, best‐match list =", window.windowChildParts);
+          if (!columnsList.includes("Matched Childpart")) {
+            columnsList.push("Matched Childpart");
+          }
+          if (!columnsList.includes("Type")) {
+            columnsList.push("Type");
+          }
+        }
       }
 
-      // Write data into spreadsheetData
+      // Now update spreadsheetData for this column without reordering others
       for (let i = 0; i < newColumnData.length; i++) {
         const text = newColumnData[i].text || "";
         const confidence = newColumnData[i].confidence || 0;
-        if (!spreadsheetData[i]) spreadsheetData[i] = {};
-        spreadsheetData[i][label] = { text: text, confidence: confidence };
+        if (!spreadsheetData[i]) {
+          spreadsheetData[i] = {};
+        }
 
-        // If injecting PartNumber, auto‐compute a match & Type
+        // If this is the “Matched Childpart” column, store plain string
+        if (label === "Matched Childpart") {
+          spreadsheetData[i][label] = text;
+        } else {
+          // For OCR columns, store { text, confidence }
+          spreadsheetData[i][label] = { text: text, confidence: confidence };
+        }
+
+        // If injecting PartNumber, auto‐compute the match & Type
         if (label === "PartNumber") {
           const drawingMatches = windowChildParts.slice();
           const best = findBestSequentialMatch(text, drawingMatches);
           const matchText = best.bestMatch.rating > 0.85 ? best.bestMatch.target : "";
+          // Store match as plain string
           spreadsheetData[i]["Matched Childpart"] = matchText;
           spreadsheetData[i]["_similarityScore"] = best.bestMatch.rating;
           spreadsheetData[i]["Type"] = matchText ? "Child Part" : "BO";
@@ -943,4 +992,5 @@ window.addEventListener("DOMContentLoaded", async () => {
   </script>
   <!-- ——— End Existing JavaScript Logic ——— -->
 </body>
+
 </html>
