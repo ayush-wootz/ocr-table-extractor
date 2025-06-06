@@ -26,13 +26,15 @@
       overflow: hidden; /* Prevent body scroll */
     }
     #hybrid-tool-container {
-      width: 1277px;
+      width: 100%;
+      max-width: 100%;      /* reduced to allow Handsontable padding */
       max-height: 758px;
       background-color: #0d0d0d;
       padding: 0 24px;
       box-sizing: border-box;
       display: flex;
       flex-direction: column;
+      overflow-x: auto;       /* Allow horizontal scroll if needed */
     }
     #main-container {
       display: flex;
@@ -105,6 +107,8 @@
     /* Wrap long text in cells */
     .handsontable td .htCore {
       white-space: normal !important;
+      word-break: break-word;         /* allow long words or strings to wrap */
+      overflow-wrap: break-word;
     }
     /* Instructions bar above the table */
     .instructions {
@@ -564,7 +568,11 @@ window.addEventListener("DOMContentLoaded", async () => {
         contextMenu: ["remove_row", "copy", "paste"],
         dropdownMenu: true,
         filters: true,
-        autoColumnSize: true,
+        autoColumnSize: true, // ← allow text to wrap
+        wordWrap: true, 
+        autoRowSize: true,             
+        // autoWrapRow: true,
+        manualColumnResize: true,
         outsideClickDeselects: true,
         licenseKey: "non-commercial-and-evaluation",
         afterSelectionEnd: function (r, c, r2, c2) {
