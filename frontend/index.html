@@ -724,43 +724,17 @@
 
         spreadsheetData[i][label] = { text, confidence };
 
-      //   // If injecting PartNumber, auto‐compute the match & Type
-      //   if (label === "PartNumber") {
-      //     const drawingMatches = windowChildParts.slice();
-      //     const best = findBestSequentialMatch(text, drawingMatches);
-      //     const matchText = best.bestMatch.rating > 0.85 ? best.bestMatch.target : "";
-      //     // Store match as plain string
-      //     spreadsheetData[i]["Matched Childpart"] = matchText;
-      //     spreadsheetData[i]["_similarityScore"] = best.bestMatch.rating;
-      //     spreadsheetData[i]["Type"] = matchText ? "Child Part" : "BO";
-      //   }
-      // }
-
-if (label === "PartNumber") {
-  console.log(`Processing PartNumber for row ${i}, text: "${text}"`);
-  console.log("windowChildParts:", windowChildParts);
-  
-  const drawingMatches = windowChildParts.slice();
-  console.log("drawingMatches:", drawingMatches);
-  
-  const best = findBestSequentialMatch(text, drawingMatches);
-  console.log("Best match result:", best);
-  
-  const matchText = best.bestMatch.rating > 0.85 ? best.bestMatch.target : "";
-  console.log("Selected matchText:", matchText);
-
-  // Only set the match if it's not already manually selected
-  if (!spreadsheetData[i]["Matched Childpart"] || spreadsheetData[i]["Matched Childpart"] === "") {
-    console.log("Setting Matched Childpart to:", matchText);
-    spreadsheetData[i]["Matched Childpart"] = matchText;
-  }
-
-  spreadsheetData[i]["_similarityScore"] = best.bestMatch.rating;
-
-  if (!spreadsheetData[i]["Type"] || spreadsheetData[i]["Type"] === "") {
-    spreadsheetData[i]["Type"] = matchText ? "Child Part" : "BO";
-  }
-}      
+        // If injecting PartNumber, auto‐compute the match & Type
+        if (label === "PartNumber") {
+          const drawingMatches = windowChildParts.slice();
+          const best = findBestSequentialMatch(text, drawingMatches);
+          const matchText = best.bestMatch.rating > 0.85 ? best.bestMatch.target : "";
+          // Store match as plain string
+          spreadsheetData[i]["Matched Childpart"] = matchText;
+          spreadsheetData[i]["_similarityScore"] = best.bestMatch.rating;
+          spreadsheetData[i]["Type"] = matchText ? "Child Part" : "BO";
+        }
+      }   
       
 
       // // Modified fix - preserve matching functionality while fixing object values
