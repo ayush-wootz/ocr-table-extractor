@@ -736,10 +736,11 @@
         }
       }
 
-      // Quick fix - convert any objects to strings
+      // Modified fix - preserve matching functionality while fixing object values
       for (let i = 0; i < spreadsheetData.length; i++) {
         if (!spreadsheetData[i]) continue;
         
+        // Fix object values in Matched Childpart
         if (spreadsheetData[i]["Matched Childpart"] && 
             typeof spreadsheetData[i]["Matched Childpart"] === 'object') {
           console.warn("Converting object to string in row", i);
@@ -747,6 +748,22 @@
             spreadsheetData[i]["Matched Childpart"].text || 
             spreadsheetData[i]["Matched Childpart"].toString() || 
             "";
+        }
+        
+        // If PartNumber exists but Matched Childpart is empty, try to find a match
+        const partText = spreadsheetData[i]["PartNumber"]?.text || "";
+        if (partText && (!spreadsheetData[i]["Matched Childpart"] || spreadsheetData[i]["Matched Childpart"] === "")) {
+          const drawingMatches = windowChildParts.slice();
+          const best = findBestSequentialMatch(partText, drawingMatches);
+          const matchText = best.bestMatch.rating > 0.85 ? best.bestMatch.target : "";
+          
+          // Set the matched child part
+          spreadsheetData[i]["Matched Childpart"] = matchText;
+          
+          // Update Type based on the match
+          if (!spreadsheetData[i]["Type"] || spreadsheetData[i]["Type"] === "") {
+            spreadsheetData[i]["Type"] = matchText ? "Child Part" : "BO";
+          }
         }
       }
 
