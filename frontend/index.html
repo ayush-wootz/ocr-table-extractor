@@ -35,8 +35,8 @@
       box-sizing: border-box;
       display: flex;
       flex-direction: column;
-      overflow-x: auto;
-      /* Allow horizontal scroll if needed */
+      overflow-x: hidden;
+      /* Prevent horizontal scroll on container */
     }
 
     #main-container {
@@ -102,8 +102,10 @@
     /* --------------------- Handsontable Area --------------------- */
     #handsontable-container {
       flex: 1 1 auto;
+      min-width: 0;
       margin-right: 16px;
-      overflow: auto;
+      overflow-x: auto;
+      overflow-y: hidden;
     }
 
     /* Override cell borders to #444 */
@@ -161,27 +163,28 @@
       color: #000;
     }
 
-    /* OCR Slide‐In Panel (Right) as a normal flex child */
+    /* OCR Overlay Panel Styles */
     #ocr-panel {
-      width: 320px;
+      position: fixed;
+      top: 5%;
+      left: 5vw;
+      width: 90vw;
+      height: 90%;
       background-color: #1a1a1a;
       border-radius: 8px;
       padding: 20px;
-      height: 100%;
       box-sizing: border-box;
       overflow-y: auto;
-      overflow: visible;
-      /* allow dropdown popups */
       display: none;
-      /* hidden by default */
       flex-direction: column;
       color: #fff;
-      z-index: 10;
+      z-index: 1000;
+      box-shadow: 0 0 10px rgba(0,0,0,0.5);
+      border: 1px solid #444;
     }
 
     #ocr-panel.open {
       display: flex;
-      /* show as flex child */
     }
 
     #ocr-panel-header {
@@ -201,40 +204,68 @@
       gap: 16px;
     }
 
-    #ocr-column-select {
-      width: 100%;
-      padding: 6px;
-      font-size: 14px;
-      border-radius: 4px;
-      background-color: #333;
-      color: #fff;
-      border: 1px solid #444;
-      position: relative;
-      z-index: 1000;
-    }
-
     .dark-label {
       font-size: 14px;
       margin-bottom: 4px;
     }
 
-    #ocr-upload-area {
+    .upload-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .upload-column {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .ocr-upload-area {
       border: 2px dashed #555;
       border-radius: 6px;
-      padding: 5px;
+      padding: 6px;
       text-align: center;
       background: #fafafa;
       color: #000;
       position: relative;
       cursor: pointer;
+      min-height: 180px;
+      height: auto; 
     }
 
-    #ocr-upload-area .upload-icon {
-      margin-bottom: 8px;
-      color: #555;
+    .upload-clear-btn {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      width: 16px;
+      height: 16px;
+      background: rgba(108,117,125,0.8);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      font-size: 12px;
+      line-height: 1;
+      cursor: pointer;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      opacity: 0.7;
+      transition: all 0.2s ease;
+      z-index: 2;
     }
 
-    #ocr-upload-area input[type="file"] {
+    .upload-clear-btn:hover {
+      background: rgba(220,53,69,0.9);
+      transform: scale(1.1);
+    }
+
+    .ocr-upload-area.has-file .upload-clear-btn {
+      display: flex;
+    }
+
+    .ocr-upload-area input[type="file"] {
       position: absolute;
       top: 0;
       left: 0;
@@ -242,40 +273,32 @@
       height: 100%;
       opacity: 0;
       cursor: pointer;
+      z-index: 1;
     }
 
-    #ocr-status {
-      font-size: 0.8rem;
-      margin-top: 8px;
-      color: #28a745;
-      display: none;
-    }
-
-    /* Expand the preview area to use full OCR panel width and larger preview height */
-    #ocr-image-preview {
+    .ocr-image-preview {
       width: 100%;
-      /* fill OCR panel width */
-      max-width: 100%;
-      max-height: 50vh;
-      /* larger preview height (1.5×) */
+      max-height: none;
+      height: auto;
       display: flex;
       justify-content: center;
       align-items: center;
       overflow: hidden;
-      /* hide overflow */
       background-color: #222;
-      /* dark background */
-      margin-top: 12px;
-      /* border-radius removed to make preview square */
+      margin-top: 6px;
     }
 
-    /* Scale the image to fit within that container */
-    #ocr-image-preview img {
+    .ocr-image-preview img {
       max-width: 100%;
-      max-height: 50vh;
-      width: 100%;
       height: auto;
       display: block;
+    }
+
+    .file-status {
+      font-size: 0.75rem;
+      margin-top: 4px;
+      color: #28a745;
+      display: none;
     }
 
     #ocr-process-btn {
@@ -297,28 +320,14 @@
       #table-and-ocr-wrapper {
         flex-direction: column;
       }
-
-      #ocr-panel {
-        position: fixed;
-        width: 100%;
-        right: -100%;
-        top: 0;
-        height: 100vh;
-      }
-
-      #ocr-panel.open {
-        right: 0;
-      }
-
+      /* Responsive positioning for #ocr-panel removed */
       #handsontable-container {
         margin-right: 0;
       }
-
       #top-row-right {
         flex-wrap: wrap;
         gap: 8px;
       }
-
       #top-row-right button {
         width: 100%;
       }
@@ -364,26 +373,55 @@
             <span id="ocr-close-btn">×</span>
           </div>
           <div id="ocr-panel-body">
-            <label for="ocr-column-select" class="dark-label">
-              Select Mapping Column
-            </label>
-            <select id="ocr-column-select" required>
-              <!-- <option value="">Select Mapping Column</option> -->
-              <option value="Drawing Number">Drawing Number</option>
-              <option value="Quantity">Quantity</option>
-              <option value="Description">Description</option>
-              <option value="Material">Material</option>
-            </select>
-
-            <div id="ocr-upload-area" class="upload-area">
-              <div class="upload-icon"><i data-lucide="upload"></i></div>
-              <div class="upload-label">Upload Image for OCR</div>
-              <input type="file" id="ocr-input" accept="image/*" />
-              <div class="file-status" id="ocr-status">✓ Uploaded</div>
-              <div id="ocr-image-preview"></div>
+            <div class="upload-row">
+              <div class="upload-column">
+                <label class="dark-label">Drawing Number</label>
+                <div class="ocr-upload-area" data-column="Drawing Number">
+                  <div class="upload-icon"><i data-lucide="upload"></i></div>
+                  <div class="upload-label">Upload Image</div>
+                  <button class="upload-clear-btn" onclick="clearUpload(this, event)">×</button>
+                  <input type="file" accept="image/*" />
+                  <div class="file-status">✓ Uploaded</div>
+                  <div class="ocr-image-preview"></div>
+                </div>
+              </div>
+              <div class="upload-column">
+                <label class="dark-label">Quantity</label>
+                <div class="ocr-upload-area" data-column="Quantity">
+                  <div class="upload-icon"><i data-lucide="upload"></i></div>
+                  <div class="upload-label">Upload Image</div>
+                  <button class="upload-clear-btn" onclick="clearUpload(this, event)">×</button>
+                  <input type="file" accept="image/*" />
+                  <div class="file-status">✓ Uploaded</div>
+                  <div class="ocr-image-preview"></div>
+                </div>
+              </div>
+              <div class="upload-column">
+                <label class="dark-label">Description</label>
+                <div class="ocr-upload-area" data-column="Description">
+                  <div class="upload-icon"><i data-lucide="upload"></i></div>
+                  <div class="upload-label">Upload Image</div>
+                  <button class="upload-clear-btn" onclick="clearUpload(this, event)">×</button>
+                  <input type="file" accept="image/*" />
+                  <div class="file-status">✓ Uploaded</div>
+                  <div class="ocr-image-preview"></div>
+                </div>
+              </div>
+              <div class="upload-column">
+                <label class="dark-label">Material</label>
+                <div class="ocr-upload-area" data-column="Material">
+                  <div class="upload-icon"><i data-lucide="upload"></i></div>
+                  <div class="upload-label">Upload Image</div>
+                  <button class="upload-clear-btn" onclick="clearUpload(this, event)">×</button>
+                  <input type="file" accept="image/*" />
+                  <div class="file-status">✓ Uploaded</div>
+                  <div class="ocr-image-preview"></div>
+                </div>
+              </div>
             </div>
-
-            <button id="ocr-process-btn" disabled>Process</button>
+            <div style="display: flex; justify-content: flex-end; margin-top: 16px;">
+              <button id="ocr-process-btn" disabled>Process</button>
+            </div>
           </div>
         </div>
       </div>
@@ -684,13 +722,8 @@
           spreadsheetData[i] = {};
         }
 
-        // If this is the “Matched Childpart” column, store plain string
-        if (label === "Matched Childpart") {
-          spreadsheetData[i][label] = text;
-        } else {
-          // For OCR columns, store { text, confidence }
-          spreadsheetData[i][label] = { text: text, confidence: confidence };
-        }
+        // Store text+confidence always
+        spreadsheetData[i][label] = { text, confidence };
 
         // If injecting PartNumber, auto‐compute the match & Type
         if (label === "PartNumber") {
@@ -701,90 +734,102 @@
           spreadsheetData[i]["Matched Childpart"] = matchText;
           spreadsheetData[i]["_similarityScore"] = best.bestMatch.rating;
           spreadsheetData[i]["Type"] = matchText ? "Child Part" : "BO";
-        }
+        }  
       }
 
       renderSpreadsheet();
     }
 
     // ─────────────────────────────────────────────────────────────────────
+    // OCR Uploads: Multiple zones, event delegation, state per column
+    // ─────────────────────────────────────────────────────────────────────
+    const uploads = document.querySelectorAll(".ocr-upload-area");
+    const fileStates = {};
+
+    uploads.forEach(area => {
+      const input = area.querySelector("input");
+      const status = area.querySelector(".file-status");
+      const preview = area.querySelector(".ocr-image-preview");
+      const column = area.dataset.column;
+
+      input.addEventListener("change", () => {
+        const file = input.files[0];
+        if (!file) return;
+
+        fileStates[column] = file;
+        status.style.display = "inline-block";
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          preview.innerHTML = `<img src="${e.target.result}" alt="Preview"/>`;
+          area.classList.add("has-file");
+        };
+        reader.readAsDataURL(file);
+
+        document.getElementById("ocr-process-btn").disabled = Object.keys(fileStates).length === 0;
+      });
+    });
+
+    function clearUpload(buttonEl, event) {
+      if (event) event.stopPropagation();
+
+      const area = buttonEl.closest(".ocr-upload-area");
+      const input = area.querySelector("input");
+      const preview = area.querySelector(".ocr-image-preview");
+      const status = area.querySelector(".file-status");
+      const column = area.dataset.column;
+
+      if (input) input.value = "";
+      if (preview) preview.innerHTML = "";
+      if (status) status.style.display = "none";
+
+      area.classList.remove("has-file");
+      delete fileStates[column];
+
+      document.getElementById("ocr-process-btn").disabled = Object.keys(fileStates).length === 0;
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
     // OCR Processing Handler: triggered when user clicks “Process” in OCR panel
     // ─────────────────────────────────────────────────────────────────────
     document.getElementById("ocr-process-btn").addEventListener("click", async () => {
-      console.log("OCR → Process button clicked, column=", document.getElementById("ocr-column-select").value);
-
-      const selectedColumn = document.getElementById("ocr-column-select").value;
-      const fileInput = document.getElementById("ocr-input");
-      if (!selectedColumn || !fileInput.files[0]) return;
-
-      // Visual feedback: disable button & show status icon
       const processBtn = document.getElementById("ocr-process-btn");
       processBtn.disabled = true;
-      document.getElementById("ocr-status").style.display = "inline-block";
 
-      // Package to FormData
-      const formData = new FormData();
-      formData.append("image", fileInput.files[0]);
-      formData.append("mode", "table");
-      // Map our displayed label back to the correct column key in code:
-      let columnKey = "";
-      if (selectedColumn === "Drawing Number") columnKey = "Matched Childpart";
-      else if (selectedColumn === "Quantity") columnKey = "Quantity";
-      else if (selectedColumn === "Description") columnKey = "Description";
-      else if (selectedColumn === "Material") columnKey = "Material";
+      const columnKeyMap = {
+        "Drawing Number": "Matched Childpart",
+        "Quantity": "Quantity",
+        "Description": "Description",
+        "Material": "Material",
+      };
 
-      formData.append("column", columnKey);
+      for (const label in fileStates) {
+        const formData = new FormData();
+        formData.append("image", fileStates[label]);
+        formData.append("mode", "table");
+        formData.append("column", columnKeyMap[label]);
 
-      try {
-        const resp = await fetch("https://ocr-table-extractor.onrender.com", {
-          method: "POST",
-          body: formData,
-        });
-        const data = await resp.json();
-        if (data.table && Array.isArray(data.table)) {
-          addColumn(data.table, columnKey);
-        } else {
-          console.warn("OCR returned no table data for column:", columnKey);
+        try {
+          const resp = await fetch("https://ocr-table-extractor.onrender.com", {
+            method: "POST",
+            body: formData,
+          });
+          const data = await resp.json();
+          if (data.table && Array.isArray(data.table)) {
+            addColumn(data.table, columnKeyMap[label]);
+          }
+        } catch (err) {
+          console.error("Error OCR for", label, err);
         }
-      } catch (err) {
-        console.error("❌ Error during OCR processing:", err);
-      } finally {
-        // Hide status after a moment and re-enable UI
-        setTimeout(() => {
-          document.getElementById("ocr-status").style.display = "none";
-          processBtn.disabled = true;
-          // Clear file input for next time
-          fileInput.value = "";
-        }, 1500);
       }
-    });
 
-    // ─────────────────────────────────────────────────────────────────────
-    // OCR UI: Enable “Process” button only when a column is selected & file present
-    // ─────────────────────────────────────────────────────────────────────
-    const ocrSelect = document.getElementById("ocr-column-select");
-    const ocrInput = document.getElementById("ocr-input");
-    function updateOcrProcessState() {
-      const hasCol = !!ocrSelect.value;
-      const hasFile = !!ocrInput.files.length;
-      document.getElementById("ocr-process-btn").disabled = !(hasCol && hasFile);
-    }
-    ocrSelect.addEventListener("change", updateOcrProcessState);
-    ocrInput.addEventListener("change", () => {
-      const status = document.getElementById("ocr-status");
-      const preview = document.getElementById("ocr-image-preview");
-      if (ocrInput.files[0]) {
-        status.style.display = "inline-block";
-        const reader = new FileReader();
-        reader.onload = function (e) {
-          preview.innerHTML = `<img src="${e.target.result}" alt="Preview"/>`;
-        };
-        reader.readAsDataURL(ocrInput.files[0]);
-      } else {
-        status.style.display = "none";
-        preview.innerHTML = "";
-      }
-      updateOcrProcessState();
+      // Clear preview and fileStates after processing
+      uploads.forEach(area => {
+        area.querySelector(".file-status").style.display = "none";
+        area.querySelector(".ocr-image-preview").innerHTML = "";
+        area.querySelector("input").value = "";
+      });
+
+      Object.keys(fileStates).forEach(k => delete fileStates[k]);
     });
 
     // ─────────────────────────────────────────────────────────────────────
@@ -792,44 +837,11 @@
     // ─────────────────────────────────────────────────────────────────────
     document.getElementById("extract-btn").addEventListener("click", () => {
       const panel = document.getElementById("ocr-panel");
-      panel.style.display = "flex";
-      setTimeout(() => {
-        panel.classList.add("open");
-
-        // Logic to auto-select Mapping Column based on empty columns
-        const priority = ["Matched Childpart", "Quantity", "Description", "Material"];
-        let autoSelect = "";
-        for (let col of priority) {
-          let isEmpty = spreadsheetData.every((row) => {
-            const val = row[col];
-            if (!val) return true;
-            if (typeof val === "object") return !val.text;
-            return val.trim() === "";
-          });
-          if (isEmpty) {
-            if (col === "Matched Childpart") autoSelect = "Drawing Number";
-            else autoSelect = col;
-            break;
-          }
-        }
-        const select = document.getElementById("ocr-column-select");
-        if (select) {
-          for (let opt of select.options) {
-            if (opt.value === autoSelect) {
-              opt.selected = true;
-              break;
-            }
-          }
-        }
-        updateOcrProcessState();
-      }, 10);
+      panel.classList.add("open");
     });
     document.getElementById("ocr-close-btn").addEventListener("click", () => {
       const panel = document.getElementById("ocr-panel");
       panel.classList.remove("open");
-      setTimeout(() => {
-        panel.style.display = "none";
-      }, 300);
     });
 
     // ─────────────────────────────────────────────────────────────────────
