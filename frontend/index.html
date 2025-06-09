@@ -724,48 +724,75 @@
 
         spreadsheetData[i][label] = { text, confidence };
 
-        // If injecting PartNumber, auto‐compute the match & Type
-        if (label === "PartNumber") {
-          const drawingMatches = windowChildParts.slice();
-          const best = findBestSequentialMatch(text, drawingMatches);
-          const matchText = best.bestMatch.rating > 0.85 ? best.bestMatch.target : "";
-          // Store match as plain string
-          spreadsheetData[i]["Matched Childpart"] = matchText;
-          spreadsheetData[i]["_similarityScore"] = best.bestMatch.rating;
-          spreadsheetData[i]["Type"] = matchText ? "Child Part" : "BO";
-        }
-      }
+      //   // If injecting PartNumber, auto‐compute the match & Type
+      //   if (label === "PartNumber") {
+      //     const drawingMatches = windowChildParts.slice();
+      //     const best = findBestSequentialMatch(text, drawingMatches);
+      //     const matchText = best.bestMatch.rating > 0.85 ? best.bestMatch.target : "";
+      //     // Store match as plain string
+      //     spreadsheetData[i]["Matched Childpart"] = matchText;
+      //     spreadsheetData[i]["_similarityScore"] = best.bestMatch.rating;
+      //     spreadsheetData[i]["Type"] = matchText ? "Child Part" : "BO";
+      //   }
+      // }
 
-      // Modified fix - preserve matching functionality while fixing object values
-      for (let i = 0; i < spreadsheetData.length; i++) {
-        if (!spreadsheetData[i]) continue;
+if (label === "PartNumber") {
+  console.log(`Processing PartNumber for row ${i}, text: "${text}"`);
+  console.log("windowChildParts:", windowChildParts);
+  
+  const drawingMatches = windowChildParts.slice();
+  console.log("drawingMatches:", drawingMatches);
+  
+  const best = findBestSequentialMatch(text, drawingMatches);
+  console.log("Best match result:", best);
+  
+  const matchText = best.bestMatch.rating > 0.85 ? best.bestMatch.target : "";
+  console.log("Selected matchText:", matchText);
+
+  // Only set the match if it's not already manually selected
+  if (!spreadsheetData[i]["Matched Childpart"] || spreadsheetData[i]["Matched Childpart"] === "") {
+    console.log("Setting Matched Childpart to:", matchText);
+    spreadsheetData[i]["Matched Childpart"] = matchText;
+  }
+
+  spreadsheetData[i]["_similarityScore"] = best.bestMatch.rating;
+
+  if (!spreadsheetData[i]["Type"] || spreadsheetData[i]["Type"] === "") {
+    spreadsheetData[i]["Type"] = matchText ? "Child Part" : "BO";
+  }
+}      
+      
+
+      // // Modified fix - preserve matching functionality while fixing object values
+      // for (let i = 0; i < spreadsheetData.length; i++) {
+      //   if (!spreadsheetData[i]) continue;
         
-        // Fix object values in Matched Childpart
-        if (spreadsheetData[i]["Matched Childpart"] && 
-            typeof spreadsheetData[i]["Matched Childpart"] === 'object') {
-          console.warn("Converting object to string in row", i);
-          spreadsheetData[i]["Matched Childpart"] = 
-            spreadsheetData[i]["Matched Childpart"].text || 
-            spreadsheetData[i]["Matched Childpart"].toString() || 
-            "";
-        }
+      //   // Fix object values in Matched Childpart
+      //   if (spreadsheetData[i]["Matched Childpart"] && 
+      //       typeof spreadsheetData[i]["Matched Childpart"] === 'object') {
+      //     console.warn("Converting object to string in row", i);
+      //     spreadsheetData[i]["Matched Childpart"] = 
+      //       spreadsheetData[i]["Matched Childpart"].text || 
+      //       spreadsheetData[i]["Matched Childpart"].toString() || 
+      //       "";
+      //   }
         
-        // If PartNumber exists but Matched Childpart is empty, try to find a match
-        const partText = spreadsheetData[i]["PartNumber"]?.text || "";
-        if (partText && (!spreadsheetData[i]["Matched Childpart"] || spreadsheetData[i]["Matched Childpart"] === "")) {
-          const drawingMatches = windowChildParts.slice();
-          const best = findBestSequentialMatch(partText, drawingMatches);
-          const matchText = best.bestMatch.rating > 0.85 ? best.bestMatch.target : "";
+      //   // If PartNumber exists but Matched Childpart is empty, try to find a match
+      //   const partText = spreadsheetData[i]["PartNumber"]?.text || "";
+      //   if (partText && (!spreadsheetData[i]["Matched Childpart"] || spreadsheetData[i]["Matched Childpart"] === "")) {
+      //     const drawingMatches = windowChildParts.slice();
+      //     const best = findBestSequentialMatch(partText, drawingMatches);
+      //     const matchText = best.bestMatch.rating > 0.85 ? best.bestMatch.target : "";
           
-          // Set the matched child part
-          spreadsheetData[i]["Matched Childpart"] = matchText;
+      //     // Set the matched child part
+      //     spreadsheetData[i]["Matched Childpart"] = matchText;
           
-          // Update Type based on the match
-          if (!spreadsheetData[i]["Type"] || spreadsheetData[i]["Type"] === "") {
-            spreadsheetData[i]["Type"] = matchText ? "Child Part" : "BO";
-          }
-        }
-      }
+      //     // Update Type based on the match
+      //     if (!spreadsheetData[i]["Type"] || spreadsheetData[i]["Type"] === "") {
+      //       spreadsheetData[i]["Type"] = matchText ? "Child Part" : "BO";
+      //     }
+      //   }
+      // }
 
       renderSpreadsheet();
     }
