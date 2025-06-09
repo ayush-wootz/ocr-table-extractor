@@ -722,8 +722,9 @@
           spreadsheetData[i] = {};
         }
 
+        // Always store the cell as { text, confidence } before any conditional logic.
+        spreadsheetData[i][label] = { text, confidence };        
         
-
         // If injecting PartNumber, auto‐compute the match & Type
         if (label === "PartNumber") {
           const drawingMatches = windowChildParts.slice();
@@ -733,8 +734,6 @@
           spreadsheetData[i]["Matched Childpart"] = matchText;
           spreadsheetData[i]["_similarityScore"] = best.bestMatch.rating;
           spreadsheetData[i]["Type"] = matchText ? "Child Part" : "BO";
-        } else {
-          spreadsheetData[i][label] = { text, confidence };
         }
       }
 
