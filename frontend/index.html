@@ -716,17 +716,22 @@
 
       // Now update spreadsheetData for this column without reordering others
       for (let i = 0; i < newColumnData.length; i++) {
-        const text = newColumnData[i].text || "";
-        const confidence = newColumnData[i].confidence || 0;
+        const text = newColumnData[i]?.text || "";
+        const confidence = newColumnData[i]?.confidence || 0;
         if (!spreadsheetData[i]) {
           spreadsheetData[i] = {};
         }
 
-        // Always store the cell as { text, confidence } before any conditional logic.
-        spreadsheetData[i][label] = { text, confidence };        
-        
+        // Store as { text, confidence } only for non-mapping columns
+        if (label !== "Matched Childpart" && label !== "Type") {
+          spreadsheetData[i][label] = { text, confidence };
+        } else {
+          spreadsheetData[i][label] = text;
+        }
+
         // If injecting PartNumber, auto‐compute the match & Type
         if (label === "PartNumber") {
+          spreadsheetData[i][label] = { text, confidence }; // PartNumber is stored as object
           const drawingMatches = windowChildParts.slice();
           const best = findBestSequentialMatch(text, drawingMatches);
           const matchText = best.bestMatch.rating > 0.85 ? best.bestMatch.target : "";
