@@ -736,6 +736,20 @@
         }
       }
 
+      // Quick fix - convert any objects to strings
+      for (let i = 0; i < spreadsheetData.length; i++) {
+        if (!spreadsheetData[i]) continue;
+        
+        if (spreadsheetData[i]["Matched Childpart"] && 
+            typeof spreadsheetData[i]["Matched Childpart"] === 'object') {
+          console.warn("Converting object to string in row", i);
+          spreadsheetData[i]["Matched Childpart"] = 
+            spreadsheetData[i]["Matched Childpart"].text || 
+            spreadsheetData[i]["Matched Childpart"].toString() || 
+            "";
+        }
+      }
+
       renderSpreadsheet();
     }
 
