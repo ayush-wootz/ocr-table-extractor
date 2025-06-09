@@ -798,6 +798,37 @@
       renderSpreadsheet();
     }
 
+
+// Add this debugging function somewhere in your code
+function diagnoseBestMatch(partNumber) {
+  if (!partNumber || !windowChildParts.length) {
+    console.log("Cannot diagnose - missing partNumber or windowChildParts");
+    return;
+  }
+  
+  console.log(`Diagnosing matches for part: "${partNumber}"`);
+  
+  // Get top 5 matches
+  const matches = windowChildParts.map(d => ({
+    target: d,
+    rating: sequentialCharacterMatch(partNumber, d)
+  }));
+  
+  matches.sort((a, b) => b.rating - a.rating);
+  const top5 = matches.slice(0, 5);
+  
+  console.log("Top 5 matches:");
+  top5.forEach((m, i) => {
+    console.log(`${i+1}. "${m.target}" - rating: ${m.rating}`);
+  });
+  
+  console.log(`Best match would be selected: ${top5[0].rating > 0.85 ? 'YES' : 'NO'}`);
+  console.log(`Selected value: "${top5[0].rating > 0.85 ? top5[0].target : ''}"`);
+}
+
+// Call this function with a sample part number to see matching results
+// diagnoseBestMatch("SP00395"); // Example - you can call this from the console
+
     // ─────────────────────────────────────────────────────────────────────
     // OCR Uploads: Multiple zones, event delegation, state per column
     // ─────────────────────────────────────────────────────────────────────
