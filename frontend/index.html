@@ -722,8 +722,7 @@
           spreadsheetData[i] = {};
         }
 
-        // Store text+confidence always
-        spreadsheetData[i][label] = { text, confidence };
+        
 
         // If injecting PartNumber, auto‐compute the match & Type
         if (label === "PartNumber") {
@@ -734,7 +733,9 @@
           spreadsheetData[i]["Matched Childpart"] = matchText;
           spreadsheetData[i]["_similarityScore"] = best.bestMatch.rating;
           spreadsheetData[i]["Type"] = matchText ? "Child Part" : "BO";
-        }  
+        } else {
+          spreadsheetData[i][label] = { text, confidence };
+        }
       }
 
       renderSpreadsheet();
