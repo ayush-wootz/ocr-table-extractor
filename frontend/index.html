@@ -735,6 +735,11 @@
         });
         hot.render();
       });
+      // Add this RIGHT AFTER your afterChange hook to test:
+      console.log("🔧 Testing if afterChange hook works...");
+      hot.addHook("afterChange", (changes, source) => {
+        console.log("🚨 BASIC TEST: afterChange fired!", { changes, source });
+      });
     }
 
     // ─────────────────────────────────────────────────────────────────────
