@@ -710,9 +710,14 @@
 
           // ✅ NEW: Just these 5 lines
           if (["Quantity", "Description", "Material"].includes(prop)) {
+            // Debug version:
             const cell = hot.getCell(row, colIndex);
+            console.log("Cell element:", cell, "Row:", row, "Col:", colIndex);
             if (cell) {
               cell.style.backgroundColor = "#ffffff";
+              console.log("✅ Set white background for cell");
+            } else {
+              console.log("❌ Could not find cell element");
             }
           } 
           
