@@ -511,17 +511,54 @@
       return sim;
     }
 
-    function findBestSequentialMatch(partText, drawingNumbers) {
-      if (!partText || !drawingNumbers.length) {
-        return { bestMatch: { target: "", rating: 0 }, allMatches: [] };
-      }
-      const matches = drawingNumbers.map((d) => ({
-        target: d,
-        rating: sequentialCharacterMatch(partText, d),
-      }));
-      matches.sort((a, b) => b.rating - a.rating);
-      return { bestMatch: matches[0], allMatches: matches };
-    }
+    // function findBestSequentialMatch(partText, drawingNumbers) {
+    //   if (!partText || !drawingNumbers.length) {
+    //     return { bestMatch: { target: "", rating: 0 }, allMatches: [] };
+    //   }
+    //   const matches = drawingNumbers.map((d) => ({
+    //     target: d,
+    //     rating: sequentialCharacterMatch(partText, d),
+    //   }));
+    //   matches.sort((a, b) => b.rating - a.rating);
+    //   return { bestMatch: matches[0], allMatches: matches };
+    // }
+    
+function findBestSequentialMatch(partText, drawingNumbers) {
+  // Handle empty inputs
+  if (!partText || !drawingNumbers || !drawingNumbers.length) {
+    return {
+      bestMatch: { target: "", rating: 0 },
+      allMatches: []
+    };
+  }
+  
+  // Ensure partText is a string
+  const partString = String(partText).trim();
+  if (!partString) {
+    return {
+      bestMatch: { target: "", rating: 0 },
+      allMatches: []
+    };
+  }
+  
+  // Calculate similarity for each drawing number
+  const matches = drawingNumbers.map(drawing => {
+    // Ensure drawing is a string
+    const drawingString = String(drawing || "");
+    return {
+      target: drawingString,
+      rating: sequentialCharacterMatch(partString, drawingString)
+    };
+  });
+  
+  // Sort by similarity (highest first)
+  matches.sort((a, b) => b.rating - a.rating);
+  
+  return {
+    bestMatch: matches.length > 0 ? matches[0] : { target: "", rating: 0 },
+    allMatches: matches
+  };
+}    
 
     // ─────────────────────────────────────────────────────────────────────
     // Initialize Handsontable with 3 rows + 2 empty rows
@@ -695,143 +732,153 @@
       });
     }
 
-    // ─────────────────────────────────────────────────────────────────────
-    // addColumn: used by OCR processing to inject a new column's OCR data
-    // ─────────────────────────────────────────────────────────────────────
-    function addColumn(newColumnData, label) {
-      // If this column is not yet in columnsList, add it (at the end).
-      if (!columnsList.includes(label)) {
-        columnsList.push(label);
-        // If injecting PartNumber, also ensure mapping columns exist
-        if (label === "PartNumber") {
-          console.log("🔍 addColumn: received OCR data for PartNumber, best‐match list =", window.windowChildParts);
-          if (!columnsList.includes("Matched Childpart")) {
-            columnsList.push("Matched Childpart");
-          }
-          if (!columnsList.includes("Type")) {
-            columnsList.push("Type");
-          }
-        }
+
+// addColumn: Rewritten to properly handle PartNumber matching
+// ─────────────────────────────────────────────────────────────────────
+function addColumn(newColumnData, label) {
+  // If this column is not yet in columnsList, add it (at the end).
+  if (!columnsList.includes(label)) {
+    columnsList.push(label);
+    // If injecting PartNumber, also ensure mapping columns exist
+    if (label === "PartNumber") {
+      console.log("🔍 addColumn: received OCR data for PartNumber, best‐match list =", window.windowChildParts);
+      if (!columnsList.includes("Matched Childpart")) {
+        columnsList.push("Matched Childpart");
       }
-
-      // Now update spreadsheetData for this column without reordering others
-      for (let i = 0; i < newColumnData.length; i++) {
-        const text = newColumnData[i]?.text || "";
-        const confidence = newColumnData[i]?.confidence || 0;
-        if (!spreadsheetData[i]) {
-          spreadsheetData[i] = {};
-        }
-
-        spreadsheetData[i][label] = { text, confidence };
-
-        // If injecting PartNumber, auto‐compute the match & Type
-        // if (label === "PartNumber") {
-        //   const drawingMatches = windowChildParts.slice();
-        //   const best = findBestSequentialMatch(text, drawingMatches);
-        //   const matchText = best.bestMatch.rating > 0.85 ? best.bestMatch.target : "";
-        //   // Store match as plain string
-        //   spreadsheetData[i]["Matched Childpart"] = matchText;
-        //   spreadsheetData[i]["_similarityScore"] = best.bestMatch.rating;
-        //   spreadsheetData[i]["Type"] = matchText ? "Child Part" : "BO";
-        // }
-        
-        if (label === "PartNumber") {
-          // Get drawing numbers from the windowChildParts
-          const drawingMatches = Array.isArray(window.windowChildParts) 
-            ? window.windowChildParts.slice() 
-            : [];
-          
-          // Debug log to see if we have drawing matches
-          console.log(`Processing PartNumber "${text}" with ${drawingMatches.length} possible matches`);
-          
-          // Find the best match
-          const best = findBestSequentialMatch(text, drawingMatches);
-          
-          // Debug log to see the best match and its rating
-          console.log("Best match:", best.bestMatch.target, "with rating:", best.bestMatch.rating);
-          
-          // Only use the match if it exceeds the threshold
-          const matchText = best.bestMatch.rating > 0.6 ? best.bestMatch.target : "";
-          
-          // Debug log to see what we're setting
-          console.log("Setting Matched Childpart to:", matchText || "(empty string)");
-          
-          // Only set the match if it's not already manually selected
-          if (!spreadsheetData[i]["Matched Childpart"] || spreadsheetData[i]["Matched Childpart"] === "") {
-            spreadsheetData[i]["Matched Childpart"] = matchText; // This should be an empty string if no good match
-          }
-          
-          // Store the similarity score for reference
-          spreadsheetData[i]["_similarityScore"] = best.bestMatch.rating;
-          
-          // Set Type based on whether we found a match
-          if (!spreadsheetData[i]["Type"] || spreadsheetData[i]["Type"] === "") {
-            spreadsheetData[i]["Type"] = matchText ? "Child Part" : "BO";
-          }
-        }
-        
-      }   
-   
-// Add this right before renderSpreadsheet() in your addColumn function
-      // Fix any objects in Matched Childpart and Type columns
-      for (let i = 0; i < spreadsheetData.length; i++) {
-        if (!spreadsheetData[i]) continue;
-        
-        // Fix Matched Childpart if it's an object
-        if (spreadsheetData[i]["Matched Childpart"] && 
-            typeof spreadsheetData[i]["Matched Childpart"] === 'object') {
-          
-          if (spreadsheetData[i]["Matched Childpart"].text !== undefined) {
-            spreadsheetData[i]["Matched Childpart"] = spreadsheetData[i]["Matched Childpart"].text;
-          } else {
-            spreadsheetData[i]["Matched Childpart"] = "";
-          }
-        }
-        
-        // Fix Type if it's an object
-        if (spreadsheetData[i]["Type"] && 
-            typeof spreadsheetData[i]["Type"] === 'object') {
-          
-          if (spreadsheetData[i]["Type"].text !== undefined) {
-            spreadsheetData[i]["Type"] = spreadsheetData[i]["Type"].text;
-          } else {
-            spreadsheetData[i]["Type"] = "";
-          }
-        }
+      if (!columnsList.includes("Type")) {
+        columnsList.push("Type");
       }
-      renderSpreadsheet();
+    }
+  }
+
+  // Now update spreadsheetData for this column without reordering others
+  for (let i = 0; i < newColumnData.length; i++) {
+    const text = newColumnData[i]?.text || "";
+    const confidence = newColumnData[i]?.confidence || 0;
+    if (!spreadsheetData[i]) {
+      spreadsheetData[i] = {};
     }
 
-
-// Add this debugging function somewhere in your code
-window.diagnoseBestMatch = function(partNumber) {
-  if (!partNumber || !windowChildParts.length) {
-    console.log("Cannot diagnose - missing partNumber or windowChildParts");
-    return;
+    // Store OCR data as {text, confidence} object
+    spreadsheetData[i][label] = { text, confidence };
+    
+    // Special handling for PartNumber column
+    if (label === "PartNumber" && text) {
+      // Ensure windowChildParts is available
+      if (window.windowChildParts && window.windowChildParts.length > 0) {
+        // Find best match from windowChildParts using sequentialCharacterMatch
+        const drawingMatches = window.windowChildParts.slice();
+        
+        // Call findBestSequentialMatch to get the best match and its rating
+        const best = findBestSequentialMatch(text, drawingMatches);
+        
+        // Log the matching process for debugging
+        console.log(`Row ${i}: PartNumber "${text}" best match:`, 
+                   best.bestMatch.target, 
+                   `(rating: ${best.bestMatch.rating})`);
+        
+        // Use a slightly lower threshold (0.7) to increase matches
+        const matchText = best.bestMatch.rating > 0.7 ? best.bestMatch.target : "";
+        
+        // Only set if not already set (to preserve user edits)
+        if (!spreadsheetData[i]["Matched Childpart"] || spreadsheetData[i]["Matched Childpart"] === "") {
+          spreadsheetData[i]["Matched Childpart"] = matchText;
+        }
+        
+        // Store similarity score for reference (optional)
+        spreadsheetData[i]["_similarityScore"] = best.bestMatch.rating;
+        
+        // Set Type based on whether we found a match
+        if (!spreadsheetData[i]["Type"] || spreadsheetData[i]["Type"] === "") {
+          spreadsheetData[i]["Type"] = matchText ? "Child Part" : "BO";
+        }
+      } else {
+        console.warn("Cannot match PartNumber: windowChildParts is empty or undefined");
+      }
+    }
   }
-  
-  console.log(`Diagnosing matches for part: "${partNumber}"`);
-  
-  // Get top 5 matches
-  const matches = windowChildParts.map(d => ({
-    target: d,
-    rating: sequentialCharacterMatch(partNumber, d)
-  }));
-  
-  matches.sort((a, b) => b.rating - a.rating);
-  const top5 = matches.slice(0, 5);
-  
-  console.log("Top 5 matches:");
-  top5.forEach((m, i) => {
-    console.log(`${i+1}. "${m.target}" - rating: ${m.rating}`);
-  });
-  
-  console.log(`Best match would be selected: ${top5[0].rating > 0.85 ? 'YES' : 'NO'}`);
-  console.log(`Selected value: "${top5[0].rating > 0.85 ? top5[0].target : ''}"`);
-};
 
-// Call this function with a sample part number to see matching results
-// diagnoseBestMatch("SP00395"); // Example - you can call this from the console
+  // Fix any objects in special columns before rendering
+  for (let i = 0; i < spreadsheetData.length; i++) {
+    if (!spreadsheetData[i]) continue;
+    
+    // Fix Matched Childpart if it's an object
+    if (spreadsheetData[i]["Matched Childpart"] && 
+        typeof spreadsheetData[i]["Matched Childpart"] === 'object') {
+      
+      if (spreadsheetData[i]["Matched Childpart"].text !== undefined) {
+        spreadsheetData[i]["Matched Childpart"] = spreadsheetData[i]["Matched Childpart"].text;
+      } else {
+        spreadsheetData[i]["Matched Childpart"] = "";
+      }
+    }
+    
+    // Fix Type if it's an object
+    if (spreadsheetData[i]["Type"] && 
+        typeof spreadsheetData[i]["Type"] === 'object') {
+      
+      if (spreadsheetData[i]["Type"].text !== undefined) {
+        spreadsheetData[i]["Type"] = spreadsheetData[i]["Type"].text;
+      } else {
+        spreadsheetData[i]["Type"] = "";
+      }
+    }
+  }
+
+  // Render the spreadsheet with the updated data
+  renderSpreadsheet();
+}  
+
+    // // ─────────────────────────────────────────────────────────────────────
+    // // addColumn: used by OCR processing to inject a new column's OCR data
+    // // ─────────────────────────────────────────────────────────────────────
+    // function addColumn(newColumnData, label) {
+    //   // If this column is not yet in columnsList, add it (at the end).
+    //   if (!columnsList.includes(label)) {
+    //     columnsList.push(label);
+    //     // If injecting PartNumber, also ensure mapping columns exist
+    //     if (label === "PartNumber") {
+    //       console.log("🔍 addColumn: received OCR data for PartNumber, best‐match list =", window.windowChildParts);
+    //       if (!columnsList.includes("Matched Childpart")) {
+    //         columnsList.push("Matched Childpart");
+    //       }
+    //       if (!columnsList.includes("Type")) {
+    //         columnsList.push("Type");
+    //       }
+    //     }
+    //   }
+
+    //   // Now update spreadsheetData for this column without reordering others
+    //   for (let i = 0; i < newColumnData.length; i++) {
+    //     const text = newColumnData[i]?.text || "";
+    //     const confidence = newColumnData[i]?.confidence || 0;
+    //     if (!spreadsheetData[i]) {
+    //       spreadsheetData[i] = {};
+    //     }
+
+    //     spreadsheetData[i][label] = { text, confidence };
+
+    //     // Updated block for PartNumber column
+    //     if (label === "PartNumber") {
+    //       const drawingMatches = windowChildParts.slice();
+    //       const best = findBestSequentialMatch(text, drawingMatches);
+    //       const matchText = best.bestMatch.rating > 0.85 ? best.bestMatch.target : "";
+
+    //       // Only set the match if it's not already manually selected
+    //       if (!spreadsheetData[i]["Matched Childpart"] || spreadsheetData[i]["Matched Childpart"] === "") {
+    //         spreadsheetData[i]["Matched Childpart"] = matchText;
+    //       }
+
+    //       spreadsheetData[i]["_similarityScore"] = best.bestMatch.rating;
+
+    //       if (!spreadsheetData[i]["Type"] || spreadsheetData[i]["Type"] === "") {
+    //         spreadsheetData[i]["Type"] = matchText ? "Child Part" : "BO";
+    //       }
+    //     }
+    //   }
+
+    //   renderSpreadsheet();
+    // }
 
     // ─────────────────────────────────────────────────────────────────────
     // OCR Uploads: Multiple zones, event delegation, state per column
@@ -884,46 +931,115 @@ window.diagnoseBestMatch = function(partNumber) {
     // ─────────────────────────────────────────────────────────────────────
     // OCR Processing Handler: triggered when user clicks “Process” in OCR panel
     // ─────────────────────────────────────────────────────────────────────
-    document.getElementById("ocr-process-btn").addEventListener("click", async () => {
-      const processBtn = document.getElementById("ocr-process-btn");
-      processBtn.disabled = true;
+// ─────────────────────────────────────────────────────────────────────
 
-      const columnKeyMap = {
-        "Drawing Number": "Matched Childpart",
-        "Quantity": "Quantity",
-        "Description": "Description",
-        "Material": "Material",
-      };
+document.getElementById("ocr-process-btn").addEventListener("click", async () => {
+  const processBtn = document.getElementById("ocr-process-btn");
+  processBtn.disabled = true;
 
-      for (const label in fileStates) {
-        const formData = new FormData();
-        formData.append("image", fileStates[label]);
-        formData.append("mode", "table");
-        formData.append("column", columnKeyMap[label]);
+  try {
+    const columnKeyMap = {
+      "Drawing Number": "PartNumber", // IMPORTANT: Map "Drawing Number" to "PartNumber"
+      "Quantity": "Quantity",
+      "Description": "Description",
+      "Material": "Material",
+    };
 
-        try {
-          const resp = await fetch("https://ocr-table-extractor.onrender.com", {
-            method: "POST",
-            body: formData,
-          });
-          const data = await resp.json();
-          if (data.table && Array.isArray(data.table)) {
-            addColumn(data.table, columnKeyMap[label]);
-          }
-        } catch (err) {
-          console.error("Error OCR for", label, err);
+    // Process each file
+    for (const label in fileStates) {
+      const formData = new FormData();
+      formData.append("image", fileStates[label]);
+      formData.append("mode", "table");
+      
+      // Use the mapped column name
+      const mappedColumn = columnKeyMap[label] || label;
+      formData.append("column", mappedColumn);
+      
+      console.log(`Processing OCR for ${label} (mapped to ${mappedColumn})`);
+
+      try {
+        const resp = await fetch("https://ocr-table-extractor.onrender.com", {
+          method: "POST",
+          body: formData,
+        });
+        
+        if (!resp.ok) {
+          throw new Error(`OCR API returned status ${resp.status}`);
         }
+        
+        const data = await resp.json();
+        
+        if (data.table && Array.isArray(data.table)) {
+          // Use the mapped column name for addColumn
+          addColumn(data.table, mappedColumn);
+        } else {
+          console.warn(`No table data returned for ${label}`);
+        }
+      } catch (err) {
+        console.error(`Error in OCR processing for ${label}:`, err);
       }
+    }
 
-      // Clear preview and fileStates after processing
-      uploads.forEach(area => {
-        area.querySelector(".file-status").style.display = "none";
-        area.querySelector(".ocr-image-preview").innerHTML = "";
-        area.querySelector("input").value = "";
-      });
-
-      Object.keys(fileStates).forEach(k => delete fileStates[k]);
+    // Clear preview and fileStates after processing
+    uploads.forEach(area => {
+      area.querySelector(".file-status").style.display = "none";
+      area.querySelector(".ocr-image-preview").innerHTML = "";
+      area.querySelector("input").value = "";
+      area.classList.remove("has-file");
     });
+
+    // Clear fileStates
+    Object.keys(fileStates).forEach(k => delete fileStates[k]);
+    
+  } catch (error) {
+    console.error("Error in OCR processing:", error);
+  } finally {
+    processBtn.disabled = false;
+  }
+});
+
+
+    // document.getElementById("ocr-process-btn").addEventListener("click", async () => {
+    //   const processBtn = document.getElementById("ocr-process-btn");
+    //   processBtn.disabled = true;
+
+    //   const columnKeyMap = {
+    //     "Drawing Number": "Matched Childpart",
+    //     "Quantity": "Quantity",
+    //     "Description": "Description",
+    //     "Material": "Material",
+    //   };
+
+    //   for (const label in fileStates) {
+    //     const formData = new FormData();
+    //     formData.append("image", fileStates[label]);
+    //     formData.append("mode", "table");
+    //     formData.append("column", columnKeyMap[label]);
+
+    //     try {
+    //       const resp = await fetch("https://ocr-table-extractor.onrender.com", {
+    //         method: "POST",
+    //         body: formData,
+    //       });
+    //       const data = await resp.json();
+    //       if (data.table && Array.isArray(data.table)) {
+    //         addColumn(data.table, columnKeyMap[label]);
+    //       }
+    //     } catch (err) {
+    //       console.error("Error OCR for", label, err);
+    //     }
+    //   }
+
+    //   // Clear preview and fileStates after processing
+    //   uploads.forEach(area => {
+    //     area.querySelector(".file-status").style.display = "none";
+    //     area.querySelector(".ocr-image-preview").innerHTML = "";
+    //     area.querySelector("input").value = "";
+    //   });
+
+    //   Object.keys(fileStates).forEach(k => delete fileStates[k]);
+    // });
+
 
     // ─────────────────────────────────────────────────────────────────────
     // OCR Panel Toggle: Extract button opens, Close (X) closes
