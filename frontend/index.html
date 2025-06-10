@@ -736,66 +736,42 @@
         // }
         
         if (label === "PartNumber") {
-          // Debug log to see what we're working with
-          console.log("Processing PartNumber:", text);
-          console.log("Available childParts:", window.childParts);
+          // Get drawing numbers from the windowChildParts
+          const drawingMatches = Array.isArray(window.windowChildParts) 
+            ? window.windowChildParts.slice() 
+            : [];
           
-          // Only proceed if we have childParts to match against
-          if (window.childParts && window.childParts.length > 0) {
-            // Extract drawing numbers from childParts
-            const drawingNumbers = window.childParts.map(p => decodeURIComponent(p.drawingNumber || ""));
-            console.log("Extracted drawing numbers:", drawingNumbers);
-            
-            // Find the best match
-            const result = findBestSequentialMatch(text, drawingNumbers);
-            console.log("Best match result:", result);
-            
-            // Use the match if it's good enough
-            const matchText = result.bestMatch.rating > 0.85 ? result.bestMatch.target : "";
-            console.log("Selected match:", matchText, "with rating:", result.bestMatch.rating);
-            
-            // Store the match
-            if (!spreadsheetData[i]["Matched Childpart"] || spreadsheetData[i]["Matched Childpart"] === "") {
-              spreadsheetData[i]["Matched Childpart"] = matchText;
-            }
-            
-            // Set the Type based on whether we found a match
-            if (!spreadsheetData[i]["Type"] || spreadsheetData[i]["Type"] === "") {
-              spreadsheetData[i]["Type"] = matchText ? "Child Part" : "BO";
-            }
-          } else {
-            console.warn("No childParts available for matching!");
+          // Debug log to see if we have drawing matches
+          console.log(`Processing PartNumber "${text}" with ${drawingMatches.length} possible matches`);
+          
+          // Find the best match
+          const best = findBestSequentialMatch(text, drawingMatches);
+          
+          // Debug log to see the best match and its rating
+          console.log("Best match:", best.bestMatch.target, "with rating:", best.bestMatch.rating);
+          
+          // Only use the match if it exceeds the threshold
+          const matchText = best.bestMatch.rating > 0.85 ? best.bestMatch.target : "";
+          
+          // Debug log to see what we're setting
+          console.log("Setting Matched Childpart to:", matchText || "(empty string)");
+          
+          // Only set the match if it's not already manually selected
+          if (!spreadsheetData[i]["Matched Childpart"] || spreadsheetData[i]["Matched Childpart"] === "") {
+            spreadsheetData[i]["Matched Childpart"] = matchText; // This should be an empty string if no good match
+          }
+          
+          // Store the similarity score for reference
+          spreadsheetData[i]["_similarityScore"] = best.bestMatch.rating;
+          
+          // Set Type based on whether we found a match
+          if (!spreadsheetData[i]["Type"] || spreadsheetData[i]["Type"] === "") {
+            spreadsheetData[i]["Type"] = matchText ? "Child Part" : "BO";
           }
         }
         
       }   
- 
-      // Fix any objects in Matched Childpart and Type columns
-      for (let i = 0; i < spreadsheetData.length; i++) {
-        if (!spreadsheetData[i]) continue;
-        
-        // Fix Matched Childpart if it's an object
-        if (spreadsheetData[i]["Matched Childpart"] && 
-            typeof spreadsheetData[i]["Matched Childpart"] === 'object') {
-          
-          if (spreadsheetData[i]["Matched Childpart"].text !== undefined) {
-            spreadsheetData[i]["Matched Childpart"] = spreadsheetData[i]["Matched Childpart"].text;
-          } else {
-            spreadsheetData[i]["Matched Childpart"] = "";
-          }
-        }
-        
-        // Fix Type if it's an object
-        if (spreadsheetData[i]["Type"] && 
-            typeof spreadsheetData[i]["Type"] === 'object') {
-          
-          if (spreadsheetData[i]["Type"].text !== undefined) {
-            spreadsheetData[i]["Type"] = spreadsheetData[i]["Type"].text;
-          } else {
-            spreadsheetData[i]["Type"] = "";
-          }
-        }
-      }   
+   
 
       renderSpreadsheet();
     }
