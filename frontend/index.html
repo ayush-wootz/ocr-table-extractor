@@ -315,6 +315,24 @@
       cursor: not-allowed;
     }
 
+    /* Low similarity warning for dropdown cells */
+    .low-similarity-cell {
+      background-color: rgba(255, 193, 7, 0.3) !important; /* Yellow warning background */
+      border: 1px solid #ffc107 !important;
+      position: relative;
+    }
+    
+    /* Warning icon for low similarity cells */
+    .low-similarity-cell::after {
+      content: "⚠️";
+      position: absolute;
+      top: 2px;
+      right: 2px;
+      font-size: 12px;
+      z-index: 10;
+      pointer-events: none;
+    }    
+    
     /* --------------------- Responsive Behavior --------------------- */
     @media (max-width: 960px) {
       #table-and-ocr-wrapper {
@@ -572,9 +590,7 @@
         const title = COLUMN_TITLES[key] || key;
         const isMatched = key === "Matched Childpart";
         const isType = key === "Type";
-        const isOCRcol = ["Quantity", "Description", "Material"].includes(
-          key
-        );
+        const isOCRcol = ["Quantity", "Description", "Material"].includes(key);
 
         return {
           data: isMatched || isType ? key : `${key}.text`,
@@ -689,8 +705,17 @@
         changes.forEach(([row, prop, oldVal, newVal]) => {
           if (oldVal === newVal) return;
           const colIndex = hot.propToCol(prop);
+          
           hot.setCellMeta(row, colIndex, "className", "edited-cell");
 
+          // ✅ NEW: Just these 5 lines
+          if (["Quantity", "Description", "Material"].includes(prop)) {
+            const cell = hot.getCell(row, colIndex);
+            if (cell) {
+              cell.style.backgroundColor = "#ffffff";
+            }
+          } 
+          
           // If user changed “Matched Childpart”, auto‐populate “Type”
           if (prop === "Matched Childpart") {
             const typeColIdx = hot.propToCol("Type");
