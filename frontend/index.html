@@ -127,11 +127,11 @@
     /* 2x2 Grid Layout - Larger areas to fill space */
     .upload-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      grid-template-rows: 1fr 1fr;
-      gap: 12px;
+      grid-template-columns: repeat(4, 1fr);
+      /* grid-template-rows: 1fr 1fr; */
+      gap: 20px;
       margin-bottom: 20px;
-      max-width: 320px;
+      max-width: 640px;
       margin-left: auto;
       margin-right: auto;
     }
@@ -189,6 +189,12 @@
       color: #10b981;
     } */
     
+.upload-area.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+  cursor: not-allowed;
+  border-color: #ccc; /* optional, to further “grey out” the dashed border */
+}
 
     .upload-clear-btn {
       position: absolute;
@@ -323,7 +329,7 @@
       border: 1px solid #ddd;
       border-radius: 5px;
       position: relative;
-      display: block; /* Hidden by default */
+      display: none; /* Hidden by default */
       min-width: 150px;  /* Minimum size */
       max-width: min(400px, 90vw);  /* Larger maximum */
       width: fit-content; /* Adapts to content */
@@ -431,6 +437,7 @@
   cursor: pointer;
   opacity: 0.7;
   transition: opacity 0.2s ease;
+  
 
   /* Add these to pull it up: */
   position: relative;
@@ -439,8 +446,8 @@
 }
 
 .help-icon i {
-  width: 10px;  /* Reduced from 14px to match text size */
-  height: 10px; /* Reduced from 14px to match text size */
+  width: 8px;  /* Reduced from 14px to match text size */
+  height: 8px; /* Reduced from 14px to match text size */
   color: #111111;
   vertical-align: baseline; /* Align with text baseline */
 }
@@ -486,8 +493,8 @@
 <body>
   <div class="container">
     <div class="header">
-      <div class="logo"></div>
-      <h3>Upload Column ScreenShots</h3>
+      <!-- <div class="logo"></div>
+      <h3>Upload Column ScreenShots</h3> -->
     </div>
 
     <div class="instructions">
@@ -564,7 +571,7 @@
 
     <div id="image-preview">
 <!--       <button class="preview-remove-btn" onclick="clearPreview()" style="display: none;">×</button> -->
-<!--       <div id="sample-preview">
+      <!-- <div id="sample-preview">
         <strong>Sample Screenshot</strong><br>
         <img src= "sample-screenshot.png" alt="Sample column screenshot">
       </div>     -->
@@ -575,18 +582,21 @@
         <div id="add-data-status" style="display: none; color: #007bff; font-size: 0.9rem;">
           <span id="add-status-icon">📤</span> <span id="add-status-text">Adding Data...</span>
         </div>
-        <button id="add-data-btn" style="display: none;">Add Data</button>
+        <button id="add-data-btn" style="display: none;"></button>
       </div>
     </div>
     
     <div id="result-container"></div>
     <button id="download-btn" class="secondary-button" style="display: none;">Download as CSV</button>
+      <!-- dynamic step header -->
+    <h4 id="table-step-header" style="margin-bottom: 12px; color: #333;"></h4>
+    <div id="hot" style="width:100%; height:400px; display:none;"></div>
     <div id="hot" style="width: 100%; height: 400px; display: none;"></div>
     
   </div>
 
   <script>
-
+    let currentStep = 1;   // 1 = Review extracted data; 2 = Map & Add data
     // :-----------------------------------------:
     //  Column key → display title mapping
     // :-----------------------------------------:
@@ -704,11 +714,6 @@
     const API_URL = 'https://ocr-table-extractor.onrender.com';
 
     window.addEventListener("DOMContentLoaded", async () => {
-      // Step 1: Initialize default empty table (always run)
-      columnsList = ['Type', 'Matched Childpart', 'Quantity', 'Description', 'Material'];
-      spreadsheetData = [{}, {}, {}, {}, {}]; // 5 initial empty rows
-      renderSpreadsheet();    
-
       const urlParams = new URLSearchParams(window.location.search);
       const project = urlParams.get("project");
       const partNumber = urlParams.get("part");
@@ -755,240 +760,658 @@
       }
     }
 
-    function renderSpreadsheet() {
-      // ensure the new column is in the right spot
-      if (columnsList.includes("Matched Childpart") && !columnsList.includes("Type")) {
-        const idx = columnsList.indexOf("Matched Childpart");
-        columnsList.splice(idx + 1, 0, "Type");
-      }
-      
-      const columns = [];
-      const colHeaders = [];
-    
-      columnsList.forEach(key => {
-        const title = COLUMN_TITLES[key] || key;
-        const isMatched = key === 'Matched Childpart';
-        const isType    = key === "Type";
-        const drawingOptions = Array.isArray(window.childParts)
-          ? window.childParts.map(p => decodeURIComponent(p.drawingNumber || ''))
-          : [];
-    
-      columns.push({
-        // 1) editor & data binding
-        data:       (isMatched || isType) ? key : `${key}.text`,
-        title,
-        type:       (isMatched || isType) ? 'dropdown' : 'text',
-        // editor:     (isMatched || isType) ? 'dropdown' : 'text',
-        editor: isMatched ? 'autocomplete' : isType ? 'dropdown' : 'text',
-        source:     isMatched ? ['', ...drawingOptions] : isType ? ['', 'Child Part','BO'] : undefined, // Add empty option first
-        strict:     false, // Allow free text for both dropdown columns
-        allowInvalid: true, // Allow invalid/empty values for both columns
-        // filter:     (isMatched || isType) ? 'dropdown' : false, // Enable dropdown filtering
-        // trimDropdown: false, // Show all options initially
 
-        // 2) custom renderer for OCR columns
-        renderer: (isMatched || isType)
-          ? function(hotInst, td, row, col, prop, value, cellProps) {
-              // Default dropdown renderer
-              Handsontable.renderers.DropdownRenderer.apply(this, arguments);
-
-              // Only apply similarity warning after OCR has run
-              if (hasProcessedOnce) {
-                // Add low similarity warning for Matched Childpart
-                if (isMatched && value && value.trim() !== '') {
-                  const rowData = hotInst.getSourceDataAtRow(row);
-                  const partNumberData = rowData['PartNumber'];
-
-                  if (partNumberData && partNumberData.text && window.childParts?.length) {
-                    const drawingNumbers = window.childParts.map(p => decodeURIComponent(p.drawingNumber || ''));
-                    const result = findBestSequentialMatch(partNumberData.text, drawingNumbers);
-
-                    // Check if current value matches the best match and get its similarity
-                    let similarity = 0;
-                    if (result.bestMatch.target === value) {
-                      similarity = result.bestMatch.rating;
-                    } else {
-                      // If it's not the best match, find similarity for current value
-                      const currentMatch = sequentialCharacterMatch(partNumberData.text, value);
-                      similarity = currentMatch;
-                    }
-
-                    console.log(`Similarity for "${value}": ${similarity}`); // Debug log
-                    // Add this right before the similarity check:
-                    console.log(`Rendering ${value}, similarity: ${similarity}, classes: ${td.className}`);
-
-                    // Show warning for ALL non-perfect matches
-                    if (similarity < 0.95) {
-                      td.classList.add('low-similarity-cell');
-                    } else {
-                      td.classList.remove('low-similarity-cell');
-                    }
-                  }
-                } else {
-                  td.classList.remove('low-similarity-cell');
-                }
-              } else {
-                td.classList.remove('low-similarity-cell');
-              }
-            }
-          : function(hotInst, td, row, col, prop, value, cellProps) {
-              // first draw the text
-              Handsontable.renderers.TextRenderer.apply(this, arguments);
-
-              // then pull the original object back out
-              const rowData = hotInst.getSourceDataAtRow(row);
-              const cellObj = rowData[key];  // the {text, confidence} you stored
-
-              // Only apply confidence coloring after OCR has run
-              if (hasProcessedOnce && cellObj && typeof cellObj === 'object') {
-                const conf = parseFloat(cellObj.confidence);
-                if (conf >= 0.95) {
-                  td.style.backgroundColor = 'rgba(76, 175, 80, 0.2)';
-                } else if (conf >= 0.8) {
-                  td.style.backgroundColor = 'rgba(255, 152, 0, 0.2)';
-                } else {
-                  td.style.backgroundColor = 'rgba(244, 67, 54, 0.2)';
-                }
-              }
-            }
-      });
-    
-        colHeaders.push(key);
-      });
-    
-      const container = document.getElementById('hot');
-      container.style.display = 'block';
-      
-      // Show the Add Data button when spreadsheet is rendered
-      document.getElementById('add-data-btn').style.display = 'inline-block';
-
-    
-      if (hot) hot.destroy();
-      hot = new Handsontable(container, {
-        data: spreadsheetData,
-        columns,
-        colHeaders,
-        rowHeaders: true,
-        minSpareRows: 1,
-        contextMenu: ['remove_row','copy','paste'],
-        licenseKey: 'non-commercial-and-evaluation',
-        dropdownMenu: true, // Enable dropdown menu
-        filters: true, // Enable filtering
-        // Add autocomplete settings for better dropdown filtering
-        autoColumnSize: true,
-
-        // 🔧 FIX: Proper selection management
-        outsideClickDeselects: true,
-
-  // Add this debug hook
-afterSelectionEnd: function(row, column, row2, column2) {
-  // Simple fix: directly modify the border elements
-  setTimeout(() => {
-    const currentBorders = document.querySelectorAll('.wtBorder.current[style*="display: block"]');
-    currentBorders.forEach(border => {
-      const style = border.getAttribute('style');
-      
-      // Fix width: 4 to width: 1
-      if (style.includes('width: 4')) {
-        border.setAttribute('style', style.replace('width: 4px', 'width: 1px'));
-      }
-      
-      // Fix height: 4 to height: 1  
-      if (style.includes('height: 4')) {
-        border.setAttribute('style', style.replace('height: 4px', 'height: 1px'));
-      }
-    });
-  }, 0);
+function updateUploadAreasState() {
+  document.querySelectorAll('.upload-area').forEach(area => {
+    if (currentStep === 2) {
+      area.classList.add('disabled');
+    } else {
+      area.classList.remove('disabled');
+    }
+  });
 }
 
-        // // 🔧 FIX: Clean cell rendering without selection interference
-        // afterRender: function() {
-        //   // Force clear any stuck borders after each render
-        //   setTimeout(() => {
-        //     const stuckBorders = document.querySelectorAll('.wtBorder.current, .wtBorder.area');
-        //     stuckBorders.forEach(border => {
-        //       const rect = border.getBoundingClientRect();
-        //       // If border has no dimensions or is positioned oddly, it's likely stuck
-        //       if (rect.width === 0 || rect.height === 0 || rect.top < 0 || rect.left < 0) {
-        //         border.style.display = 'none';
-        //       }
-        //     });
-        //   }, 10);
-        // }
-        
-        // // Remove the current afterSelectionEnd hook entirely and replace with:
-        // afterSelection: function(row, column, row2, column2, preventScrolling, selectionLayerLevel) {
-        //   // This fires when selection starts - more reliable than afterSelectionEnd
-        //   // Clear any stuck selections from previous interactions
-        //   if (selectionLayerLevel === 0) { // Only handle primary selections
-        //     // Let Handsontable handle selection normally
-        //     return;
-        //   }
-        // },
-        
-        // afterDeselect: function() {
-        //   // This fires when a cell is deselected - perfect for cleanup
-        //   // Force clear any stuck border states
-        //   setTimeout(() => {
-        //     const borders = document.querySelectorAll('.wtBorder');
-        //     borders.forEach(border => {
-        //       if (border.style.display !== 'none') {
-        //         // Only hide if it appears stuck (no active selection)
-        //         const activeCell = hot.getActiveEditor();
-        //         if (!activeCell || !activeCell.isOpened()) {
-        //           border.style.display = 'none';
-        //         }
-        //       }
-        //     });
-        //   }, 50);
-        // }        
-                
-        // Prevent auto-selection in dropdowns
-        // afterSelectionEnd: function(row, column, row2, column2) {
-        //   const prop = hot.colToProp(column);
-        //   if (prop === 'Matched Childpart' || prop === 'Type') {
-        //     // Don't auto-select first item when opening dropdown
-        //     const editor = hot.getActiveEditor();
-        //     if (editor && editor.isOpened && editor.isOpened()) {
-        //       editor.focus();
-        //     }
-        //   }
-        // },
-      });
-      
-      // Enhanced change handler
-      hot.addHook('afterChange', (changes, source) => {
-        if (!hasProcessedOnce) return;  // only mark edits post-OCR
-        // only care about real user edits
-        if (source !== 'edit' || !changes) return;
+/**
+ * Two-step Handsontable renderer:
+ *  Step 1: editable OCR cells with confidence colors; mapping columns hidden
+ *  Step 2: read-only OCR cells plain-text; mapping columns visible and editable
+ */
+ function renderSpreadsheet() {
+  // ─────────────────────────────────────────────────────────────────
+  // 1) HEADER: create or update the <h4> above the table
+  // ─────────────────────────────────────────────────────────────────
+  const headerText =
+    currentStep === 1
+      ? 'Step 1: Review extracted data'
+      : 'Step 2: Map Part Number → Drawing Number & Type';
 
-        changes.forEach(([row, prop, oldValue, newValue]) => {
-          // skip if value didn't actually change
-          if (oldValue === newValue) return;
+  let header = document.getElementById('table-step-header');
+  if (!header) {
+    header = document.createElement('h4');
+    header.id = 'table-step-header';
+    header.style.marginBottom = '12px';
+    header.style.color = '#333';
+    const hotDiv = document.getElementById('hot');
+    hotDiv.parentNode.insertBefore(header, hotDiv);
+  }
+  header.textContent = headerText;
 
-          const col = hot.propToCol(prop);
-          // mark this cell as edited
-          hot.setCellMeta(row, col, 'className', 'edited-cell');
+  // ─────────────────────────────────────────────────────────────────
+  // 2) COLUMN SELECTION: hide “Matched Childpart” & “Type” in Step 1
+  // ─────────────────────────────────────────────────────────────────
+  const hideInStep1 = ['Matched Childpart', 'Type'];
+  const colsToRender = columnsList.filter(key =>
+    !(currentStep === 1 && hideInStep1.includes(key))
+  );
 
-          // Handle Type column auto-population when Matched Childpart changes
-          if (prop === 'Matched Childpart') {
-            const typeCol = hot.propToCol('Type');
-            if (typeCol !== -1) {
-              // Only auto-populate Type if user didn't explicitly set it to empty
-              if (newValue && newValue.trim() !== '') {
-                hot.setDataAtCell(row, typeCol, 'Child Part', 'auto-type-population');
-              } else if (newValue === '' || newValue === null) {
-                // Don't auto-populate when user clears the field
-                hot.setDataAtCell(row, typeCol, 'BO', 'auto-type-population');
-              }
+  // ─────────────────────────────────────────────────────────────────
+  // 3) PRE-INJECTION: ensure “Type” sits right after “Matched Childpart” in Step 2
+  // ─────────────────────────────────────────────────────────────────
+  if (
+    currentStep === 2 &&
+    colsToRender.includes('Matched Childpart') &&
+    !colsToRender.includes('Type')
+  ) {
+    const idx = colsToRender.indexOf('Matched Childpart');
+    colsToRender.splice(idx + 1, 0, 'Type');
+  }
+
+  // ─────────────────────────────────────────────────────────────────
+  // 4) BUILD COLUMNS ARRAY—now step-aware for OCR vs mapping columns
+  // ─────────────────────────────────────────────────────────────────
+  const drawingOptions = (window.childParts || []).map(p =>
+    decodeURIComponent(p.drawingNumber || '')
+  );
+
+  // Define which keys are “OCR” vs “Mapping”
+  const ocrKeys = ['PartNumber', 'Quantity', 'Description', 'Material'];
+
+  const columns = colsToRender.map(key => {
+    const title     = COLUMN_TITLES[key] || key;
+    const isMatched = key === 'Matched Childpart';
+    const isType    = key === 'Type';
+    const isOCR     = ocrKeys.includes(key);
+
+    // In Step 2: OCR columns become readOnly and should use a plain TextRenderer
+    const readOnlyOCR = currentStep === 2 && isOCR;
+
+    return {
+      // 1) data binding: OCR cells store { text, confidence }, mapping cells store a raw string
+      data: isMatched || isType ? key : `${key}.text`,
+
+      // 2) header label
+      title,
+
+      // 3) type & editor:
+      type: isMatched || isType ? 'dropdown' : 'text',
+      editor: isMatched
+        ? 'autocomplete'
+        : isType
+          ? 'dropdown'
+          : 'text',
+
+      // 4) dropdown source arrays:
+      source: isMatched
+        ? ['', ...drawingOptions]
+        : isType
+          ? ['', 'Child Part', 'BO']
+          : undefined,
+
+      // 5) enforce read-only on OCR columns in Step 2:
+      readOnly: readOnlyOCR,
+
+      strict: false,
+      allowInvalid: true,
+
+      // 6) custom renderer changes based on step & column type:
+      renderer: function(hotInst, td, row, col, prop, value) {
+        // ──────────────── MAPPING COLUMNS ────────────────
+        if (isMatched || isType) {
+          Handsontable.renderers.DropdownRenderer.apply(this, arguments);
+
+          // Only in Step 2: low-similarity warning for Matched Childpart
+          if (
+            currentStep === 2 &&
+            isMatched &&
+            value != null &&
+            value.toString().trim() !== ''
+          ) {
+            const rowData = hotInst.getSourceDataAtRow(row);
+            const partText = rowData['PartNumber'].text;
+            const sim = sequentialCharacterMatch(partText, value.toString());
+            if (sim < 0.95) td.classList.add('low-similarity-cell');
+            else td.classList.remove('low-similarity-cell');
+          } else {
+            td.classList.remove('low-similarity-cell');
+          }
+
+        // ─────────── OCR COLUMNS (Step 1 w/ colors, Step 2 plain) ───────────
+        } else {
+          if (readOnlyOCR) {
+            // ─── Step 2: plain text, read-only ───
+            Handsontable.renderers.TextRenderer.apply(this, arguments);
+            td.style.backgroundColor = ''; // remove any colored background
+          } else {
+            // ─── Step 1: editable with confidence colors ───
+            Handsontable.renderers.TextRenderer.apply(this, arguments);
+            const rowData = hotInst.getSourceDataAtRow(row);
+            const cellObj = rowData[key];
+            if (cellObj && typeof cellObj === 'object') {
+              const conf = parseFloat(cellObj.confidence || 0);
+              if (conf >= 0.95)       td.style.backgroundColor = 'rgba(76, 175, 80, 0.2)';
+              else if (conf >= 0.8)   td.style.backgroundColor = 'rgba(255, 152, 0, 0.2)';
+              else                    td.style.backgroundColor = 'rgba(244, 67, 54, 0.2)';
             }
           }
-        });
+        }
+      }
+    };
+  });
 
-        // re-render so every flagged cell gets the CSS
-        hot.render();
-      });
+  // ─────────────────────────────────────────────────────────────────
+  // 5) BUTTON: show “Verify Data” or “Add Data” based on currentStep
+  //    (Keep the same confirmation modal logic if you added one earlier)
+  // ─────────────────────────────────────────────────────────────────
+  const btn = document.getElementById('add-data-btn');
+  btn.style.display = 'inline-block';
+  if (currentStep === 1) {
+    btn.textContent = 'Verify Data';
+    btn.onclick = () => {
+      // If you previously wired a custom confirm overlay, use it here.
+      // Otherwise, replace with window.confirm if in a real browser:
+      const proceed = window.confirm(
+        'Are you sure you want to verify the extracted data?'
+      );
+      if (proceed) {
+        currentStep = 2;
+        renderSpreadsheet();
+      }
+    };
+  } else {
+    btn.textContent = 'Add Data';
+    btn.onclick     = sendDataToBackend;
+  }
+
+  // ─────────────────────────────────────────────────────────────────
+  // 6) DESTROY old Handsontable, then CREATE a new one with these columns
+  // ─────────────────────────────────────────────────────────────────
+  const container = document.getElementById('hot');
+  container.style.display = 'block';
+  if (hot) hot.destroy();
+
+  hot = new Handsontable(container, {
+    data:           spreadsheetData,
+    columns,
+    colHeaders:     colsToRender,
+    rowHeaders:     true,
+    minSpareRows:   1,
+    contextMenu:    ['remove_row', 'copy', 'paste'],
+    dropdownMenu:   true,
+    filters:        true,
+    autoColumnSize: true,
+    outsideClickDeselects: true,
+    licenseKey:     'non-commercial-and-evaluation',
+
+    // ── KEEP your existing afterSelectionEnd border-fix hook ──
+    afterSelectionEnd: function(row, column, row2, column2) {
+      setTimeout(() => {
+        document
+          .querySelectorAll('.wtBorder.current[style*="display: block"]')
+          .forEach(border => {
+            let s = border.getAttribute('style');
+            if (s.includes('width: 4px')) {
+              border.setAttribute('style', s.replace('width: 4px', 'width: 1px'));
+            }
+            if (s.includes('height: 4px')) {
+              border.setAttribute('style', s.replace('height: 4px', 'height: 1px'));
+            }
+          });
+      }, 0);
     }
+  });
+
+  // ─────────────────────────────────────────────────────────────────
+  // 7) RE-ATTACH your existing afterChange hook (edited-cell & auto-populate “Type”)
+  // ─────────────────────────────────────────────────────────────────
+  hot.addHook('afterChange', (changes, source) => {
+    if (source !== 'edit' || !changes) return;
+    changes.forEach(([row, prop, oldV, newV]) => {
+      if (oldV === newV) return;
+      const colIndex = hot.propToCol(prop);
+      hot.setCellMeta(row, colIndex, 'className', 'edited-cell');
+
+      // If user changed “Matched Childpart”, auto-populate “Type”
+      if (prop === 'Matched Childpart') {
+        const typeCol = hot.propToCol('Type');
+        if (typeCol !== -1) {
+          const val = newV && newV.toString().trim();
+          if (val)     hot.setDataAtCell(row, typeCol, 'Child Part', 'auto-type-population');
+          else         hot.setDataAtCell(row, typeCol, 'BO', 'auto-type-population');
+        }
+      }
+    });
+    hot.render();
+  });
+
+  // ─────────────────────────────────────────────────────────────────
+  // 8) ENABLE or DISABLE upload-areas based on Step (optional you may already have this)
+  //    For Step 2, simply add a ‘disabled’ class so the user cannot re-upload.
+  // ─────────────────────────────────────────────────────────────────
+  updateUploadAreasState();
+}
+
+// function renderSpreadsheet() {
+//   // 1) Update or create the step header
+//   const headerText = currentStep === 1
+//     ? 'Step 1: Review extracted data'
+//     : 'Step 2: Map Part Number → Drawing Number & Type';
+//   let header = document.getElementById('table-step-header');
+//   if (!header) {
+//     header = document.createElement('h4');
+//     header.id = 'table-step-header';
+//     header.style.marginBottom = '12px';
+//     header.style.color = '#333';
+//     const hotDiv = document.getElementById('hot');
+//     hotDiv.parentNode.insertBefore(header, hotDiv);
+//   }
+//   header.textContent = headerText;
+
+//   // 2) Decide which columns to show for this step
+//   const hideInStep1 = ['Matched Childpart', 'Type'];
+//   const colsToRender = columnsList.filter(key =>
+//     !(currentStep === 1 && hideInStep1.includes(key))
+//   );
+
+//   // 3) Prepare Handsontable column definitions
+//   const drawingOptions = (window.childParts || [])
+//     .map(p => decodeURIComponent(p.drawingNumber || ''));
+
+//   const columns = colsToRender.map(key => {
+//     const title    = COLUMN_TITLES[key] || key;
+//     const isMatch  = key === 'Matched Childpart';
+//     const isType   = key === 'Type';
+//     return {
+//       data:       isMatch || isType ? key : `${key}.text`,
+//       title,
+//       type:       isMatch ? 'autocomplete'
+//                  : isType  ? 'dropdown'
+//                  : 'text',
+//       source:     isMatch 
+//                  ? ['', ...drawingOptions] 
+//                  : isType 
+//                    ? ['', 'Child Part', 'BO'] 
+//                    : undefined,
+//       strict:     false,
+//       allowInvalid: true,
+//       renderer:   function(hotInst, td, row, col, prop, value) {
+//         if (isMatch || isType) {
+//           // Dropdown renderer + low-sim warning only in step 2 for Matched Childpart
+//           Handsontable.renderers.DropdownRenderer.apply(this, arguments);
+//           if (currentStep === 2 && isMatch && value && value.trim()) {
+//             const partText = hotInst.getSourceDataAtRow(row).PartNumber.text;
+//             const sim = sequentialCharacterMatch(partText, value);
+//             if (sim < 0.95) td.classList.add('low-similarity-cell');
+//             else td.classList.remove('low-similarity-cell');
+//           }
+//         } else {
+//           // OCR column: text + confidence coloring
+//           Handsontable.renderers.TextRenderer.apply(this, arguments);
+//           const cellObj = hotInst.getSourceDataAtRow(row)[key];
+//           if (cellObj && typeof cellObj === 'object') {
+//             const conf = parseFloat(cellObj.confidence);
+//             if (conf >= 0.95)       td.style.backgroundColor = 'rgba(76,175,80,0.2)';
+//             else if (conf >= 0.8)   td.style.backgroundColor = 'rgba(255,152,0,0.2)';
+//             else                    td.style.backgroundColor = 'rgba(244,67,54,0.2)';
+//           }
+//         }
+//       }
+//     };
+//   });
+
+//   // 4) Destroy old table and create new one
+//   const container = document.getElementById('hot');
+//   container.style.display = 'block';
+//   if (hot) hot.destroy();
+//   hot = new Handsontable(container, {
+//     data:           spreadsheetData,
+//     columns,
+//     colHeaders:     colsToRender,
+//     rowHeaders:     true,
+//     minSpareRows:   1,
+//     contextMenu:    ['remove_row','copy','paste'],
+//     dropdownMenu:   true,
+//     filters:        true,
+//     autoColumnSize: true,
+//     outsideClickDeselects: true,
+//     licenseKey:     'non-commercial-and-evaluation',
+//     // your existing afterSelectionEnd hook:
+//     afterSelectionEnd: function(row, column, row2, column2) {
+//       setTimeout(() => {
+//         document
+//           .querySelectorAll('.wtBorder.current[style*="display: block"]')
+//           .forEach(border => {
+//             let s = border.getAttribute('style');
+//             if (s.includes('width: 4px'))  border.setAttribute('style', s.replace('width: 4px','width: 1px'));
+//             if (s.includes('height: 4px')) border.setAttribute('style', s.replace('height: 4px','height: 1px'));
+//           });
+//       }, 0);
+//     }
+//   });
+
+//   // 5) Re-attach your change-handler hook
+//   hot.addHook('afterChange', (changes, source) => {
+//     if (source !== 'edit' || !changes) return;
+//     changes.forEach(([row, prop, oldV, newV]) => {
+//       if (oldV === newV) return;
+//       const colIndex = hot.propToCol(prop);
+//       hot.setCellMeta(row, colIndex, 'className', 'edited-cell');
+//       if (prop === 'Matched Childpart') {
+//         const typeCol = hot.propToCol('Type');
+//         if (typeCol !== -1) {
+//           const val = newV?.trim();
+//           hot.setDataAtCell(row, typeCol, val ? 'Child Part' : 'BO', 'auto-type-population');
+//         }
+//       }
+//     });
+//     hot.render();
+//   });
+
+//   // 6) Finally, show & wire up the Verify/Add Data button
+//   const btn = document.getElementById('add-data-btn');
+//   btn.style.display = 'inline-block';
+//   if (currentStep === 1) {
+//     btn.textContent = 'Verify Data';
+//     btn.onclick = () => {
+//       console.log("Verify button clicked – showing confirm dialog");
+//       const proceed = window.confirm(
+//         'Are you sure you want to verify the extracted data?'
+//       );
+//       console.log("User clicked:", proceed ? "OK" : "Cancel");
+//       if (proceed) {
+//         currentStep = 2;
+//         renderSpreadsheet();
+//       }
+//     };
+//   } else {
+//     btn.textContent = 'Add Data';
+//     btn.onclick     = sendDataToBackend;
+//   }
+
+//   updateUploadAreasState();
+// }  
+    // function renderSpreadsheet() {
+    //     const headerText = currentStep === 1
+    //       ? 'Step 1: Review extracted data'
+    //       : 'Step 2: Map Part Number → Drawing Number & Type';
+
+    //     // Ensure the header element exists
+    //     let header = document.getElementById('table-step-header');
+    //     if (!header) {
+    //       header = document.createElement('h4');
+    //       header.id = 'table-step-header';
+    //       header.style.marginBottom = '12px';
+    //       header.style.color = '#333';
+    //       const hotDiv = document.getElementById('hot');
+    //       hotDiv.parentNode.insertBefore(header, hotDiv);
+    //     }
+    //     header.textContent = headerText;
+
+    //     // Decide which columns to show
+    //     const hideInStep1 = ['Matched Childpart','Type'];
+    //     const colsToRender = columnsList.filter(key => 
+    //       !(currentStep === 1 && hideInStep1.includes(key))
+    //     );
+
+    //     // Build Handsontable column definitions
+    //     const columns = colsToRender.map(key => {
+    //       const title = COLUMN_TITLES[key] || key;
+    //       const isMatch = key === 'Matched Childpart';
+    //       const isType  = key === 'Type';
+    //       const drawingOptions = (window.childParts||[]).map(p => decodeURIComponent(p.drawingNumber));
+
+    //       return {
+    //         data:       isMatch||isType ? key : `${key}.text`,
+    //         title,
+    //         type:       isMatch ? 'autocomplete' : isType ? 'dropdown' : 'text',
+    //         source:     isMatch ? ['', ...drawingOptions] : isType ? ['','Child Part','BO'] : undefined,
+    //         strict:     false, allowInvalid: true,
+    //         renderer:   (hotInst, td, row, col, prop, value) => {
+    //           if (isMatch||isType) {
+    //             Handsontable.renderers.DropdownRenderer.apply(this, arguments);
+    //             // ⚠️ low-sim logic only in step 2
+    //             if (currentStep===2 && isMatch && value.trim()) {
+    //               const partText = hotInst.getSourceDataAtRow(row).PartNumber.text;
+    //               const sim = sequentialCharacterMatch(partText, value);
+    //               if (sim < 0.95) td.classList.add('low-similarity-cell');
+    //               else td.classList.remove('low-similarity-cell');
+    //             }
+    //           } else {
+    //             Handsontable.renderers.TextRenderer.apply(this, arguments);
+    //             const cell = hotInst.getSourceDataAtRow(row)[key];
+    //             if (cell && cell.confidence != null) {
+    //               const conf = parseFloat(cell.confidence);
+    //               if (conf >= 0.95) td.style.backgroundColor = 'rgba(76,175,80,0.2)';
+    //               else if (conf >= 0.8) td.style.backgroundColor = 'rgba(255,152,0,0.2)';
+    //               else td.style.backgroundColor = 'rgba(244,67,54,0.2)';
+    //             }
+    //           }
+    //         }
+    //       };
+    //     });
+      
+    //     // Set up the step-button
+    //     const btn = document.getElementById('add-data-btn');
+    //     btn.style.display = 'inline-block';
+    //     if (currentStep === 1) {
+    //       btn.textContent = 'Verify Data';
+    //       btn.onclick = () => {
+    //         currentStep = 2;
+    //         renderSpreadsheet();
+    //       };
+    //     } else {
+    //       btn.textContent = 'Add Data';
+    //       btn.onclick = sendDataToBackend;
+    //     }
+    //     // Show and re-create the table
+    //     const container = document.getElementById('hot');
+    //     container.style.display = 'block';
+
+    //     // destroy previous
+    //     if (hot) hot.destroy();
+
+    //     // single, correct instantiation:
+    //     hot = new Handsontable(container, {
+    //       data:       spreadsheetData,
+    //       columns,                              // your columns array
+    //       colHeaders: colsToRender,             // <— use colsToRender here
+    //       rowHeaders: true,
+    //       minSpareRows: 1,
+    //       contextMenu: ['remove_row','copy','paste'],
+    //       dropdownMenu: true,
+    //       filters: true,
+    //       licenseKey: 'non-commercial-and-evaluation',
+    //       autoColumnSize: true,
+    //       outsideClickDeselects: true,
+      
+
+
+      // // ensure the new column is in the right spot
+      // if (columnsList.includes("Matched Childpart") && !columnsList.includes("Type")) {
+      //   const idx = columnsList.indexOf("Matched Childpart");
+      //   columnsList.splice(idx + 1, 0, "Type");
+      // }
+      
+      // const columns = [];
+      // const colHeaders = [];
+    
+      // columnsList.forEach(key => {
+      //   const title = COLUMN_TITLES[key] || key;
+      //   const isMatched = key === 'Matched Childpart';
+      //   const isType    = key === "Type";
+      //   const drawingOptions = Array.isArray(window.childParts)
+      //     ? window.childParts.map(p => decodeURIComponent(p.drawingNumber || ''))
+      //     : [];
+    
+      //   columns.push({
+      //     // 1) editor & data binding
+      //     data:       (isMatched || isType) ? key : `${key}.text`,
+      //     title,
+      //     type:       (isMatched || isType) ? 'dropdown' : 'text',
+      //     // editor:     (isMatched || isType) ? 'dropdown' : 'text',
+      //     editor: isMatched ? 'autocomplete' : isType ? 'dropdown' : 'text',
+      //     source:     isMatched ? ['', ...drawingOptions] : isType ? ['', 'Child Part','BO'] : undefined, // Add empty option first
+      //     strict:     false, // Allow free text for both dropdown columns
+      //     allowInvalid: true, // Allow invalid/empty values for both columns
+      //     // filter:     (isMatched || isType) ? 'dropdown' : false, // Enable dropdown filtering
+      //     // trimDropdown: false, // Show all options initially
+
+
+          
+      //         // 2) custom renderer for OCR columns
+      //     renderer: (isMatched || isType)
+      //       ? function(hotInst, td, row, col, prop, value, cellProps) {
+      //           // Default dropdown renderer
+      //           Handsontable.renderers.DropdownRenderer.apply(this, arguments);
+                
+      //           // Add low similarity warning for Matched Childpart
+      //           if (isMatched && value && value.trim() !== '') {
+      //             const rowData = hotInst.getSourceDataAtRow(row);
+      //             const partNumberData = rowData['PartNumber'];
+                  
+      //             if (partNumberData && partNumberData.text && window.childParts?.length) {
+      //               const drawingNumbers = window.childParts.map(p => decodeURIComponent(p.drawingNumber || ''));
+      //               const result = findBestSequentialMatch(partNumberData.text, drawingNumbers);
+                    
+      //               // Check if current value matches the best match and get its similarity
+      //               let similarity = 0;
+      //               if (result.bestMatch.target === value) {
+      //                 similarity = result.bestMatch.rating;
+      //               } else {
+      //                 // If it's not the best match, find similarity for current value
+      //                 const currentMatch = sequentialCharacterMatch(partNumberData.text, value);
+      //                 similarity = currentMatch;
+      //               }
+                    
+      //               console.log(`Similarity for "${value}": ${similarity}`); // Debug log
+      //               // Add this right before the similarity check:
+      //               console.log(`Rendering ${value}, similarity: ${similarity}, classes: ${td.className}`);
+
+      //               // Show warning for ALL non-perfect matches
+      //               if (similarity < 0.95) {
+      //                 td.classList.add('low-similarity-cell');
+      //               } else {
+      //                 td.classList.remove('low-similarity-cell');
+      //               }
+      //             }
+      //           } else {
+      //             td.classList.remove('low-similarity-cell');
+      //           }
+      //         }
+      //       : function(hotInst, td, row, col, prop, value, cellProps) {
+      //           // first draw the text
+      //           Handsontable.renderers.TextRenderer.apply(this, arguments);
+    
+      //           // then pull the original object back out
+      //           const rowData = hotInst.getSourceDataAtRow(row);
+      //           const cellObj = rowData[key];  // the {text, confidence} you stored
+    
+      //           if (cellObj && typeof cellObj === 'object') {
+      //             const conf = parseFloat(cellObj.confidence);
+      //             if (conf >= 0.95) {
+      //               td.style.backgroundColor = 'rgba(76, 175, 80, 0.2)';
+      //             } else if (conf >= 0.8) {
+      //               td.style.backgroundColor = 'rgba(255, 152, 0, 0.2)';
+      //             } else {
+      //               td.style.backgroundColor = 'rgba(244, 67, 54, 0.2)';
+      //             }
+      //           }
+      //         }
+      //   });
+    
+      //   colHeaders.push(key);
+      // });
+    
+      // const container = document.getElementById('hot');
+      // container.style.display = 'block';
+      
+      // // Show the Add Data button when spreadsheet is rendered
+      // document.getElementById('add-data-btn').style.display = 'inline-block';
+
+    
+      // if (hot) hot.destroy();
+      // hot = new Handsontable(container, {
+      //   data: spreadsheetData,
+      //   columns,
+      //   colHeaders,
+      //   rowHeaders: true,
+      //   minSpareRows: 1,
+      //   contextMenu: ['remove_row','copy','paste'],
+      //   licenseKey: 'non-commercial-and-evaluation',
+      //   dropdownMenu: true, // Enable dropdown menu
+      //   filters: true, // Enable filtering
+      //   // Add autocomplete settings for better dropdown filtering
+      //   autoColumnSize: true,
+
+      //   // 🔧 FIX: Proper selection management
+      //   outsideClickDeselects: true,
+      
+        // Add this debug hook
+    //   afterSelectionEnd: function(row, column, row2, column2) {
+    //     // Simple fix: directly modify the border elements
+    //     setTimeout(() => {
+    //       const currentBorders = document.querySelectorAll('.wtBorder.current[style*="display: block"]');
+    //       currentBorders.forEach(border => {
+    //         const style = border.getAttribute('style');
+            
+    //         // Fix width: 4 to width: 1
+    //         if (style.includes('width: 4')) {
+    //           border.setAttribute('style', style.replace('width: 4px', 'width: 1px'));
+    //         }
+            
+    //         // Fix height: 4 to height: 1  
+    //         if (style.includes('height: 4')) {
+    //           border.setAttribute('style', style.replace('height: 4px', 'height: 1px'));
+    //         }
+    //       });
+    //     }, 0);
+    //   }
+    //   });
+      
+    //   // Enhanced change handler
+    //   hot.addHook('afterChange', (changes, source) => {
+    //     // only care about real user edits
+    //     if (source !== 'edit' || !changes) return;
+      
+    //     changes.forEach(([row, prop, oldValue, newValue]) => {
+    //       // skip if value didn't actually change
+    //       if (oldValue === newValue) return;
+      
+    //       const col = hot.propToCol(prop);
+    //       // mark this cell as edited
+    //       hot.setCellMeta(row, col, 'className', 'edited-cell');
+          
+    //       // Handle Type column auto-population when Matched Childpart changes
+    //       if (prop === 'Matched Childpart') {
+    //         const typeCol = hot.propToCol('Type');
+    //         if (typeCol !== -1) {
+    //           // Only auto-populate Type if user didn't explicitly set it to empty
+    //           if (newValue && newValue.trim() !== '') {
+    //             hot.setDataAtCell(row, typeCol, 'Child Part', 'auto-type-population');
+    //           } else if (newValue === '' || newValue === null) {
+    //             // Don't auto-populate when user clears the field
+    //             hot.setDataAtCell(row, typeCol, 'BO', 'auto-type-population');
+    //           }
+    //         }
+    //       }
+    //     });
+      
+    //     // re-render so every flagged cell gets the CSS
+    //     hot.render();
+    //   });
+
+      
+      
+    // }
 
     function addColumn(newColumnData, label) {
       // 🔧 FIX: If column already exists, remove it first (replacement)
@@ -1969,5 +2392,7 @@ async function sendDataToBackend() {
     });   
     
   </script>
+
+<!-- Backend Dependent UI testing code --> 
 </body>
 </html>
