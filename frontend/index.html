@@ -751,7 +751,7 @@
           console.log("Best match:", best.bestMatch.target, "with rating:", best.bestMatch.rating);
           
           // Only use the match if it exceeds the threshold
-          const matchText = best.bestMatch.rating > 0.85 ? best.bestMatch.target : "";
+          const matchText = best.bestMatch.rating > 0.6 ? best.bestMatch.target : "";
           
           // Debug log to see what we're setting
           console.log("Setting Matched Childpart to:", matchText || "(empty string)");
