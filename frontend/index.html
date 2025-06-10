@@ -800,7 +800,7 @@
 
 
 // Add this debugging function somewhere in your code
-function diagnoseBestMatch(partNumber) {
+window.diagnoseBestMatch = function(partNumber) {
   if (!partNumber || !windowChildParts.length) {
     console.log("Cannot diagnose - missing partNumber or windowChildParts");
     return;
@@ -824,7 +824,7 @@ function diagnoseBestMatch(partNumber) {
   
   console.log(`Best match would be selected: ${top5[0].rating > 0.85 ? 'YES' : 'NO'}`);
   console.log(`Selected value: "${top5[0].rating > 0.85 ? top5[0].target : ''}"`);
-}
+};
 
 // Call this function with a sample part number to see matching results
 // diagnoseBestMatch("SP00395"); // Example - you can call this from the console
