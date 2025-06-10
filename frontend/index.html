@@ -772,7 +772,33 @@
         
       }   
    
-
+// Add this right before renderSpreadsheet() in your addColumn function
+      // Fix any objects in Matched Childpart and Type columns
+      for (let i = 0; i < spreadsheetData.length; i++) {
+        if (!spreadsheetData[i]) continue;
+        
+        // Fix Matched Childpart if it's an object
+        if (spreadsheetData[i]["Matched Childpart"] && 
+            typeof spreadsheetData[i]["Matched Childpart"] === 'object') {
+          
+          if (spreadsheetData[i]["Matched Childpart"].text !== undefined) {
+            spreadsheetData[i]["Matched Childpart"] = spreadsheetData[i]["Matched Childpart"].text;
+          } else {
+            spreadsheetData[i]["Matched Childpart"] = "";
+          }
+        }
+        
+        // Fix Type if it's an object
+        if (spreadsheetData[i]["Type"] && 
+            typeof spreadsheetData[i]["Type"] === 'object') {
+          
+          if (spreadsheetData[i]["Type"].text !== undefined) {
+            spreadsheetData[i]["Type"] = spreadsheetData[i]["Type"].text;
+          } else {
+            spreadsheetData[i]["Type"] = "";
+          }
+        }
+      }
       renderSpreadsheet();
     }
 
