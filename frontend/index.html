@@ -862,7 +862,8 @@
                 const currentType = spreadsheetData[i]["Type"];
                 if (!currentType || currentType === "") {
                     // const autoType = matchText ? "Child Part" : "BO";
-                    spreadsheetData[i]["Type"] = "Child Part";
+                    const autoType = "Child Part";
+                    spreadsheetData[i]["Type"] = "autoType";
                     console.log(`✅ Auto-populated Type: "${autoType}"`);
                 }
             } else {
