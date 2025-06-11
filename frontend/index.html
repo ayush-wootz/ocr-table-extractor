@@ -121,23 +121,22 @@
       overflow-wrap: break-word;
     }
 
-    /* Fix editor background and text layering */
-    .handsontable .htCore textarea,
-    .handsontable .htCore input {
+    /* More specific class targeting */
+    .handsontable textarea.handsontableInput,
+    .handsontable input.handsontableInput {
       background-color: #ffffff !important;
       color: #000000 !important;
       border: 1px solid #ccc !important;
     }
     
-    /* Remove confidence colors from editor */
     .handsontable .htCore .htEditor {
       background-color: #ffffff !important;
     }
     
-    /* Ensure single text layer in editor */
-    .handsontable .htCore .htEditor textarea {
-      background: transparent !important;
-    }   
+    .handsontable .wtHolder textarea,
+    .handsontable .wtHolder input {
+      background: #ffffff !important;
+    }  
 
     /* Instructions bar above the table */
     .instructions {
@@ -651,24 +650,35 @@
             } else if (isOCRcol) {
               // OCR columns: color by confidence
               Handsontable.renderers.TextRenderer.apply(this, arguments);
-              const rowData = hotInstance.getSourceDataAtRow(row);
-              const cellObj = rowData[key];  // the { text, confidence } you stored
 
-              if (cellObj && typeof cellObj === "object" && cellObj.confidence !== undefined) {
-                const conf = parseFloat(cellObj.confidence || 0);
-                // Only apply a background if confidence > 0;
-                // otherwise leave it blank (white).
-                if (conf > 0) {
-                  if (conf >= 0.95) {
-                    td.style.backgroundColor = "rgba(76, 175, 80, 0.2)";
-                  } else if (conf >= 0.8) {
-                    td.style.backgroundColor = "rgba(255, 152, 0, 0.2)";
+              // ✅ CHECK: Was this cell edited by user?
+              const cellMeta = hotInstance.getCellMeta(row, col);
+              const wasEdited = cellMeta.className && cellMeta.className.includes('user-edited-ocr');
+              
+              if (wasEdited) {
+                // ✅ USER EDITED: Keep it white
+                td.style.backgroundColor = "#ffffff";
+              } else {
+                // ✅ OCR DATA: Show confidence colors   
+                const rowData = hotInstance.getSourceDataAtRow(row);
+                const cellObj = rowData[key];  // the { text, confidence } you stored
+  
+                if (cellObj && typeof cellObj === "object" && cellObj.confidence !== undefined) {
+                  const conf = parseFloat(cellObj.confidence || 0);
+                  // Only apply a background if confidence > 0;
+                  // otherwise leave it blank (white).
+                  if (conf > 0) {
+                    if (conf >= 0.95) {
+                      td.style.backgroundColor = "rgba(76, 175, 80, 0.2)";
+                    } else if (conf >= 0.8) {
+                      td.style.backgroundColor = "rgba(255, 152, 0, 0.2)";
+                    } else {
+                      td.style.backgroundColor = "rgba(244, 67, 54, 0.2)";
+                    }
                   } else {
-                    td.style.backgroundColor = "rgba(244, 67, 54, 0.2)";
+                    // No coloring when confidence is zero (empty cell)
+                    td.style.backgroundColor = "";
                   }
-                } else {
-                  // No coloring when confidence is zero (empty cell)
-                  td.style.backgroundColor = "";
                 }
               }
             }
@@ -728,16 +738,9 @@
 
           // ✅ FIXED: Use correct property names with .text
           if (["Quantity.text", "Description.text", "Material.text"].includes(prop)) {
+            // Mark as user-edited so renderer knows to keep it white
+            hot.setCellMeta(row, colIndex, "className", "edited-cell user-edited-ocr");
             console.log(`🔧 User edited OCR cell: Row ${row}, Column ${prop}`);
-            
-            setTimeout(() => {
-              const cell = hot.getCell(row, colIndex);
-              console.log("Cell found:", !!cell);
-              if (cell) {
-                cell.style.backgroundColor = "#ffffff";
-                console.log("✅ Applied white background");
-              }
-            }, 10);
           }
           
           // If user changed “Matched Childpart”, auto‐populate “Type”
