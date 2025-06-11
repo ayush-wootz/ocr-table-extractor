@@ -624,8 +624,9 @@
           source: isMatched
             ? ["", ...drawingOptions]
             : isType
-              ? ["", "Child Part", "BO"]
+              ? ["Child Part", "BO"]
               : undefined,
+
           strict: false,
           allowInvalid: true,
           readOnly: false, // all columns remain editable
@@ -755,16 +756,53 @@
           }
           
           // If user changed “Matched Childpart”, auto‐populate “Type”
-          if (prop === "Matched Childpart") {
-            const typeColIdx = hot.propToCol("Type");
-            if (typeColIdx !== -1) {
-              if (newVal && newVal.toString().trim() !== "") {
-                hot.setDataAtCell(row, typeColIdx, "Child Part", "auto-type-population");
-              } else {
-                hot.setDataAtCell(row, typeColIdx, "BO", "auto-type-population");
-              }
+        //   if (prop === "Matched Childpart") {
+        //     const typeColIdx = hot.propToCol("Type");
+        //     if (typeColIdx !== -1) {
+        //       if (newVal && newVal.toString().trim() !== "") {
+        //         hot.setDataAtCell(row, typeColIdx, "Child Part", "auto-type-population");
+        //       } else {
+        //         hot.setDataAtCell(row, typeColIdx, "BO", "auto-type-population");
+        //       }
+        //     }
+        //   }
+        
+        //New Logic
+        // ✅ REQUIREMENT 2: Validate Select Childpart based on Type
+        if (prop === "Matched Childpart") {
+            const rowData = hot.getSourceDataAtRow(row);
+            const typeValue = rowData["Type"];
+            
+            console.log(`🔍 Select Childpart changed: "${newVal}", Type: "${typeValue}"`);
+            
+            if (typeValue === "Child Part") {
+            // ✅ REQUIREMENT 2: Strict validation for Child Part
+            if (newVal && newVal.toString().trim() !== "") {
+                const isValidChildpart = windowChildParts.includes(newVal.toString());
+                
+                if (!isValidChildpart) {
+                console.warn(`⚠️ Invalid childpart selection: "${newVal}" - clearing cell`);
+                // Clear the invalid value
+                hot.setDataAtCell(row, colIndex, "", "validation-clear");
+                alert(`"${newVal}" is not a valid child part. Please select from the dropdown list.`);
+                return; // Don't continue processing
+                } else {
+                console.log(`✅ Valid childpart selected: "${newVal}"`);
+                }
             }
-          }
+            } else if (typeValue === "BO") {
+            // ✅ REQUIREMENT 3: Allow any value for BO type
+            console.log(`✅ BO type - allowing custom value: "${newVal}"`);
+            }
+        }
+        
+        // Handle Type changes (removed auto-population logic as per Requirement 1)
+        if (prop === "Type") {
+            console.log(`🔄 Type changed to: "${newVal}" for row ${row}`);
+            // Note: Type auto-population removed - now only set by PartNumber OCR
+        }    
+      // New Logic Ends here
+
         });
         hot.render();
       });
@@ -823,8 +861,8 @@
                 // Auto-populate Type
                 const currentType = spreadsheetData[i]["Type"];
                 if (!currentType || currentType === "") {
-                    const autoType = matchText ? "Child Part" : "BO";
-                    spreadsheetData[i]["Type"] = autoType;
+                    // const autoType = matchText ? "Child Part" : "BO";
+                    spreadsheetData[i]["Type"] = "Child Part";
                     console.log(`✅ Auto-populated Type: "${autoType}"`);
                 }
             } else {
@@ -1007,8 +1045,8 @@
             if (!type) missingFields.push(`Row ${index + 1}: Type`);
             
             // If Type is "Child Part", require Select Drawing Number
-            if (type === "Child Part" && !row["Matched Childpart"]?.trim()) {
-            missingFields.push(`Row ${index + 1}: Select Child Part (required for Child Part)`);
+            if (type === "Child Part" || type === "BO" && !row["Matched Childpart"]?.trim()) {
+            missingFields.push(`Row ${index + 1}: Child Part/BO (required)`);
             }
         });
         
@@ -1040,7 +1078,7 @@
           alert(
             `Missing Required Fields:\n${validation.missingFields.join(
               ", "
-            )}\nRequired fields:\n- Quantity, Type (always required)\n- Select Drawing Number if Type = “Child Part”`
+            )}\nRequired fields:\n- Child Part/BO, Quantity, Type`
           );
           addDataBtn.textContent = originalText;
           return;
