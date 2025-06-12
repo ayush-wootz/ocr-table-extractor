@@ -592,7 +592,7 @@
             Quantity: "Quantity",
             Description: "Description",
             Material: "Material",
-            "Matched Childpart": "Select Child Part",
+            "Matched Childpart": "Child Part/BO",
             Type: "Type",
         };
 
@@ -1164,7 +1164,7 @@
                 if (!type) missingFields.push(`Row ${index + 1}: Type`);
 
                 // If Type is "Child Part", require Select Drawing Number
-                if (type === "Child Part" || type === "BO" && !row["Matched Childpart"]?.trim()) {
+                if ((type === "Child Part" || type === "BO") && !row["Matched Childpart"]?.trim()) {
                     missingFields.push(`Row ${index + 1}: Child Part/BO (required)`);
                 }
             });
