@@ -254,13 +254,14 @@
         .dark-label {
             font-size: 14px;
             margin-bottom: 4px;
+            margin-top: 10px;
             text-align: center;
         }
 
 
         .upload-row {
         display: grid;
-        grid-template-columns: 1.5fr 1fr 3.2fr 3.2fr; /* Part, Qty, Desc, Material */
+        grid-template-columns: 1.8fr 1fr 3.2fr 3.2fr; /* Part, Qty, Desc, Material */
         gap: 8px;
         width: 100%;
         box-sizing: border-box;
@@ -290,7 +291,7 @@
 
 
         .ocr-upload-area {
-            border: 1px dashed #555;
+            border: 1.5px dashed #555;
             border-radius: 6px;
             padding: 6px;
             text-align: center;
@@ -304,13 +305,12 @@
             flex-direction: column;
             justify-content: center; /* Center content when no image */
             align-items: center;
-            transition: all 0.2s ease; /* Smooth transitions */
+            transition: all 0.2s ease;
         }
  
 .ocr-upload-area:hover {
-    border: 1px solid #D89326 !important; /* Your specified color */
+    border: 1.5px solid #D89326 !important; /* Your specified color */
     background: #2b2a2a;
-    transform: scale(1.02); /* Subtle zoom effect */
 }
 
 /* Drag over effect */
@@ -1039,7 +1039,9 @@
         // ─────────────────────────────────────────────────────────────────────
         document.getElementById("ocr-process-btn").addEventListener("click", async () => {
             const processBtn = document.getElementById("ocr-process-btn");
+            const originalText = processBtn.textContent;
             processBtn.disabled = true;
+            processBtn.textContent = "Processing...";
 
             console.log("🚀 Starting OCR processing...");
             console.log("📁 Files to process:", Object.keys(fileStates));
@@ -1097,6 +1099,11 @@
 
             Object.keys(fileStates).forEach(k => delete fileStates[k]);
             processBtn.disabled = true;
+            processBtn.textContent = originalText; // Restore original text
+
+            // Auto-close OCR panel
+            const panel = document.getElementById("ocr-panel");
+            panel.classList.remove("open");
 
             console.log("🏁 OCR processing completed");
         });
