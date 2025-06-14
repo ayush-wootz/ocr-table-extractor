@@ -1156,6 +1156,7 @@ div.wtBorder.current.corner {
                 reader.readAsDataURL(file);
 
                 document.getElementById("ocr-process-btn").disabled = Object.keys(fileStates).length === 0;
+                document.getElementById("ocr-process-btn").click();
             });
 
             
