@@ -110,9 +110,109 @@
         }
 
         /* Override cell borders to #444 */
-        #handsontable-container .wtBorder {
+        #handsontable-container .wtBorder:not(.current) {
             border-color: #444 !important;
         }
+
+
+/* GLIDE TABLE UI and BLACK & YELLOW THEME */
+/* Selected cell border - now more specific */
+#handsontable-container .wtBorder.current {
+    border-color: #D89326 !important;
+}        
+
+/* Black and white Handsontable theme */
+.handsontable {
+    background-color: #000000 !important;
+    color: #ffffff !important;
+}
+
+/* Table cells */
+.handsontable td {
+    background-color: #000000 !important;
+    color: #ffffff !important;
+    border-color: #333333 !important;
+}
+
+/* Column headers */
+.handsontable .ht_clone_top th,
+.handsontable .ht_clone_top_left_corner th {
+    background-color: #000000 !important;
+    color: #7e7e7e !important;
+    border-color: #333333 !important;
+}
+
+/* Row headers */
+.handsontable .ht_clone_left th {
+    background-color: #000000 !important;
+    color: #7e7e7e !important;
+    border-color: #333333 !important;
+}
+
+/* Selected cell */
+.handsontable .current {
+    background-color: #231d0f !important;
+}
+
+/* Target wtBorder current elements with inline background-color */
+div.wtBorder.current[style*="background-color"] {
+    background-color: 1px #D89326 !important;
+}
+
+/* More specific targeting */
+.handsontable div.wtBorder.current {
+    background-color: 1px #D89326 !important;
+}
+
+/* Target all variations */
+div.wtBorder.current,
+div.wtBorder.current.corner {
+    background-color: #D89326 !important;
+}
+
+/* COLUMN SELECTION */
+/* More specific targeting for column/row selections */
+.handsontable .wtBorder.area[style*="background-color"] {
+    background-color: #D89326 !important;
+}
+.handsontable td.area.highlight {
+    background-color: #231d0f !important; /* Same as current cell */
+}
+
+/* Input fields when editing */
+.handsontable .handsontableInputHolder textarea.handsontableInput,
+.handsontable .handsontableInputHolder input.handsontableInput {
+    background-color: #000000 !important;
+    color: #ffffff !important;
+    /* border: #666 !important; */
+}
+
+
+.handsontable textarea[data-hot-input]:focus {
+    border: 1px solid #D89326 !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+/* Dropdown menus */
+.handsontable .htDropdownMenu {
+    background-color: #1a1a1a !important;
+    color: #ffffff !important;
+    border-color: #333333 !important;
+}
+
+.handsontable .htDropdownMenu .ht_master table td {
+    background-color: #1a1a1a !important;
+    color: #ffffff !important;
+}
+
+/* Scrollbars */
+.handsontable .wtHolder {
+    scrollbar-color: #666 #1a1a1a;
+}
+
+
+
 
         /* Wrap long text in cells */
         .handsontable td .htCore {
@@ -499,6 +599,52 @@
                     <div id="table-action-buttons">
                         <button id="extract-btn">Extract</button>
                         <button id="submit-btn">Submit</button>
+                    </div>
+                    <div class="upload-row">
+                        <div class="upload-column">
+                            <label class="dark-label">Part Number</label>
+                            <div class="ocr-upload-area" data-column="Part Number">
+                                <div class="upload-icon"><i data-lucide="upload"></i></div>
+                                <div class="upload-label">Upload Image</div>
+                                <button class="upload-clear-btn" onclick="clearUpload(this, event)">×</button>
+                                <input type="file" accept="image/*" />
+                                <div class="file-status">✓ Uploaded</div>
+                                <div class="ocr-image-preview"></div>
+                            </div>
+                        </div>
+                        <div class="upload-column">
+                            <label class="dark-label">Quantity</label>
+                            <div class="ocr-upload-area" data-column="Quantity">
+                                <div class="upload-icon"><i data-lucide="upload"></i></div>
+                                <div class="upload-label">Upload Image</div>
+                                <button class="upload-clear-btn" onclick="clearUpload(this, event)">×</button>
+                                <input type="file" accept="image/*" />
+                                <div class="file-status">✓ Uploaded</div>
+                                <div class="ocr-image-preview"></div>
+                            </div>
+                        </div>
+                        <div class="upload-column">
+                            <label class="dark-label">Description</label>
+                            <div class="ocr-upload-area" data-column="Description">
+                                <div class="upload-icon"><i data-lucide="upload"></i></div>
+                                <div class="upload-label">Upload Image</div>
+                                <button class="upload-clear-btn" onclick="clearUpload(this, event)">×</button>
+                                <input type="file" accept="image/*" />
+                                <div class="file-status">✓ Uploaded</div>
+                                <div class="ocr-image-preview"></div>
+                            </div>
+                        </div>
+                        <div class="upload-column">
+                            <label class="dark-label">Material</label>
+                            <div class="ocr-upload-area" data-column="Material">
+                                <div class="upload-icon"><i data-lucide="upload"></i></div>
+                                <div class="upload-label">Upload Image</div>
+                                <button class="upload-clear-btn" onclick="clearUpload(this, event)">×</button>
+                                <input type="file" accept="image/*" />
+                                <div class="file-status">✓ Uploaded</div>
+                                <div class="ocr-image-preview"></div>
+                            </div>
+                        </div>
                     </div>
                     <!-- Handsontable placeholder (will be initialized via JS) -->
                     <div id="hot" style="width: 100%; height: 400px;"></div>
