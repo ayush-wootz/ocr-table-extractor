@@ -93,6 +93,14 @@
             font-weight: 700;
         }
 
+        /* ---------- --- Upload area as Heading Row--- ------  */
+/* Just override for header-row */
+.upload-row.header-row {
+    grid-template-columns: 40px 1fr 1fr 1fr 1fr 1fr !important; /* 6 columns instead of 4 */
+    gap: 2px !important;
+}
+
+
         /* --------------------- Table & OCR Wrapper --------------------- */
         #table-and-ocr-wrapper {
             display: flex;
@@ -102,17 +110,60 @@
 
         /* --------------------- Handsontable Area --------------------- */
         #handsontable-container {
+            max-height: none;
+            height: 500px;
+            overflow-y: auto;
+            overflow-x: auto;
             flex: 1 1 auto;
             min-width: 0;
             margin-right: 16px;
-            overflow-x: auto;
-            overflow-y: hidden;
+        }
+        #hot {
+            width: 100%;
+            height: auto;
+            max-height: none;
         }
 
         /* Override cell borders to #444 */
         #handsontable-container .wtBorder:not(.current) {
             border-color: #444 !important;
         }
+
+/* Remove the conflicting general rules and use only specific ones */
+
+.handsontable th .ocr-upload-area-header {
+    height: 40px !important;
+    min-height: 40px !important;
+    padding: 4px 4px !important;
+    box-sizing: border-box !important;
+    font-size: 12px !important;
+    /* Use grid instead of flex */
+    display: grid !important;
+    grid-template-columns: auto auto !important;  /* Two columns for icon and text */
+    justify-content: center !important;           /* Center the grid content */
+    align-items: center !important;               /* Center vertically */
+    gap: 4px !important;
+}
+
+.handsontable th .ocr-upload-area-header .upload-icon {
+    font-size: 16px !important;
+    margin: 0 !important;
+    line-height: 1 !important;
+}
+
+.handsontable th .ocr-upload-area-header .upload-label {
+    font-size: 12px !important;
+    margin: 0 !important;
+    line-height: 1.2 !important;
+    white-space: nowrap !important;
+}
+
+.handsontable th {
+    vertical-align: middle !important;
+    text-align: center !important;
+    width: auto !important;   
+}
+
 
 
 /* GLIDE TABLE UI and BLACK & YELLOW THEME */
@@ -127,11 +178,16 @@
     color: #ffffff !important;
 }
 
-/* Table cells */
+/* Table cells - with textwrap functionality */
 .handsontable td {
     background-color: #000000 !important;
     color: #ffffff !important;
     border-color: #333333 !important;
+
+    white-space: normal !important;
+    word-break: break-word !important;
+    overflow-wrap: break-word !important;
+    max-width: 300px; /* Helps trigger wrapping earlier */
 }
 
 /* Column headers */
@@ -212,15 +268,6 @@ div.wtBorder.current.corner {
 }
 
 
-
-
-        /* Wrap long text in cells */
-        .handsontable td .htCore {
-            white-space: normal !important;
-            word-break: break-word;
-            /* allow long words or strings to wrap */
-            overflow-wrap: break-word;
-        }
 
         /* More specific class targeting */
         .handsontable textarea.handsontableInput,
@@ -600,54 +647,10 @@ div.wtBorder.current.corner {
                         <button id="extract-btn">Extract</button>
                         <button id="submit-btn">Submit</button>
                     </div>
-                    <div class="upload-row">
-                        <div class="upload-column">
-                            <label class="dark-label">Part Number</label>
-                            <div class="ocr-upload-area" data-column="Part Number">
-                                <div class="upload-icon"><i data-lucide="upload"></i></div>
-                                <div class="upload-label">Upload Image</div>
-                                <button class="upload-clear-btn" onclick="clearUpload(this, event)">×</button>
-                                <input type="file" accept="image/*" />
-                                <div class="file-status">✓ Uploaded</div>
-                                <div class="ocr-image-preview"></div>
-                            </div>
-                        </div>
-                        <div class="upload-column">
-                            <label class="dark-label">Quantity</label>
-                            <div class="ocr-upload-area" data-column="Quantity">
-                                <div class="upload-icon"><i data-lucide="upload"></i></div>
-                                <div class="upload-label">Upload Image</div>
-                                <button class="upload-clear-btn" onclick="clearUpload(this, event)">×</button>
-                                <input type="file" accept="image/*" />
-                                <div class="file-status">✓ Uploaded</div>
-                                <div class="ocr-image-preview"></div>
-                            </div>
-                        </div>
-                        <div class="upload-column">
-                            <label class="dark-label">Description</label>
-                            <div class="ocr-upload-area" data-column="Description">
-                                <div class="upload-icon"><i data-lucide="upload"></i></div>
-                                <div class="upload-label">Upload Image</div>
-                                <button class="upload-clear-btn" onclick="clearUpload(this, event)">×</button>
-                                <input type="file" accept="image/*" />
-                                <div class="file-status">✓ Uploaded</div>
-                                <div class="ocr-image-preview"></div>
-                            </div>
-                        </div>
-                        <div class="upload-column">
-                            <label class="dark-label">Material</label>
-                            <div class="ocr-upload-area" data-column="Material">
-                                <div class="upload-icon"><i data-lucide="upload"></i></div>
-                                <div class="upload-label">Upload Image</div>
-                                <button class="upload-clear-btn" onclick="clearUpload(this, event)">×</button>
-                                <input type="file" accept="image/*" />
-                                <div class="file-status">✓ Uploaded</div>
-                                <div class="ocr-image-preview"></div>
-                            </div>
-                        </div>
-                    </div>
+
+                    <!-- Removed the Header -->
                     <!-- Handsontable placeholder (will be initialized via JS) -->
-                    <div id="hot" style="width: 100%; height: 400px;"></div>
+                    <div id="hot"></div>
                 </div>
 
                 <!-- OCR Slide-In Panel (Right) -->
@@ -672,7 +675,7 @@ div.wtBorder.current.corner {
                                 <label class="dark-label">Part Number</label>
                                 <div class="ocr-upload-area" data-column="Part Number">
                                     <div class="upload-icon"><i data-lucide="upload"></i></div>
-                                    <div class="upload-label">Upload Image</div>
+                                    <!-- <div class="upload-label">Upload Image</div> -->
                                     <button class="upload-clear-btn" onclick="clearUpload(this, event)">×</button>
                                     <input type="file" accept="image/*" />
                                     <div class="file-status">✓ Uploaded</div>
@@ -683,7 +686,7 @@ div.wtBorder.current.corner {
                                 <label class="dark-label">Quantity</label>
                                 <div class="ocr-upload-area" data-column="Quantity">
                                     <div class="upload-icon"><i data-lucide="upload"></i></div>
-                                    <div class="upload-label">Upload Image</div>
+                                    <!-- <div class="upload-label">Upload Image</div> -->
                                     <button class="upload-clear-btn" onclick="clearUpload(this, event)">×</button>
                                     <input type="file" accept="image/*" />
                                     <div class="file-status">✓ Uploaded</div>
@@ -694,7 +697,7 @@ div.wtBorder.current.corner {
                                 <label class="dark-label">Description</label>
                                 <div class="ocr-upload-area" data-column="Description">
                                     <div class="upload-icon"><i data-lucide="upload"></i></div>
-                                    <div class="upload-label">Upload Image</div>
+                                    <!-- <div class="upload-label">Upload Image</div> -->
                                     <button class="upload-clear-btn" onclick="clearUpload(this, event)">×</button>
                                     <input type="file" accept="image/*" />
                                     <div class="file-status">✓ Uploaded</div>
@@ -705,7 +708,7 @@ div.wtBorder.current.corner {
                                 <label class="dark-label">Material</label>
                                 <div class="ocr-upload-area" data-column="Material">
                                     <div class="upload-icon"><i data-lucide="upload"></i></div>
-                                    <div class="upload-label">Upload Image</div>
+                                    <!-- <div class="upload-label">Upload Image</div> -->
                                     <button class="upload-clear-btn" onclick="clearUpload(this, event)">×</button>
                                     <input type="file" accept="image/*" />
                                     <div class="file-status">✓ Uploaded</div>
@@ -738,7 +741,7 @@ div.wtBorder.current.corner {
             Quantity: "Quantity",
             Description: "Description",
             Material: "Material",
-            "Matched Childpart": "Child Part/BO",
+            "Matched Childpart": "Part Number: Child Part/BO",
             Type: "Type",
         };
 
@@ -885,6 +888,7 @@ div.wtBorder.current.corner {
                     strict: false,
                     allowInvalid: true,
                     readOnly: false, // all columns remain editable
+                    wordWrap: true, // ✅ enable per-column wrap
 
                     renderer: function (hotInstance, td, row, col, prop, value, cellProps) {
                         if (isMatched || isType) {
@@ -958,24 +962,91 @@ div.wtBorder.current.corner {
                 colHeaders: visibleColumns.map((k) => COLUMN_TITLES[k]),
                 rowHeaders: true,
                 minSpareRows: 1,
-                // ✅ ADD FORMULAS:
                 formulas: { engine: HyperFormula, sheetName: 'Sheet1' },
-                // contextMenu: ["col_right","remove_row", "copy", "paste"],
                 contextMenu: true,
-
-
-                dropdownMenu: true,
+                dropdownMenu: false,
                 filters: true,
                 width: '100%',
                 heigth: '100%',
+                autoColumnSize: true, 
                 stretchH: 'all',
-                autoColumnSize: true, // ← allow text to wrap
                 wordWrap: true,
-                autoRowSize: true,
-                // autoWrapRow: true,
                 manualColumnResize: true,
+                autoRowSize: true,
                 outsideClickDeselects: true,
                 licenseKey: "non-commercial-and-evaluation",
+
+                // --- NEW afterGetColHeader for OCR upload header area ---
+                afterGetColHeader: function(col, TH) {
+                    const columnName = visibleColumns[col];
+
+                    // ← ADD: Label mapping for display
+                    const labelMap = {
+                        "Quantity": "Quantity",
+                        "Description": "Description", 
+                        "Material": "Material",
+                        "Matched Childpart": "Part Number"  // ← This maps to display name
+                    };
+
+                    const ocrMap = {
+                        "Quantity": "Quantity",
+                        "Description": "Description", 
+                        "Material": "Material",
+                        "Matched Childpart": "PartNumber"
+                    };
+
+                    const ocrKey = ocrMap[columnName];
+                    if (!ocrKey) return;
+
+                    // Avoid double-mounting
+                    if (TH.querySelector(".ocr-upload-area-header")) return;
+
+                    // ← GET: Display label safely
+                    const displayLabel = labelMap[columnName] || columnName;
+
+                    // Create new upload area directly (don't move existing ones)
+                    const uploadArea = document.createElement("div");
+                    uploadArea.className = "ocr-upload-area ocr-upload-area-header";
+                    uploadArea.setAttribute("data-column", ocrKey);
+                    
+                    uploadArea.innerHTML = `
+                        <span class="upload-icon"><i data-lucide="upload"></i></span>
+                        <span class="upload-label">${displayLabel}</span>
+                        <button class="upload-clear-btn" onclick="clearUpload(this, event)">×</button>
+                        <input type="file" accept="image/*" />
+                        <div class="file-status">✓ Uploaded</div>
+                        <div class="ocr-image-preview"></div>
+                    `;
+
+                    // Clear existing TH content and add upload area
+                    TH.innerHTML = "";
+                    TH.appendChild(uploadArea);
+
+                    // Reinitialize Lucide icons for this new element
+                    lucide.createIcons();
+
+                    // Reattach event listeners for this specific upload area
+                    const input = uploadArea.querySelector("input");
+                    const status = uploadArea.querySelector(".file-status");
+                    const preview = uploadArea.querySelector(".ocr-image-preview");
+
+                    input.addEventListener("change", () => {
+                        const file = input.files[0];
+                        if (!file) return;
+
+                        fileStates[ocrKey] = file;
+                        status.style.display = "inline-block";
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            preview.innerHTML = `<img src="${e.target.result}" alt="Preview"/>`;
+                            uploadArea.classList.add("has-file");
+                        };
+                        reader.readAsDataURL(file);
+
+                        document.getElementById("ocr-process-btn").disabled = Object.keys(fileStates).length === 0;
+                        document.getElementById("ocr-process-btn").click();
+                    });
+                },
 
                 afterSelectionEnd: function (r, c, r2, c2) {
                     setTimeout(() => {
@@ -1454,6 +1525,28 @@ div.wtBorder.current.corner {
             }
         }
 
+        // --- Ensure OCR upload header areas use correct data-column attributes (internal keys) ---
+        // This runs once on DOMContentLoaded to fix any "data-column" attributes for header upload areas
+        document.addEventListener("DOMContentLoaded", function() {
+            // Map display titles to internal keys
+            const columnKeyMap = {
+                "Part Number": "PartNumber",
+                "Quantity": "Quantity",
+                "Description": "Description",
+                "Material": "Material",
+            };
+            // Find all .ocr-upload-area in the header-row and update data-column
+            document.querySelectorAll(".header-row .ocr-upload-area").forEach(area => {
+                const oldCol = area.getAttribute("data-column");
+                if (columnKeyMap[oldCol]) {
+                    area.setAttribute("data-column", columnKeyMap[oldCol]);
+                }
+            });
+            // Add a marker class for header upload areas (so afterGetColHeader can find them)
+            document.querySelectorAll(".header-row .ocr-upload-area").forEach(area => {
+                area.classList.add("ocr-upload-area-header");
+            });
+        });
         lucide.createIcons();
 
     </script>
@@ -1461,3 +1554,4 @@ div.wtBorder.current.corner {
 </body>
 
 </html>
+
