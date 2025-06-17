@@ -979,24 +979,30 @@ div.wtBorder.current.corner {
                 // --- NEW afterGetColHeader for OCR upload header area ---
                 afterGetColHeader: function(col, TH) {
                     const columnName = visibleColumns[col];
+                    console.log(`🔍 Column ${col}: "${columnName}"`);
 
-                    // ← ADD: Label mapping for display
-                    const labelMap = {
-                        "Quantity": "Quantity",
-                        "Description": "Description", 
-                        "Material": "Material",
-                        "Matched Childpart": "Part Number"  // ← This maps to display name
-                    };
+                    // // ← ADD: Label mapping for display
+                    // const labelMap = {
+                    //     "Quantity": "Quantity",
+                    //     "Description": "Description", 
+                    //     "Material": "Material",
+                    //     "Matched Childpart": "Part Number"  // ← This maps to display name
+                    // };
 
                     const ocrMap = {
                         "Quantity": "Quantity",
                         "Description": "Description", 
                         "Material": "Material",
-                        "Matched Childpart": "PartNumber"
+                        "Matched Childpart": "Part Number"
                     };
 
                     const ocrKey = ocrMap[columnName];
-                    if (!ocrKey) return;
+                    console.log(`🗝️ ocrKey for "${columnName}": "${ocrKey}"`);
+
+                    if (!ocrKey) {
+                         console.log(`⏭️ No ocrKey, skipping "${columnName}"`);
+                         return;
+                    }
 
                     // Avoid double-mounting
                     if (TH.querySelector(".ocr-upload-area-header")) return;
@@ -1008,6 +1014,7 @@ div.wtBorder.current.corner {
                     const uploadArea = document.createElement("div");
                     uploadArea.className = "ocr-upload-area ocr-upload-area-header";
                     uploadArea.setAttribute("data-column", ocrKey);
+                    console.log(`✅ Set data-column to: "${ocrKey}"`);
                     
                     uploadArea.innerHTML = `
                         <span class="upload-icon"><i data-lucide="upload"></i></span>
