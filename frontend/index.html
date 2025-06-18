@@ -586,7 +586,7 @@ div.wtBorder.current.corner {
 
         /* Low similarity warning for dropdown cells */
         .low-similarity-cell {
-            background-color: rgba(255, 193, 7, 0.3) !important;
+            background-color: a(255, 193, 7, 0.3) !important;
             /* Yellow warning background */
             border: 1px solid #ffc107 !important;
             position: relative;
@@ -919,8 +919,8 @@ div.wtBorder.current.corner {
                             const wasEdited = cellMeta.className && cellMeta.className.includes('user-edited-ocr');
 
                             if (wasEdited) {
-                                // ✅ USER EDITED: Keep it white
-                                td.style.backgroundColor = "#ffffff";
+                                // ✅ USER EDITED: Keep it black
+                                td.style.backgroundColor = "#000000";
                             } else {
                                 // ✅ OCR DATA: Show confidence colors   
                                 const rowData = hotInstance.getSourceDataAtRow(row);
@@ -932,11 +932,11 @@ div.wtBorder.current.corner {
                                     // otherwise leave it blank (white).
                                     if (conf > 0) {
                                         if (conf >= 0.95) {
-                                            td.style.backgroundColor = "rgba(76, 175, 80, 0.2)";
+                                            td.style.backgroundColor = "rgba(13, 112, 7, 1)";
                                         } else if (conf >= 0.8) {
-                                            td.style.backgroundColor = "rgba(255, 152, 0, 0.2)";
+                                            td.style.backgroundColor = "rgba(179, 110, 0, 1)";
                                         } else {
-                                            td.style.backgroundColor = "rgba(244, 67, 54, 0.2)";
+                                            td.style.backgroundColor = "rgba(152, 27, 27, 1)";
                                         }
                                     } else {
                                         // No coloring when confidence is zero (empty cell)
