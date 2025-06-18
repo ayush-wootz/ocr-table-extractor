@@ -180,7 +180,7 @@
 
 /* Table cells - with textwrap functionality */
 .handsontable td {
-    background-color: #000000;
+    background-color: #000000 !important;
     color: #ffffff !important;
     border-color: #333333 !important;
 
@@ -251,6 +251,22 @@ div.wtBorder.current.corner {
 }
 
 /* Dropdown menus */
+.handsontable .htDropdownMenu td,
+.handsontable .htContextMenu td {
+    background-color: #1a1a1a !important;
+    color: #ffffff !important;
+    border: none !important;
+    padding: 8px 12px !important;
+}
+        
+.handsontable .htDropdownMenu td.current,
+.handsontable .htContextMenu td.current {
+    background-color: #1F1F1F !important;
+    color: #ffffff !important;
+}
+
+
+        
 .handsontable .htDropdownMenu {
     background-color: #1a1a1a !important;
     color: #ffffff !important;
@@ -630,7 +646,6 @@ div.wtBorder.current.corner {
 .warning-popup {
     position: fixed;
     background: #1a1a1a;
-    border: 2px solid #ffc107;
     border-radius: 6px;
     padding: 12px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
@@ -640,7 +655,7 @@ div.wtBorder.current.corner {
     display: none;
 }
 
-.warning-popup h4 {
+.warning-popup h5 {
     margin: 0 0 8px 0;
     color: #ffc107;
 }
@@ -1472,7 +1487,7 @@ function showWarningPopup(x, y, partNumber) {
         <p>This part was auto-marked as <strong>BO</strong> because no matching child part was found.</p>
         <p>Please verify if this is:</p>
         <p>• A legitimate bought-out part, OR<br>• A missing child part drawing</p>
-        <button onclick="reportMissingDrawing('${partNumber}')">Report Missing Drawing</button>
+        <button onclick="reportMissingDrawing('${partNumber}')">Coming Soon! - Report Missing Drawing</button>
         <button onclick="closeWarningPopup()">Close</button>
     `;
     
