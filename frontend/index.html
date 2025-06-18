@@ -88,7 +88,7 @@
         }
 
         #submit-btn {
-            background-color: #D89326;
+            background-color: #D99E00;
             color: #fff;
             font-weight: 700;
         }
@@ -169,7 +169,7 @@
 /* GLIDE TABLE UI and BLACK & YELLOW THEME */
 /* Selected cell border - now more specific */
 #handsontable-container .wtBorder.current {
-    border-color: #D89326 !important;
+    border-color: #D99E00 !important;
 }        
 
 /* Black and white Handsontable theme */
@@ -212,24 +212,24 @@
 
 /* Target wtBorder current elements with inline background-color */
 div.wtBorder.current[style*="background-color"] {
-    background-color: 1px #D89326 !important;
+    background-color: 1px #D99E00 !important;
 }
 
 /* More specific targeting */
 .handsontable div.wtBorder.current {
-    background-color: 1px #D89326 !important;
+    background-color: 1px #D99E00 !important;
 }
 
 /* Target all variations */
 div.wtBorder.current,
 div.wtBorder.current.corner {
-    background-color: #D89326 !important;
+    background-color: #D99E00 !important;
 }
 
 /* COLUMN SELECTION */
 /* More specific targeting for column/row selections */
 .handsontable .wtBorder.area[style*="background-color"] {
-    background-color: #D89326 !important;
+    background-color: #D99E00 !important;
 }
 .handsontable td.area.highlight {
     background-color: #231d0f !important; /* Same as current cell */
@@ -245,7 +245,7 @@ div.wtBorder.current.corner {
 
 
 .handsontable textarea[data-hot-input]:focus {
-    border: 1px solid #D89326 !important;
+    border: 1px solid #D99E00 !important;
     outline: none !important;
     box-shadow: none !important;
 }
@@ -456,13 +456,13 @@ div.wtBorder.current.corner {
         }
  
 .ocr-upload-area:hover {
-    border: 1.5px solid #D89326 !important; /* Your specified color */
+    border: 1.5px solid #D99E00 !important; /* Your specified color */
     background: #2b2a2a;
 }
 
 /* Drag over effect */
 .ocr-upload-area.drag-over {
-    border-color: #D89326;
+    border-color: #D99E00;
     border-style: solid;
     background: #fff9f0;
     transform: scale(1.03);
@@ -471,7 +471,7 @@ div.wtBorder.current.corner {
 
 /* Active drag state */
 .ocr-upload-area.drag-active {
-    border-color: #D89326;
+    border-color: #D99E00;
     border-width: 3px;
     background: #fff6e6;
 }
@@ -482,7 +482,7 @@ div.wtBorder.current.corner {
 .ocr-upload-area.drag-over .upload-label,
 .ocr-upload-area.drag-active .upload-icon
 .ocr-upload-area.drag-active .upload-label {
-    color: #D89326 !important;
+    color: #D99E00 !important;
 }
       
 
@@ -561,7 +561,7 @@ div.wtBorder.current.corner {
             font-size: 0.75rem;
             font-weight: bold;
             margin-top: 1px;
-            color: #D89326;
+            color: #D99E00;
             display: none;
         }
 
@@ -571,7 +571,7 @@ div.wtBorder.current.corner {
 
 
         #ocr-process-btn {
-            background-color: #D89326;
+            background-color: #D99E00;
             color: #fff;
             border: none;
             border-radius: 4px;
@@ -603,6 +603,63 @@ div.wtBorder.current.corner {
             pointer-events: none;
         }
 
+        
+/* Warning icon for potential missing childparts */
+.needs-review-cell {
+    position: relative;
+}
+
+.needs-review-cell::after {
+    content: "⚠️";
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    font-size: 12px;
+    z-index: 10;
+    cursor: pointer;
+    opacity: 0.8;
+    pointer-events: auto;
+}
+
+.needs-review-cell::after:hover {
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+/* Warning popup */
+.warning-popup {
+    position: fixed;
+    background: #1a1a1a;
+    border: 2px solid #ffc107;
+    border-radius: 6px;
+    padding: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    z-index: 1003;
+    color: #fff;
+    max-width: 300px;
+    display: none;
+}
+
+.warning-popup h4 {
+    margin: 0 0 8px 0;
+    color: #ffc107;
+}
+
+.warning-popup p {
+    margin: 0 0 8px 0;
+    font-size: 14px;
+}
+
+.warning-popup button {
+    background: #D89326;
+    color: #fff;
+    border: none;
+    padding: 4px 8px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 12px;
+}
+        
         /* --------------------- Responsive Behavior --------------------- */
         @media (max-width: 960px) {
             #table-and-ocr-wrapper {
@@ -894,7 +951,16 @@ div.wtBorder.current.corner {
                         if (isMatched || isType) {
                             // dropdown renderer for mapping columns
                             Handsontable.renderers.DropdownRenderer.apply(this, arguments);
-
+                            
+                            // ✅ ADD: Check for warning needed
+                            if (prop === "Type" && value === "BO") {
+                                const rowData = hotInstance.getSourceDataAtRow(row);
+                                if (rowData["_needsReview"]) {
+                                    td.classList.add("needs-review-cell");
+                                    td.setAttribute("data-part-number", rowData["PartNumber"]?.text || "");
+                                }
+                            }
+                            
                             if (isMatched && value && value.toString().trim() !== "") {
                                 // low‐similarity warning on mapping in real time
                                 const rowData = hotInstance.getSourceDataAtRow(row);
@@ -1182,8 +1248,18 @@ div.wtBorder.current.corner {
                         // Only auto-populate if not manually set
                         const currentMatch = spreadsheetData[i]["Matched Childpart"];
                         if (!currentMatch || currentMatch === "") {
-                            spreadsheetData[i]["Matched Childpart"] = matchText;
-                            console.log(`✅ Auto-populated Matched Childpart: "${matchText}"`);
+                            if (matchText) {
+                                // ✅ GOOD MATCH: Child Part
+                                spreadsheetData[i]["Matched Childpart"] = matchText;
+                                spreadsheetData[i]["Type"] = "Child Part";
+                                console.log(`✅ Auto-populated Matched Childpart: "${matchText}"`);
+                            } else {
+                                // ❌ NO MATCH: Potential BO with warning
+                                spreadsheetData[i]["Matched Childpart"] = text; // Use original PartNumber text
+                                spreadsheetData[i]["Type"] = "BO";
+                                spreadsheetData[i]["_needsReview"] = true; // Flag for warning icon
+                                console.log(`⚠️ No match found - auto-set as BO with warning: "${text}"`);
+                            }
                         } else {
                             console.log(`⏭️ Skipped auto-population - already set to: "${currentMatch}"`);
                         }
@@ -1191,14 +1267,14 @@ div.wtBorder.current.corner {
                         // Store similarity score for reference
                         spreadsheetData[i]["_similarityScore"] = best.bestMatch.rating;
 
-                        // Auto-populate Type
-                        const currentType = spreadsheetData[i]["Type"];
-                        if (!currentType || currentType === "") {
-                            // const autoType = matchText ? "Child Part" : "BO";
-                            const autoType = "Child Part";
-                            spreadsheetData[i]["Type"] = autoType;
-                            console.log(`✅ Auto-populated Type: "${autoType}"`);
-                        }
+                        // // Auto-populate Type
+                        // const currentType = spreadsheetData[i]["Type"];
+                        // if (!currentType || currentType === "") {
+                        //     // const autoType = matchText ? "Child Part" : "BO";
+                        //     const autoType = "Child Part";
+                        //     spreadsheetData[i]["Type"] = autoType;
+                        //     console.log(`✅ Auto-populated Type: "${autoType}"`);
+                        // }
                     } else {
                         console.warn("⚠️ No drawing numbers available for matching");
                     }
@@ -1365,7 +1441,64 @@ div.wtBorder.current.corner {
             sendDataToBackend();
         });
 
+        
+// Add this after your table initialization
+document.addEventListener('click', function(e) {
+    if (e.target.matches('.needs-review-cell::after') || 
+        e.target.closest('.needs-review-cell')) {
+        
+        const cell = e.target.closest('.needs-review-cell');
+        const partNumber = cell.getAttribute('data-part-number');
+        
+        showWarningPopup(e.pageX, e.pageY, partNumber);
+    }
+});
 
+function showWarningPopup(x, y, partNumber) {
+    // Remove existing popup
+    const existingPopup = document.querySelector('.warning-popup');
+    if (existingPopup) existingPopup.remove();
+    
+    // Create new popup
+    const popup = document.createElement('div');
+    popup.className = 'warning-popup';
+    popup.style.left = x + 'px';
+    popup.style.top = y + 'px';
+    popup.style.display = 'block';
+    
+    popup.innerHTML = `
+        <h4>⚠️ Review Required</h4>
+        <p><strong>Part Number:</strong> ${partNumber}</p>
+        <p>This part was auto-marked as <strong>BO</strong> because no matching child part was found.</p>
+        <p>Please verify if this is:</p>
+        <p>• A legitimate bought-out part, OR<br>• A missing child part drawing</p>
+        <button onclick="reportMissingDrawing('${partNumber}')">Report Missing Drawing</button>
+        <button onclick="closeWarningPopup()">Close</button>
+    `;
+    
+    document.body.appendChild(popup);
+    
+    // Auto-close after 10 seconds
+    setTimeout(() => {
+        if (popup.parentNode) popup.remove();
+    }, 10000);
+}
+
+function closeWarningPopup() {
+    const popup = document.querySelector('.warning-popup');
+    if (popup) popup.remove();
+}
+
+function reportMissingDrawing(partNumber) {
+    // TODO: Implement notification/reporting logic
+    console.log(`📧 Reporting missing drawing for: ${partNumber}`);
+    alert(`Missing drawing reported for: ${partNumber}`);
+    closeWarningPopup();
+}
+
+
+
+        
         // ─────────────────────────────────────────────────────────────────────
         // validateRequiredFields (unchanged)
         // ─────────────────────────────────────────────────────────────────────
