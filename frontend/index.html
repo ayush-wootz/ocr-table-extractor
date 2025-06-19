@@ -20,7 +20,7 @@
             margin: 0;
             padding: 0;
             font-family: 'Inter', sans-serif;
-            background: #0d0d0d;
+            background: #0a0a0a;
             color: #ffffff;
             overflow: hidden;
             /* Prevent body scroll */
@@ -31,7 +31,7 @@
             max-width: 100%;
             /* reduced to allow Handsontable padding */
             max-height: 758px;
-            background-color: #0d0d0d;
+            background-color: #0a0a0a;
             padding: 0 24px;
             box-sizing: border-box;
             display: flex;
@@ -88,7 +88,7 @@
         }
 
         #submit-btn {
-            background-color: #D99E00;
+            background-color: #D99E01;
             color: #fff;
             font-weight: 700;
         }
@@ -169,20 +169,20 @@
 /* GLIDE TABLE UI and BLACK & YELLOW THEME */
 /* Selected cell border - now more specific */
 #handsontable-container .wtBorder.current {
-    border-color: #D99E00 !important;
+    border-color: #D99E01 !important;
 }        
 
 /* Black and white Handsontable theme */
 .handsontable {
-    background-color: #000000 !important;
+    background-color: #0a0a0a !important;
     color: #ffffff !important;
 }
 
 /* Table cells - with textwrap functionality */
 .handsontable td {
-    background-color: #000000;
+    background-color: #0a0a0a;
     color: #ffffff !important;
-    border-color: #333333 !important;
+    border-color: #222222 !important;
 
     white-space: normal !important;
     word-break: break-word !important;
@@ -193,16 +193,16 @@
 /* Column headers */
 .handsontable .ht_clone_top th,
 .handsontable .ht_clone_top_left_corner th {
-    background-color: #000000 !important;
+    background-color: #0a0a0a !important;
     color: #7e7e7e !important;
-    border-color: #333333 !important;
+    border-color: #222222 !important;
 }
 
 /* Row headers */
 .handsontable .ht_clone_left th {
-    background-color: #000000 !important;
+    background-color: #0a0a0a !important;
     color: #7e7e7e !important;
-    border-color: #333333 !important;
+    border-color: #222222 !important;
 }
 
 /* Selected cell */
@@ -212,24 +212,24 @@
 
 /* Target wtBorder current elements with inline background-color */
 div.wtBorder.current[style*="background-color"] {
-    background-color: 1px #D99E00 !important;
+    background-color: 1px #D99E01 !important;
 }
 
 /* More specific targeting */
 .handsontable div.wtBorder.current {
-    background-color: 1px #D99E00 !important;
+    background-color: 1px #D99E01 !important;
 }
 
 /* Target all variations */
 div.wtBorder.current,
 div.wtBorder.current.corner {
-    background-color: #D99E00 !important;
+    background-color: #D99E01 !important;
 }
 
 /* COLUMN SELECTION */
 /* More specific targeting for column/row selections */
 .handsontable .wtBorder.area[style*="background-color"] {
-    background-color: #D99E00 !important;
+    background-color: #D99E01 !important;
 }
 .handsontable td.area.highlight {
     background-color: #231d0f !important; /* Same as current cell */
@@ -245,7 +245,7 @@ div.wtBorder.current.corner {
 
 
 .handsontable textarea[data-hot-input]:focus {
-    border: 1px solid #D99E00 !important;
+    border: 1px solid #D99E01 !important;
     outline: none !important;
     box-shadow: none !important;
 }
@@ -253,7 +253,7 @@ div.wtBorder.current.corner {
 /* Dropdown menus */
 .handsontable .htDropdownMenu td,
 .handsontable .htContextMenu td {
-    background-color: #1a1a1a !important;
+    background-color: #0a0a0a !important;
     color: #ffffff !important;
     border: none !important;
     padding: 8px 12px !important;
@@ -458,7 +458,7 @@ div.wtBorder.current.corner {
             border-radius: 6px;
             padding: 6px;
             text-align: center;
-            background: #2b2a2a;
+            background: #0a0a0a;
             color: #000;
             position: relative;
             cursor: pointer;
@@ -473,7 +473,7 @@ div.wtBorder.current.corner {
  
 .ocr-upload-area:hover {
     border: 1.5px solid #D99E00 !important; /* Your specified color */
-    background: #2b2a2a;
+    background: #0a0a0a;
 }
 
 /* Drag over effect */
@@ -1709,4 +1709,3 @@ function reportMissingDrawing(partNumber) {
 </body>
 
 </html>
-
