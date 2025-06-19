@@ -820,7 +820,8 @@ div.wtBorder.current.corner {
         let spreadsheetData = [];
         let columnsList = [];
         let hot;
-        let windowChildParts = []; // expose on window for debugging
+let windowChildParts = []; // expose on window for debugging
+let _pasteBackup = [];
 
         // Fetch query-params (project, part, parentdrgnum) on load and fetch childParts
         window.addEventListener("DOMContentLoaded", async () => {
@@ -1217,6 +1218,44 @@ div.wtBorder.current.corner {
                     }
                     // New Logic Ends here
 
+                });
+                hot.render();
+            });
+
+            // ─── Backup OCR confidences on any paste ─────────────────────────────────────
+            hot.addHook('beforePaste', (data, coords) => {
+                _pasteBackup = [];
+                coords.forEach(({ startRow, startCol, endRow, endCol }) => {
+                    for (let r = startRow; r <= endRow; r++) {
+                        for (let c = startCol; c <= endCol; c++) {
+                            const prop = hot.colToProp(c).split('.')[0];
+                            if (['Quantity','Description','Material'].includes(prop)) {
+                                _pasteBackup.push({ row: r, col: c, conf: spreadsheetData[r][prop].confidence });
+                            }
+                        }
+                    }
+                });
+            });
+
+            // ─── Restore OCR confidences after paste and re‐flag DataSource ─────────────────
+            hot.addHook('afterPaste', (data, coords) => {
+                let idx = 0;
+                coords.forEach(({ startRow, startCol, endRow, endCol }) => {
+                    for (let r = startRow; r <= endRow; r++) {
+                        for (let c = startCol; c <= endCol; c++) {
+                            const backup = _pasteBackup[idx++];
+                            const prop = hot.colToProp(c).split('.')[0];
+                            spreadsheetData[backup.row][prop].confidence = backup.conf;
+                        }
+                    }
+                });
+                // Recalculate DataSource tags
+                spreadsheetData.forEach(row => {
+                    const confCols = ['Quantity','Description','Material'];
+                    const lowConf = confCols.some(col => row[col]?.confidence > 0 && row[col].confidence < 0.95);
+                    const lowSim = row._similarityScore !== undefined && row._similarityScore < 0.95;
+                    const needsReview = !!row._needsReview;
+                    row.DataSource = (lowConf || lowSim || needsReview) ? 'OCR <95%' : '';
                 });
                 hot.render();
             });
