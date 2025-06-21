@@ -187,7 +187,7 @@
     white-space: normal !important;
     word-break: break-word !important;
     overflow-wrap: break-word !important;
-    max-width: 300px; /* Helps trigger wrapping earlier */
+    max-width: 300px;
 }
 
 /* Column headers */
@@ -250,38 +250,115 @@ div.wtBorder.current.corner {
     box-shadow: none !important;
 }
 
+
 /* Dropdown menus */
-.handsontable .htDropdownMenu td,
-.handsontable .htContextMenu td {
-    background-color: #0a0a0a !important;
+/* ========== DROPDOWN & CONTEXT MENU FIXES ========== */
+
+/* Context Menu Container - Most specific */
+.htContextMenu.htMenu {
+    background-color: #1a1a1a !important;
+    /* border: 1px solid #444 !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5) !important; */
+}
+
+/* Context Menu Table */
+.htContextMenu.htMenu table.htCore {
+    background-color: #1a1a1a !important;
+}
+
+/* Context Menu Items */
+.htContextMenu.htMenu tbody tr td {
+    background-color: #1a1a1a !important;
     color: #ffffff !important;
+    /* padding: 8px 12px !important; */
     border: none !important;
-    padding: 8px 12px !important;
-}
-        
-.handsontable .htDropdownMenu td.current,
-.handsontable .htContextMenu td.current {
-    background-color: #1F1F1F !important;
-    color: #ffffff !important;
 }
 
+/* Context Menu Hover State */
+.htContextMenu.htMenu tbody tr td.current,
+.htContextMenu.htMenu tbody tr:hover td {
+    background-color: #2a2a2a !important;
+    color: #D99E01 !important;
+}
 
-        
-.handsontable .htDropdownMenu {
+/* Context Menu Disabled Items */
+.htContextMenu.htMenu tbody tr td.htDisabled,
+.htContextMenu.htMenu tbody tr td.htDisabled:hover {
+    background-color: #1a1a1a !important;
+    color: #666 !important;
+    cursor: default !important;
+}
+
+/* Context Menu Separators */
+.htContextMenu.htMenu .ht_sep {
+    background-color: #444 !important;
+    height: 1px !important;
+    margin: 4px 0 !important;
+}
+
+.htContextMenu .ht_master table.htCore {
+    border-color: #1F1F1F;
+    border-style: solid;
+    border-width: 1.5px;
+}
+
+/* Dropdown Menu Specific Fixes */
+.htDropdownMenu.htMenu {
+    background-color: #1a1a1a !important;
+    border: 1px solid #444 !important;
+}
+
+.htDropdownMenu.htMenu table.htCore {
+    background-color: #1a1a1a !important;
+}
+
+.htDropdownMenu.htMenu tbody tr td {
     background-color: #1a1a1a !important;
     color: #ffffff !important;
-    border-color: #333333 !important;
 }
 
-.handsontable .htDropdownMenu .ht_master table td {
+.htDropdownMenu.htMenu tbody tr:hover td {
+    background-color: #2a2a2a !important;
+}
+
+.handsontable.listbox .ht_master table {
+    border: 1px solid #1F1F1F;
+    border-collapse: separate;
+    /* background: #1a1a1a; */
+}
+.handsontable.listbox td {
     background-color: #1a1a1a !important;
-    color: #ffffff !important;
+    /* color: #323232 !important; */
+    /* border-color: #333 !important; */
+}
+.handsontable.listbox tr td.current,
+.handsontable.listbox tbody tr:hover td {
+    background-color: #2a2a2a !important;
+    /* color: #D99E01 !important; */
 }
 
-/* Scrollbars */
-.handsontable .wtHolder {
-    scrollbar-color: #666 #1a1a1a;
+
+/* ========== SCROLLBARS ========== */
+/* .handsontable .wtHolder::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
 }
+
+.handsontable .wtHolder::-webkit-scrollbar-track {
+    background: #1a1a1a;
+}
+
+.handsontable .wtHolder::-webkit-scrollbar-thumb {
+    background: #666;
+    border-radius: 5px;
+}
+
+.handsontable .wtHolder::-webkit-scrollbar-thumb:hover {
+    background: #888;
+} */
+
+
+
 
 
 
@@ -480,8 +557,8 @@ div.wtBorder.current.corner {
 .ocr-upload-area.drag-over {
     border-color: #D99E00;
     border-style: solid;
-    background: #fff9f0;
-    transform: scale(1.03);
+    background: #0a0a0a;
+    /* transform: scale(1.03); */
     box-shadow: 0 4px 12px rgba(216, 147, 38, 0.2);
 }
 
@@ -645,7 +722,7 @@ div.wtBorder.current.corner {
 /* Warning popup */
 .warning-popup {
     position: fixed;
-    background: #1a1a1a;
+    background: #1a1a1a47;
     border-radius: 6px;
     padding: 12px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
@@ -805,7 +882,6 @@ div.wtBorder.current.corner {
         // ─────────────────────────────────────────────────────────────────────
         // Global state & utility functions (unchanged from your original)
         // ─────────────────────────────────────────────────────────────────────
-
         let currentStep = 1; // (unused now that we've collapsed Step 1/2 into one hybrid view)
         // Column‐to‐Title mapping (used by renderSpreadsheet)
         const COLUMN_TITLES = {
@@ -820,7 +896,8 @@ div.wtBorder.current.corner {
         let spreadsheetData = [];
         let columnsList = [];
         let hot;
-        let windowChildParts = []; // expose on window for debugging
+let windowChildParts = []; // expose on window for debugging
+let _cutBackup = [];
 
         // Fetch query-params (project, part, parentdrgnum) on load and fetch childParts
         window.addEventListener("DOMContentLoaded", async () => {
@@ -1000,8 +1077,8 @@ div.wtBorder.current.corner {
                             const wasEdited = cellMeta.className && cellMeta.className.includes('user-edited-ocr');
 
                             if (wasEdited) {
-                                // ✅ USER EDITED: Keep it black
-                                td.style.backgroundColor = "#000000";
+                                // ✅ USER EDITED: Keep it default cell color
+                                td.style.backgroundColor = "#0a0a0a";
                             } else {
                                 // ✅ OCR DATA: Show confidence colors   
                                 const rowData = hotInstance.getSourceDataAtRow(row);
@@ -1013,11 +1090,11 @@ div.wtBorder.current.corner {
                                     // otherwise leave it blank (white).
                                     if (conf > 0) {
                                         if (conf >= 0.95) {
-                                            td.style.backgroundColor = "rgb(5, 12, 8)";
+                                            td.style.backgroundColor = "#214028";
                                         } else if (conf >= 0.8) {
-                                            td.style.backgroundColor = "#34261F";
+                                            td.style.backgroundColor = "#6B3D1C";
                                         } else {
-                                            td.style.backgroundColor = "#7f1d1d";
+                                            td.style.backgroundColor = "#412628";
                                         }
                                     } else {
                                         // No coloring when confidence is zero (empty cell)
@@ -1113,6 +1190,9 @@ div.wtBorder.current.corner {
                     // Reinitialize Lucide icons for this new element
                     lucide.createIcons();
 
+                    // Add this single line at the end of your afterGetColHeader function
+                    addDragDropListeners(uploadArea);
+
                     // Reattach event listeners for this specific upload area
                     const input = uploadArea.querySelector("input");
                     const status = uploadArea.querySelector(".file-status");
@@ -1153,78 +1233,111 @@ div.wtBorder.current.corner {
                 },
             });
 
-            // Re‐attach the “afterChange” hook to mark edited cells & auto‐populate “Type”
-            hot.addHook("afterChange", (changes, source) => {
-                if (source !== "edit" || !changes) return;
-                changes.forEach(([row, prop, oldVal, newVal]) => {
-                    if (oldVal === newVal) return;
+            // --- Unified afterChange handler: edit, cut, paste -----------------------------------------------
+            hot.addHook('afterChange', (changes, source) => {
+              if (!changes) return;
+
+              // ===== 0. COPY: clear any previous cut‑backup so future paste is treated as edit =====
+              if (source === 'CopyPaste.copy') {
+                _cutBackup = [];         // Do not capture confidence on copy
+                return;
+              }
+
+              // ===== 1. CUT: capture confidences before they disappear =====
+              if (source === 'CopyPaste.cut') {
+
+                _cutBackup = changes.map(([row, prop]) => {
+                  const colKey  = prop.split('.')[0];
+                  const confVal = spreadsheetData[row]?.[colKey]?.confidence ?? 0;
+                  return { row, prop, colKey, conf: confVal };
+                });
+                console.log('[CopyPaste.cut] backed‑up confs:', _cutBackup);
+
+                // wipe confidence from the source cells so color disappears
+                changes.forEach(([row, prop]) => {
+                  const colKey   = prop.split('.')[0];
+                  if (['Quantity','Description','Material'].includes(colKey)) {
+                    spreadsheetData[row][colKey].confidence = 0;
                     const colIndex = hot.propToCol(prop);
-
-                    hot.setCellMeta(row, colIndex, "className", "edited-cell");
-
-                    // ✅ FIXED: Use correct property names with .text
-                    if (["Quantity.text", "Description.text", "Material.text"].includes(prop)) {
-                        // Mark as user-edited so renderer knows to keep it white
-                        hot.setCellMeta(row, colIndex, "className", "edited-cell user-edited-ocr");
-                        console.log(`🔧 User edited OCR cell: Row ${row}, Column ${prop}`);
-                    }
-
-                    // If user changed “Matched Childpart”, auto‐populate “Type”
-                    //   if (prop === "Matched Childpart") {
-                    //     const typeColIdx = hot.propToCol("Type");
-                    //     if (typeColIdx !== -1) {
-                    //       if (newVal && newVal.toString().trim() !== "") {
-                    //         hot.setDataAtCell(row, typeColIdx, "Child Part", "auto-type-population");
-                    //       } else {
-                    //         hot.setDataAtCell(row, typeColIdx, "BO", "auto-type-population");
-                    //       }
-                    //     }
-                    //   }
-
-                    //New Logic
-                    // ✅ REQUIREMENT 2: Validate Select Childpart based on Type
-                    if (prop === "Matched Childpart") {
-                        const rowData = hot.getSourceDataAtRow(row);
-                        const typeValue = rowData["Type"];
-
-                        console.log(`🔍 Select Childpart changed: "${newVal}", Type: "${typeValue}"`);
-
-                        if (typeValue === "Child Part") {
-                            // ✅ REQUIREMENT 2: Strict validation for Child Part
-                            if (newVal && newVal.toString().trim() !== "") {
-                                const isValidChildpart = windowChildParts.includes(newVal.toString());
-
-                                if (!isValidChildpart) {
-                                    console.warn(`⚠️ Invalid childpart selection: "${newVal}" - clearing cell`);
-                                    // Clear the invalid value
-                                    hot.setDataAtCell(row, colIndex, "", "validation-clear");
-                                    alert(`"${newVal}" is not a valid child part. Please select from the dropdown list.`);
-                                    return; // Don't continue processing
-                                } else {
-                                    console.log(`✅ Valid childpart selected: "${newVal}"`);
-                                }
-                            }
-                        } else if (typeValue === "BO") {
-                            // ✅ REQUIREMENT 3: Allow any value for BO type
-                            console.log(`✅ BO type - allowing custom value: "${newVal}"`);
-                        }
-                    }
-
-                    // Handle Type changes (removed auto-population logic as per Requirement 1)
-                    if (prop === "Type") {
-                        console.log(`🔄 Type changed to: "${newVal}" for row ${row}`);
-                        // Note: Type auto-population removed - now only set by PartNumber OCR
-                    }
-                    // New Logic Ends here
-
+                    hot.setCellMeta(row, colIndex, 'className', 'edited-cell user-edited-ocr');
+                  }
                 });
                 hot.render();
+                return;
+              }
+
+              // ===== 2. PASTE: restore confidences to new cells ===========
+              if (source === 'CopyPaste.paste') {
+                console.log('[CopyPaste.paste] applying backup:', _cutBackup);
+                const isCutPaste = _cutBackup.length === changes.length;
+                changes.forEach(([row, prop], idx) => {
+                  const colKey   = prop.split('.')[0];
+                  if (!['Quantity','Description','Material'].includes(colKey)) return;
+
+                  const colIndex = hot.propToCol(prop);
+                  const restored = isCutPaste ? _cutBackup[idx]?.conf ?? 0 : 0;   // 0 for copy‑paste
+
+                  // set confidence
+                  spreadsheetData[row][colKey].confidence = restored;
+
+                  // build classes
+                  let classes = (hot.getCellMeta(row, colIndex).className || '')
+                                 .split(' ')
+                                 .filter(cls => cls !== 'user-edited-ocr' && cls !== 'edited-cell');
+
+                  if (restored === 0) classes.push('edited-cell','user-edited-ocr');
+                  hot.setCellMeta(row, colIndex, 'className', classes.join(' ').trim());
+                });
+                // clear backup after every paste
+                _cutBackup = [];
+                hot.render();
+                return;
+              }
+
+              // ===== 3. STANDARD EDIT branch =================================
+              if (source === 'edit') {
+                changes.forEach(([row, prop, oldVal, newVal]) => {
+                  if (oldVal === newVal) return;
+                  const colIndex = hot.propToCol(prop);
+
+                  // generic edited marker
+                  hot.setCellMeta(row, colIndex, 'className', 'edited-cell');
+
+                  // OCR columns: zero confidence & force default bg
+                  if (['Quantity.text','Description.text','Material.text'].includes(prop)) {
+                    spreadsheetData[row][prop.split('.')[0]].confidence = 0;
+                    hot.setCellMeta(row, colIndex, 'className', 'edited-cell user-edited-ocr');
+                    console.log(`🔧 User edited OCR cell: Row ${row}, Column ${prop}`);
+                  }
+
+                  // Childpart validation against Type
+                  if (prop === 'Matched Childpart') {
+                    const rowData  = hot.getSourceDataAtRow(row);
+                    const typeVal  = rowData['Type'];
+                    console.log(`🔍 Select Childpart changed: "${newVal}", Type: "${typeVal}"`);
+                    if (typeVal === 'Child Part' && newVal && newVal.toString().trim() !== '') {
+                      const isValid = windowChildParts.includes(newVal.toString());
+                      if (!isValid) {
+                        console.warn(`⚠️ Invalid childpart selection: "${newVal}" - clearing cell`);
+                        hot.setDataAtCell(row, colIndex, '', 'validation-clear');
+                        alert(`"${newVal}" is not a valid child part. Please select from the dropdown list.`);
+                        return;
+                      }
+                    }
+                    // BO type always allowed
+                  }
+
+                  // Optional logging for Type edits
+                  if (prop === 'Type') {
+                    console.log(`🔄 Type changed to: "${newVal}" for row ${row}`);
+                  }
+                });
+                hot.render();
+              }
             });
-            //   // Add this RIGHT AFTER your afterChange hook to test:
-            //   console.log("🔧 Testing if afterChange hook works...");
-            //   hot.addHook("afterChange", (changes, source) => {
-            //     console.log("🚨 BASIC TEST: afterChange fired!", { changes, source });
-            //   });
+
+
+
         }
 
         // ─────────────────────────────────────────────────────────────────────
@@ -1330,6 +1443,65 @@ div.wtBorder.current.corner {
 
             
         });
+
+// Add this JavaScript code after your existing OCR upload event listeners
+// (Around line 800-850 in your script section)
+
+// Function to add drag and drop listeners to upload areas
+function addDragDropListeners(uploadArea) {
+    // Prevent default drag behaviors on these events
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        uploadArea.addEventListener(eventName, preventDefaults, false);
+    });
+
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    // Highlight drop area when item is dragged over it
+    ['dragenter', 'dragover'].forEach(eventName => {
+        uploadArea.addEventListener(eventName, highlight, false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        uploadArea.addEventListener(eventName, unhighlight, false);
+    });
+
+    function highlight(e) {
+        uploadArea.classList.add('drag-over');
+    }
+
+    function unhighlight(e) {
+        uploadArea.classList.remove('drag-over');
+    }
+
+    // Handle dropped files
+    uploadArea.addEventListener('drop', handleDrop, false);
+
+    function handleDrop(e) {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+
+        if (files.length > 0) {
+            const input = uploadArea.querySelector('input[type="file"]');
+            input.files = files;
+            
+            // Trigger the change event to process the file
+            const event = new Event('change', { bubbles: true });
+            input.dispatchEvent(event);
+        }
+    }
+}
+
+// Apply drag & drop listeners to existing upload areas
+document.addEventListener('DOMContentLoaded', function() {
+    const uploads = document.querySelectorAll(".ocr-upload-area");
+    uploads.forEach(area => {
+        addDragDropListeners(area);
+    });
+});
+
 
         function clearUpload(buttonEl, event) {
             if (event) event.stopPropagation();
@@ -1484,9 +1656,9 @@ function showWarningPopup(x, y, partNumber) {
     popup.innerHTML = `
         <h4>⚠️ Review Required</h4>
         <p><strong>Part Number:</strong> ${partNumber}</p>
-        <p>This part was auto-marked as <strong>BO</strong> because no matching child part was found.</p>
+        <p>No Childpart found</p>
         <p>Please verify if this is:</p>
-        <p>• A legitimate bought-out part, OR<br>• A missing child part drawing</p>
+        <p>• A bought-out, OR<br>• A missing child part drawing case</p>
         <button onclick="reportMissingDrawing('${partNumber}')">Coming Soon! - Report Missing Drawing</button>
         <button onclick="closeWarningPopup()">Close</button>
     `;
