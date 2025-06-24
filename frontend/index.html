@@ -996,11 +996,11 @@
             const warns = [];
 
             // Non‑OCR warnings
-            if (row._needsReview)            warns.push('Verify whether a ChildPart or BO');
+            if (row._needsReview) warns.push('Verify whether a ChildPart or BO');
             if (row._similarityScore < 0.95) warns.push('Verify whether the PartNumber/BO name and other fields are correct');
 
             // OCR confidences   – flag 0 < conf < 0.95
-            ['Quantity','Description','Material'].forEach(col => {
+            ['Quantity', 'Description', 'Material'].forEach(col => {
                 const conf = row[col]?.confidence ?? 0;
                 if (conf > 0 && conf < 0.95) warns.push(`Caution in ${col} value`);
             });
@@ -1769,7 +1769,7 @@
         // Existing sendDataToBackend() function (unchanged from your original)
         // ─────────────────────────────────────────────────────────────────────
         window.childPartsData = [];
-        window.boData        = [];
+        window.boData = [];
 
         async function sendDataToBackend() {
             const addDataBtn = document.getElementById("submit-btn");
@@ -1819,6 +1819,7 @@
 
                     if (type === "Child Part") {
                         childPartsData.push({
+                            itemNumber: vRow + 1,
                             quantity: qty,
                             description: row.Description?.text?.trim() || "",
                             material: row.Material?.text?.trim() || "",
@@ -1827,6 +1828,7 @@
                         });
                     } else if (type === "BO") {
                         boData.push({
+                            itemNumber: vRow + 1,
                             quantity: qty,
                             description: row.Description?.text?.trim() || "",
                             material: row.Material?.text?.trim() || "",
