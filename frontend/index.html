@@ -94,11 +94,12 @@
         }
 
         /* ---------- --- Upload area as Heading Row--- ------  */
-/* Just override for header-row */
-.upload-row.header-row {
-    grid-template-columns: 40px 1fr 1fr 1fr 1fr 1fr !important; /* 6 columns instead of 4 */
-    gap: 2px !important;
-}
+        /* Just override for header-row */
+        .upload-row.header-row {
+            grid-template-columns: 40px 1fr 1fr 1fr 1fr 1fr !important;
+            /* 6 columns instead of 4 */
+            gap: 2px !important;
+        }
 
 
         /* --------------------- Table & OCR Wrapper --------------------- */
@@ -118,6 +119,7 @@
             min-width: 0;
             margin-right: 16px;
         }
+
         #hot {
             width: 100%;
             height: auto;
@@ -129,217 +131,224 @@
             border-color: #444 !important;
         }
 
-/* Remove the conflicting general rules and use only specific ones */
+        /* Remove the conflicting general rules and use only specific ones */
 
-.handsontable th .ocr-upload-area-header {
-    height: 40px !important;
-    min-height: 40px !important;
-    padding: 4px 4px !important;
-    box-sizing: border-box !important;
-    font-size: 12px !important;
-    /* Use grid instead of flex */
-    display: grid !important;
-    grid-template-columns: auto auto !important;  /* Two columns for icon and text */
-    justify-content: center !important;           /* Center the grid content */
-    align-items: center !important;               /* Center vertically */
-    gap: 4px !important;
-}
+        .handsontable th .ocr-upload-area-header {
+            height: 40px !important;
+            min-height: 40px !important;
+            padding: 4px 4px !important;
+            box-sizing: border-box !important;
+            font-size: 12px !important;
+            /* Use grid instead of flex */
+            display: grid !important;
+            grid-template-columns: auto auto !important;
+            /* Two columns for icon and text */
+            justify-content: center !important;
+            /* Center the grid content */
+            align-items: center !important;
+            /* Center vertically */
+            gap: 4px !important;
+        }
 
-.handsontable th .ocr-upload-area-header .upload-icon {
-    font-size: 16px !important;
-    margin: 0 !important;
-    line-height: 1 !important;
-}
+        .handsontable th .ocr-upload-area-header .upload-icon {
+            font-size: 16px !important;
+            margin: 0 !important;
+            line-height: 1 !important;
+        }
 
-.handsontable th .ocr-upload-area-header .upload-label {
-    font-size: 12px !important;
-    margin: 0 !important;
-    line-height: 1.2 !important;
-    white-space: nowrap !important;
-}
+        .handsontable th .ocr-upload-area-header .upload-label {
+            font-size: 12px !important;
+            margin: 0 !important;
+            line-height: 1.2 !important;
+            white-space: nowrap !important;
+        }
 
-.handsontable th {
-    vertical-align: middle !important;
-    text-align: center !important;
-    width: auto !important;   
-}
-
-
-
-/* GLIDE TABLE UI and BLACK & YELLOW THEME */
-/* Selected cell border - now more specific */
-#handsontable-container .wtBorder.current {
-    border-color: #D99E01 !important;
-}        
-
-/* Black and white Handsontable theme */
-.handsontable {
-    background-color: #0a0a0a !important;
-    color: #ffffff !important;
-}
-
-/* Table cells - with textwrap functionality */
-.handsontable td {
-    background-color: #0a0a0a;
-    color: #ffffff !important;
-    border-color: #222222 !important;
-
-    white-space: normal !important;
-    word-break: break-word !important;
-    overflow-wrap: break-word !important;
-    max-width: 300px;
-}
-
-/* Column headers */
-.handsontable .ht_clone_top th,
-.handsontable .ht_clone_top_left_corner th {
-    background-color: #0a0a0a !important;
-    color: #7e7e7e !important;
-    border-color: #222222 !important;
-}
-
-/* Row headers */
-.handsontable .ht_clone_left th {
-    background-color: #0a0a0a !important;
-    color: #7e7e7e !important;
-    border-color: #222222 !important;
-}
-
-/* Selected cell */
-.handsontable .current {
-    background-color: #231d0f !important;
-}
-
-/* Target wtBorder current elements with inline background-color */
-div.wtBorder.current[style*="background-color"] {
-    background-color: 1px #D99E01 !important;
-}
-
-/* More specific targeting */
-.handsontable div.wtBorder.current {
-    background-color: 1px #D99E01 !important;
-}
-
-/* Target all variations */
-div.wtBorder.current,
-div.wtBorder.current.corner {
-    background-color: #D99E01 !important;
-}
-
-/* COLUMN SELECTION */
-/* More specific targeting for column/row selections */
-.handsontable .wtBorder.area[style*="background-color"] {
-    background-color: #D99E01 !important;
-}
-.handsontable td.area.highlight {
-    background-color: #231d0f !important; /* Same as current cell */
-}
-
-/* Input fields when editing */
-.handsontable .handsontableInputHolder textarea.handsontableInput,
-.handsontable .handsontableInputHolder input.handsontableInput {
-    background-color: #000000 !important;
-    color: #ffffff !important;
-    /* border: #666 !important; */
-}
+        .handsontable th {
+            vertical-align: middle !important;
+            text-align: center !important;
+            width: auto !important;
+        }
 
 
-.handsontable textarea[data-hot-input]:focus {
-    border: 1px solid #D99E01 !important;
-    outline: none !important;
-    box-shadow: none !important;
-}
+
+        /* GLIDE TABLE UI and BLACK & YELLOW THEME */
+        /* Selected cell border - now more specific */
+        #handsontable-container .wtBorder.current {
+            border-color: #D99E01 !important;
+        }
+
+        /* Black and white Handsontable theme */
+        .handsontable {
+            background-color: #0a0a0a !important;
+            color: #ffffff !important;
+        }
+
+        /* Table cells - with textwrap functionality */
+        .handsontable td {
+            background-color: #0a0a0a;
+            color: #ffffff !important;
+            border-color: #222222 !important;
+
+            white-space: normal !important;
+            word-break: break-word !important;
+            overflow-wrap: break-word !important;
+            max-width: 300px;
+        }
+
+        /* Column headers */
+        .handsontable .ht_clone_top th,
+        .handsontable .ht_clone_top_left_corner th {
+            background-color: #0a0a0a !important;
+            color: #7e7e7e !important;
+            border-color: #222222 !important;
+        }
+
+        /* Row headers */
+        .handsontable .ht_clone_left th {
+            background-color: #0a0a0a !important;
+            color: #7e7e7e !important;
+            border-color: #222222 !important;
+        }
+
+        /* Selected cell */
+        .handsontable .current {
+            background-color: #231d0f !important;
+        }
+
+        /* Target wtBorder current elements with inline background-color */
+        div.wtBorder.current[style*="background-color"] {
+            background-color: 1px #D99E01 !important;
+        }
+
+        /* More specific targeting */
+        .handsontable div.wtBorder.current {
+            background-color: 1px #D99E01 !important;
+        }
+
+        /* Target all variations */
+        div.wtBorder.current,
+        div.wtBorder.current.corner {
+            background-color: #D99E01 !important;
+        }
+
+        /* COLUMN SELECTION */
+        /* More specific targeting for column/row selections */
+        .handsontable .wtBorder.area[style*="background-color"] {
+            background-color: #D99E01 !important;
+        }
+
+        .handsontable td.area.highlight {
+            background-color: #231d0f !important;
+            /* Same as current cell */
+        }
+
+        /* Input fields when editing */
+        .handsontable .handsontableInputHolder textarea.handsontableInput,
+        .handsontable .handsontableInputHolder input.handsontableInput {
+            background-color: #000000 !important;
+            color: #ffffff !important;
+            /* border: #666 !important; */
+        }
 
 
-/* Dropdown menus */
-/* ========== DROPDOWN & CONTEXT MENU FIXES ========== */
+        .handsontable textarea[data-hot-input]:focus {
+            border: 1px solid #D99E01 !important;
+            outline: none !important;
+            box-shadow: none !important;
+        }
 
-/* Context Menu Container - Most specific */
-.htContextMenu.htMenu {
-    background-color: #1a1a1a !important;
-    /* border: 1px solid #444 !important;
+
+        /* Dropdown menus */
+        /* ========== DROPDOWN & CONTEXT MENU FIXES ========== */
+
+        /* Context Menu Container - Most specific */
+        .htContextMenu.htMenu {
+            background-color: #1a1a1a !important;
+            /* border: 1px solid #444 !important;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5) !important; */
-}
+        }
 
-/* Context Menu Table */
-.htContextMenu.htMenu table.htCore {
-    background-color: #1a1a1a !important;
-}
+        /* Context Menu Table */
+        .htContextMenu.htMenu table.htCore {
+            background-color: #1a1a1a !important;
+        }
 
-/* Context Menu Items */
-.htContextMenu.htMenu tbody tr td {
-    background-color: #1a1a1a !important;
-    color: #ffffff !important;
-    /* padding: 8px 12px !important; */
-    border: none !important;
-}
+        /* Context Menu Items */
+        .htContextMenu.htMenu tbody tr td {
+            background-color: #1a1a1a !important;
+            color: #ffffff !important;
+            /* padding: 8px 12px !important; */
+            border: none !important;
+        }
 
-/* Context Menu Hover State */
-.htContextMenu.htMenu tbody tr td.current,
-.htContextMenu.htMenu tbody tr:hover td {
-    background-color: #2a2a2a !important;
-    color: #D99E01 !important;
-}
+        /* Context Menu Hover State */
+        .htContextMenu.htMenu tbody tr td.current,
+        .htContextMenu.htMenu tbody tr:hover td {
+            background-color: #2a2a2a !important;
+            color: #D99E01 !important;
+        }
 
-/* Context Menu Disabled Items */
-.htContextMenu.htMenu tbody tr td.htDisabled,
-.htContextMenu.htMenu tbody tr td.htDisabled:hover {
-    background-color: #1a1a1a !important;
-    color: #666 !important;
-    cursor: default !important;
-}
+        /* Context Menu Disabled Items */
+        .htContextMenu.htMenu tbody tr td.htDisabled,
+        .htContextMenu.htMenu tbody tr td.htDisabled:hover {
+            background-color: #1a1a1a !important;
+            color: #666 !important;
+            cursor: default !important;
+        }
 
-/* Context Menu Separators */
-.htContextMenu.htMenu .ht_sep {
-    background-color: #444 !important;
-    height: 1px !important;
-    margin: 4px 0 !important;
-}
+        /* Context Menu Separators */
+        .htContextMenu.htMenu .ht_sep {
+            background-color: #444 !important;
+            height: 1px !important;
+            margin: 4px 0 !important;
+        }
 
-.htContextMenu .ht_master table.htCore {
-    border-color: #1F1F1F;
-    border-style: solid;
-    border-width: 1.5px;
-}
+        .htContextMenu .ht_master table.htCore {
+            border-color: #1F1F1F;
+            border-style: solid;
+            border-width: 1.5px;
+        }
 
-/* Dropdown Menu Specific Fixes */
-.htDropdownMenu.htMenu {
-    background-color: #1a1a1a !important;
-    border: 1px solid #444 !important;
-}
+        /* Dropdown Menu Specific Fixes */
+        .htDropdownMenu.htMenu {
+            background-color: #1a1a1a !important;
+            border: 1px solid #444 !important;
+        }
 
-.htDropdownMenu.htMenu table.htCore {
-    background-color: #1a1a1a !important;
-}
+        .htDropdownMenu.htMenu table.htCore {
+            background-color: #1a1a1a !important;
+        }
 
-.htDropdownMenu.htMenu tbody tr td {
-    background-color: #1a1a1a !important;
-    color: #ffffff !important;
-}
+        .htDropdownMenu.htMenu tbody tr td {
+            background-color: #1a1a1a !important;
+            color: #ffffff !important;
+        }
 
-.htDropdownMenu.htMenu tbody tr:hover td {
-    background-color: #2a2a2a !important;
-}
+        .htDropdownMenu.htMenu tbody tr:hover td {
+            background-color: #2a2a2a !important;
+        }
 
-.handsontable.listbox .ht_master table {
-    border: 1px solid #1F1F1F;
-    border-collapse: separate;
-    /* background: #1a1a1a; */
-}
-.handsontable.listbox td {
-    background-color: #1a1a1a !important;
-    /* color: #323232 !important; */
-    /* border-color: #333 !important; */
-}
-.handsontable.listbox tr td.current,
-.handsontable.listbox tbody tr:hover td {
-    background-color: #2a2a2a !important;
-    /* color: #D99E01 !important; */
-}
+        .handsontable.listbox .ht_master table {
+            border: 1px solid #1F1F1F;
+            border-collapse: separate;
+            /* background: #1a1a1a; */
+        }
+
+        .handsontable.listbox td {
+            background-color: #1a1a1a !important;
+            /* color: #323232 !important; */
+            /* border-color: #333 !important; */
+        }
+
+        .handsontable.listbox tr td.current,
+        .handsontable.listbox tbody tr:hover td {
+            background-color: #2a2a2a !important;
+            /* color: #D99E01 !important; */
+        }
 
 
-/* ========== SCROLLBARS ========== */
-/* .handsontable .wtHolder::-webkit-scrollbar {
+        /* ========== SCROLLBARS ========== */
+        /* .handsontable .wtHolder::-webkit-scrollbar {
     width: 10px;
     height: 10px;
 }
@@ -392,11 +401,13 @@ div.wtBorder.current.corner {
             display: inline-flex;
             align-items: center;
             gap: 10px;
-            width: fit-content; /* Only as wide as content */
+            width: fit-content;
+            /* Only as wide as content */
             position: absolute;
             left: 50%;
             top: 10px;
-            transform: translateX(-50%); /* Perfect center */
+            transform: translateX(-50%);
+            /* Perfect center */
             z-index: 1;
         }
 
@@ -428,20 +439,25 @@ div.wtBorder.current.corner {
             max-width: none;
             min-width: none;
             margin-top: 8px;
-            top: 100%; /* Below the help icon */
-            left: 50%; /* Align to right edge of help icon */
+            top: 100%;
+            /* Below the help icon */
+            left: 50%;
+            /* Align to right edge of help icon */
             transform: translateX(-50%);
             display: none;
             color: #000;
         }
-       
+
         .help-popover img {
             width: 100%;
-            height: auto; /* Maintain aspect ratio */
-            max-height: 50vh; /* Prevent it from getting too tall */
-            object-fit: contain; /* Maintain aspect ratio while fitting */        
+            height: auto;
+            /* Maintain aspect ratio */
+            max-height: 50vh;
+            /* Prevent it from getting too tall */
+            object-fit: contain;
+            /* Maintain aspect ratio while fitting */
             /* Remove the height restrictions I added */
-        }       
+        }
 
         /* OCR Overlay Panel Styles */
         #ocr-panel {
@@ -482,7 +498,7 @@ div.wtBorder.current.corner {
 
         #ocr-close-btn:hover {
             opacity: 1;
-        }       
+        }
 
         #ocr-panel-body {
             margin-top: 8px;
@@ -500,18 +516,20 @@ div.wtBorder.current.corner {
 
 
         .upload-row {
-        display: grid;
-        grid-template-columns: 1.8fr 1fr 3.2fr 3.2fr; /* Part, Qty, Desc, Material */
-        gap: 8px;
-        width: 100%;
-        box-sizing: border-box;
+            display: grid;
+            grid-template-columns: 1.8fr 1fr 3.2fr 3.2fr;
+            /* Part, Qty, Desc, Material */
+            gap: 8px;
+            width: 100%;
+            box-sizing: border-box;
         }
 
         .upload-column {
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-        min-width: 0; /* Allow shrinking */
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            min-width: 0;
+            /* Allow shrinking */
         }
 
 
@@ -543,53 +561,55 @@ div.wtBorder.current.corner {
             height: auto;
             display: flex;
             flex-direction: column;
-            justify-content: center; /* Center content when no image */
+            justify-content: center;
+            /* Center content when no image */
             align-items: center;
             transition: all 0.2s ease;
         }
- 
-.ocr-upload-area:hover {
-    border: 1.5px solid #D99E00 !important; /* Your specified color */
-    background: #0a0a0a;
-}
 
-/* Drag over effect */
-.ocr-upload-area.drag-over {
-    border-color: #D99E00;
-    border-style: solid;
-    background: #0a0a0a;
-    /* transform: scale(1.03); */
-    box-shadow: 0 4px 12px rgba(216, 147, 38, 0.2);
-}
+        .ocr-upload-area:hover {
+            border: 1.5px solid #D99E00 !important;
+            /* Your specified color */
+            background: #0a0a0a;
+        }
 
-/* Active drag state */
-.ocr-upload-area.drag-active {
-    border-color: #D99E00;
-    border-width: 3px;
-    background: #fff6e6;
-}
+        /* Drag over effect */
+        .ocr-upload-area.drag-over {
+            border-color: #D99E00;
+            border-style: solid;
+            background: #0a0a0a;
+            /* transform: scale(1.03); */
+            box-shadow: 0 4px 12px rgba(216, 147, 38, 0.2);
+        }
 
-.ocr-upload-area:hover .upload-icon,
-.ocr-upload-area:hover .upload-label,
-.ocr-upload-area.drag-over .upload-icon,
-.ocr-upload-area.drag-over .upload-label,
-.ocr-upload-area.drag-active .upload-icon
-.ocr-upload-area.drag-active .upload-label {
-    color: #D99E00 !important;
-}
-      
+        /* Active drag state */
+        .ocr-upload-area.drag-active {
+            border-color: #D99E00;
+            border-width: 3px;
+            background: #fff6e6;
+        }
+
+        .ocr-upload-area:hover .upload-icon,
+        .ocr-upload-area:hover .upload-label,
+        .ocr-upload-area.drag-over .upload-icon,
+        .ocr-upload-area.drag-over .upload-label,
+        .ocr-upload-area.drag-active .upload-icon .ocr-upload-area.drag-active .upload-label {
+            color: #D99E00 !important;
+        }
+
 
         /* Only override when file is uploaded */
         .ocr-upload-area.has-file {
-        justify-content: flex-start; /* Move to top when file uploaded */
+            justify-content: flex-start;
+            /* Move to top when file uploaded */
         }
 
         /* Hide upload prompt when file is uploaded */
         .ocr-upload-area.has-file .upload-icon,
         .ocr-upload-area.has-file .upload-label {
-        display: none;
-        }        
-        
+            display: none;
+        }
+
 
         .upload-clear-btn {
             position: absolute;
@@ -659,7 +679,7 @@ div.wtBorder.current.corner {
         }
 
         .ocr-upload-area.has-file .file-status {
-        display: block;
+            display: block;
         }
 
 
@@ -696,62 +716,62 @@ div.wtBorder.current.corner {
             pointer-events: none;
         }
 
-        
-/* Warning icon for potential missing childparts */
-.needs-review-cell {
-    position: relative;
-}
 
-.needs-review-cell::after {
-    content: "⚠️";
-    position: absolute;
-    top: 2px;
-    right: 2px;
-    font-size: 12px;
-    z-index: 10;
-    cursor: pointer;
-    opacity: 0.8;
-    pointer-events: auto;
-}
+        /* Warning icon for potential missing childparts */
+        .needs-review-cell {
+            position: relative;
+        }
 
-.needs-review-cell::after:hover {
-    opacity: 1;
-    transform: scale(1.1);
-}
+        .needs-review-cell::after {
+            content: "⚠️";
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            font-size: 12px;
+            z-index: 10;
+            cursor: pointer;
+            opacity: 0.8;
+            pointer-events: auto;
+        }
 
-/* Warning popup */
-.warning-popup {
-    position: fixed;
-    background: #1a1a1a47;
-    border-radius: 6px;
-    padding: 12px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    z-index: 1003;
-    color: #fff;
-    max-width: 300px;
-    display: none;
-}
+        .needs-review-cell::after:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
 
-.warning-popup h5 {
-    margin: 0 0 8px 0;
-    color: #ffc107;
-}
+        /* Warning popup */
+        .warning-popup {
+            position: fixed;
+            background: #1a1a1a47;
+            border-radius: 6px;
+            padding: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            z-index: 1003;
+            color: #fff;
+            max-width: 300px;
+            display: none;
+        }
 
-.warning-popup p {
-    margin: 0 0 8px 0;
-    font-size: 14px;
-}
+        .warning-popup h5 {
+            margin: 0 0 8px 0;
+            color: #ffc107;
+        }
 
-.warning-popup button {
-    background: #D89326;
-    color: #fff;
-    border: none;
-    padding: 4px 8px;
-    border-radius: 3px;
-    cursor: pointer;
-    font-size: 12px;
-}
-        
+        .warning-popup p {
+            margin: 0 0 8px 0;
+            font-size: 14px;
+        }
+
+        .warning-popup button {
+            background: #D89326;
+            color: #fff;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
         /* --------------------- Responsive Behavior --------------------- */
         @media (max-width: 960px) {
             #table-and-ocr-wrapper {
@@ -896,8 +916,8 @@ div.wtBorder.current.corner {
         let spreadsheetData = [];
         let columnsList = [];
         let hot;
-let windowChildParts = []; // expose on window for debugging
-let _cutBackup = [];
+        let windowChildParts = []; // expose on window for debugging
+        let _cutBackup = [];
 
         // Fetch query-params (project, part, parentdrgnum) on load and fetch childParts
         window.addEventListener("DOMContentLoaded", async () => {
@@ -967,6 +987,25 @@ let _cutBackup = [];
             }));
             matches.sort((a, b) => b.rating - a.rating);
             return { bestMatch: matches[0], allMatches: matches };
+        }
+
+        // ─────────────────────────────────────────────────────────────────────
+        // Build a per‑row warning string (hidden; sent only in payload)
+        // ─────────────────────────────────────────────────────────────────────
+        function getRowWarning(row) {
+            const warns = [];
+
+            // Non‑OCR warnings
+            if (row._needsReview)            warns.push('Verify whether a ChildPart or BO');
+            if (row._similarityScore < 0.95) warns.push('Verify whether the PartNumber/BO name and other fields are correct');
+
+            // OCR confidences   – flag 0 < conf < 0.95
+            ['Quantity','Description','Material'].forEach(col => {
+                const conf = row[col]?.confidence ?? 0;
+                if (conf > 0 && conf < 0.95) warns.push(`Caution in ${col} value`);
+            });
+
+            return warns.join('; ');
         }
 
         // ─────────────────────────────────────────────────────────────────────
@@ -1043,7 +1082,7 @@ let _cutBackup = [];
                         if (isMatched || isType) {
                             // dropdown renderer for mapping columns
                             Handsontable.renderers.DropdownRenderer.apply(this, arguments);
-                            
+
                             // ✅ ADD: Check for warning needed
                             if (prop === "Type" && value === "BO") {
                                 const rowData = hotInstance.getSourceDataAtRow(row);
@@ -1052,7 +1091,7 @@ let _cutBackup = [];
                                     td.setAttribute("data-part-number", rowData["PartNumber"]?.text || "");
                                 }
                             }
-                            
+
                             if (isMatched && value && value.toString().trim() !== "") {
                                 // low‐similarity warning on mapping in real time
                                 const rowData = hotInstance.getSourceDataAtRow(row);
@@ -1126,7 +1165,7 @@ let _cutBackup = [];
                 filters: true,
                 width: '100%',
                 heigth: '100%',
-                autoColumnSize: true, 
+                autoColumnSize: true,
                 stretchH: 'all',
                 wordWrap: true,
                 manualColumnResize: true,
@@ -1135,21 +1174,21 @@ let _cutBackup = [];
                 licenseKey: "non-commercial-and-evaluation",
 
                 // --- NEW afterGetColHeader for OCR upload header area ---
-                afterGetColHeader: function(col, TH) {
+                afterGetColHeader: function (col, TH) {
                     const columnName = visibleColumns[col];
                     console.log(`🔍 Column ${col}: "${columnName}"`);
 
                     // ← ADD: Label mapping for display
                     const labelMap = {
                         "Quantity": "Quantity",
-                        "Description": "Description", 
+                        "Description": "Description",
                         "Material": "Material",
                         "Matched Childpart": "Part Number"  // ← This maps to display name
                     };
 
                     const ocrMap = {
                         "Quantity": "Quantity",
-                        "Description": "Description", 
+                        "Description": "Description",
                         "Material": "Material",
                         "Matched Childpart": "Part Number"
                     };
@@ -1158,8 +1197,8 @@ let _cutBackup = [];
                     console.log(`🗝️ ocrKey for "${columnName}": "${ocrKey}"`);
 
                     if (!ocrKey) {
-                         console.log(`⏭️ No ocrKey, skipping "${columnName}"`);
-                         return;
+                        console.log(`⏭️ No ocrKey, skipping "${columnName}"`);
+                        return;
                     }
 
                     // Avoid double-mounting
@@ -1173,7 +1212,7 @@ let _cutBackup = [];
                     uploadArea.className = "ocr-upload-area ocr-upload-area-header";
                     uploadArea.setAttribute("data-column", ocrKey);
                     console.log(`✅ Set data-column to: "${ocrKey}"`);
-                    
+
                     uploadArea.innerHTML = `
                         <span class="upload-icon"><i data-lucide="upload"></i></span>
                         <span class="upload-label">${displayLabel}</span>
@@ -1235,105 +1274,105 @@ let _cutBackup = [];
 
             // --- Unified afterChange handler: edit, cut, paste -----------------------------------------------
             hot.addHook('afterChange', (changes, source) => {
-              if (!changes) return;
+                if (!changes) return;
 
-              // ===== 0. COPY: clear any previous cut‑backup so future paste is treated as edit =====
-              if (source === 'CopyPaste.copy') {
-                _cutBackup = [];         // Do not capture confidence on copy
-                return;
-              }
+                // ===== 0. COPY: clear any previous cut‑backup so future paste is treated as edit =====
+                if (source === 'CopyPaste.copy') {
+                    _cutBackup = [];         // Do not capture confidence on copy
+                    return;
+                }
 
-              // ===== 1. CUT: capture confidences before they disappear =====
-              if (source === 'CopyPaste.cut') {
+                // ===== 1. CUT: capture confidences before they disappear =====
+                if (source === 'CopyPaste.cut') {
 
-                _cutBackup = changes.map(([row, prop]) => {
-                  const colKey  = prop.split('.')[0];
-                  const confVal = spreadsheetData[row]?.[colKey]?.confidence ?? 0;
-                  return { row, prop, colKey, conf: confVal };
-                });
-                console.log('[CopyPaste.cut] backed‑up confs:', _cutBackup);
+                    _cutBackup = changes.map(([row, prop]) => {
+                        const colKey = prop.split('.')[0];
+                        const confVal = spreadsheetData[row]?.[colKey]?.confidence ?? 0;
+                        return { row, prop, colKey, conf: confVal };
+                    });
+                    console.log('[CopyPaste.cut] backed‑up confs:', _cutBackup);
 
-                // wipe confidence from the source cells so color disappears
-                changes.forEach(([row, prop]) => {
-                  const colKey   = prop.split('.')[0];
-                  if (['Quantity','Description','Material'].includes(colKey)) {
-                    spreadsheetData[row][colKey].confidence = 0;
-                    const colIndex = hot.propToCol(prop);
-                    hot.setCellMeta(row, colIndex, 'className', 'edited-cell user-edited-ocr');
-                  }
-                });
-                hot.render();
-                return;
-              }
+                    // wipe confidence from the source cells so color disappears
+                    changes.forEach(([row, prop]) => {
+                        const colKey = prop.split('.')[0];
+                        if (['Quantity', 'Description', 'Material'].includes(colKey)) {
+                            spreadsheetData[row][colKey].confidence = 0;
+                            const colIndex = hot.propToCol(prop);
+                            hot.setCellMeta(row, colIndex, 'className', 'edited-cell user-edited-ocr');
+                        }
+                    });
+                    hot.render();
+                    return;
+                }
 
-              // ===== 2. PASTE: restore confidences to new cells ===========
-              if (source === 'CopyPaste.paste') {
-                console.log('[CopyPaste.paste] applying backup:', _cutBackup);
-                const isCutPaste = _cutBackup.length === changes.length;
-                changes.forEach(([row, prop], idx) => {
-                  const colKey   = prop.split('.')[0];
-                  if (!['Quantity','Description','Material'].includes(colKey)) return;
+                // ===== 2. PASTE: restore confidences to new cells ===========
+                if (source === 'CopyPaste.paste') {
+                    console.log('[CopyPaste.paste] applying backup:', _cutBackup);
+                    const isCutPaste = _cutBackup.length === changes.length;
+                    changes.forEach(([row, prop], idx) => {
+                        const colKey = prop.split('.')[0];
+                        if (!['Quantity', 'Description', 'Material'].includes(colKey)) return;
 
-                  const colIndex = hot.propToCol(prop);
-                  const restored = isCutPaste ? _cutBackup[idx]?.conf ?? 0 : 0;   // 0 for copy‑paste
+                        const colIndex = hot.propToCol(prop);
+                        const restored = isCutPaste ? _cutBackup[idx]?.conf ?? 0 : 0;   // 0 for copy‑paste
 
-                  // set confidence
-                  spreadsheetData[row][colKey].confidence = restored;
+                        // set confidence
+                        spreadsheetData[row][colKey].confidence = restored;
 
-                  // build classes
-                  let classes = (hot.getCellMeta(row, colIndex).className || '')
-                                 .split(' ')
-                                 .filter(cls => cls !== 'user-edited-ocr' && cls !== 'edited-cell');
+                        // build classes
+                        let classes = (hot.getCellMeta(row, colIndex).className || '')
+                            .split(' ')
+                            .filter(cls => cls !== 'user-edited-ocr' && cls !== 'edited-cell');
 
-                  if (restored === 0) classes.push('edited-cell','user-edited-ocr');
-                  hot.setCellMeta(row, colIndex, 'className', classes.join(' ').trim());
-                });
-                // clear backup after every paste
-                _cutBackup = [];
-                hot.render();
-                return;
-              }
+                        if (restored === 0) classes.push('edited-cell', 'user-edited-ocr');
+                        hot.setCellMeta(row, colIndex, 'className', classes.join(' ').trim());
+                    });
+                    // clear backup after every paste
+                    _cutBackup = [];
+                    hot.render();
+                    return;
+                }
 
-              // ===== 3. STANDARD EDIT branch =================================
-              if (source === 'edit') {
-                changes.forEach(([row, prop, oldVal, newVal]) => {
-                  if (oldVal === newVal) return;
-                  const colIndex = hot.propToCol(prop);
+                // ===== 3. STANDARD EDIT branch =================================
+                if (source === 'edit') {
+                    changes.forEach(([row, prop, oldVal, newVal]) => {
+                        if (oldVal === newVal) return;
+                        const colIndex = hot.propToCol(prop);
 
-                  // generic edited marker
-                  hot.setCellMeta(row, colIndex, 'className', 'edited-cell');
+                        // generic edited marker
+                        hot.setCellMeta(row, colIndex, 'className', 'edited-cell');
 
-                  // OCR columns: zero confidence & force default bg
-                  if (['Quantity.text','Description.text','Material.text'].includes(prop)) {
-                    spreadsheetData[row][prop.split('.')[0]].confidence = 0;
-                    hot.setCellMeta(row, colIndex, 'className', 'edited-cell user-edited-ocr');
-                    console.log(`🔧 User edited OCR cell: Row ${row}, Column ${prop}`);
-                  }
+                        // OCR columns: zero confidence & force default bg
+                        if (['Quantity.text', 'Description.text', 'Material.text'].includes(prop)) {
+                            spreadsheetData[row][prop.split('.')[0]].confidence = 0;
+                            hot.setCellMeta(row, colIndex, 'className', 'edited-cell user-edited-ocr');
+                            console.log(`🔧 User edited OCR cell: Row ${row}, Column ${prop}`);
+                        }
 
-                  // Childpart validation against Type
-                  if (prop === 'Matched Childpart') {
-                    const rowData  = hot.getSourceDataAtRow(row);
-                    const typeVal  = rowData['Type'];
-                    console.log(`🔍 Select Childpart changed: "${newVal}", Type: "${typeVal}"`);
-                    if (typeVal === 'Child Part' && newVal && newVal.toString().trim() !== '') {
-                      const isValid = windowChildParts.includes(newVal.toString());
-                      if (!isValid) {
-                        console.warn(`⚠️ Invalid childpart selection: "${newVal}" - clearing cell`);
-                        hot.setDataAtCell(row, colIndex, '', 'validation-clear');
-                        alert(`"${newVal}" is not a valid child part. Please select from the dropdown list.`);
-                        return;
-                      }
-                    }
-                    // BO type always allowed
-                  }
+                        // Childpart validation against Type
+                        if (prop === 'Matched Childpart') {
+                            const rowData = hot.getSourceDataAtRow(row);
+                            const typeVal = rowData['Type'];
+                            console.log(`🔍 Select Childpart changed: "${newVal}", Type: "${typeVal}"`);
+                            if (typeVal === 'Child Part' && newVal && newVal.toString().trim() !== '') {
+                                const isValid = windowChildParts.includes(newVal.toString());
+                                if (!isValid) {
+                                    console.warn(`⚠️ Invalid childpart selection: "${newVal}" - clearing cell`);
+                                    hot.setDataAtCell(row, colIndex, '', 'validation-clear');
+                                    alert(`"${newVal}" is not a valid child part. Please select from the dropdown list.`);
+                                    return;
+                                }
+                            }
+                            // BO type always allowed
+                        }
 
-                  // Optional logging for Type edits
-                  if (prop === 'Type') {
-                    console.log(`🔄 Type changed to: "${newVal}" for row ${row}`);
-                  }
-                });
-                hot.render();
-              }
+                        // Optional logging for Type edits
+                        if (prop === 'Type') {
+                            console.log(`🔄 Type changed to: "${newVal}" for row ${row}`);
+                        }
+                    });
+                    hot.render();
+                }
             });
 
 
@@ -1441,66 +1480,66 @@ let _cutBackup = [];
                 document.getElementById("ocr-process-btn").click();
             });
 
-            
+
         });
 
-// Add this JavaScript code after your existing OCR upload event listeners
-// (Around line 800-850 in your script section)
+        // Add this JavaScript code after your existing OCR upload event listeners
+        // (Around line 800-850 in your script section)
 
-// Function to add drag and drop listeners to upload areas
-function addDragDropListeners(uploadArea) {
-    // Prevent default drag behaviors on these events
-    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-        uploadArea.addEventListener(eventName, preventDefaults, false);
-    });
+        // Function to add drag and drop listeners to upload areas
+        function addDragDropListeners(uploadArea) {
+            // Prevent default drag behaviors on these events
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                uploadArea.addEventListener(eventName, preventDefaults, false);
+            });
 
-    function preventDefaults(e) {
-        e.preventDefault();
-        e.stopPropagation();
-    }
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
 
-    // Highlight drop area when item is dragged over it
-    ['dragenter', 'dragover'].forEach(eventName => {
-        uploadArea.addEventListener(eventName, highlight, false);
-    });
+            // Highlight drop area when item is dragged over it
+            ['dragenter', 'dragover'].forEach(eventName => {
+                uploadArea.addEventListener(eventName, highlight, false);
+            });
 
-    ['dragleave', 'drop'].forEach(eventName => {
-        uploadArea.addEventListener(eventName, unhighlight, false);
-    });
+            ['dragleave', 'drop'].forEach(eventName => {
+                uploadArea.addEventListener(eventName, unhighlight, false);
+            });
 
-    function highlight(e) {
-        uploadArea.classList.add('drag-over');
-    }
+            function highlight(e) {
+                uploadArea.classList.add('drag-over');
+            }
 
-    function unhighlight(e) {
-        uploadArea.classList.remove('drag-over');
-    }
+            function unhighlight(e) {
+                uploadArea.classList.remove('drag-over');
+            }
 
-    // Handle dropped files
-    uploadArea.addEventListener('drop', handleDrop, false);
+            // Handle dropped files
+            uploadArea.addEventListener('drop', handleDrop, false);
 
-    function handleDrop(e) {
-        const dt = e.dataTransfer;
-        const files = dt.files;
+            function handleDrop(e) {
+                const dt = e.dataTransfer;
+                const files = dt.files;
 
-        if (files.length > 0) {
-            const input = uploadArea.querySelector('input[type="file"]');
-            input.files = files;
-            
-            // Trigger the change event to process the file
-            const event = new Event('change', { bubbles: true });
-            input.dispatchEvent(event);
+                if (files.length > 0) {
+                    const input = uploadArea.querySelector('input[type="file"]');
+                    input.files = files;
+
+                    // Trigger the change event to process the file
+                    const event = new Event('change', { bubbles: true });
+                    input.dispatchEvent(event);
+                }
+            }
         }
-    }
-}
 
-// Apply drag & drop listeners to existing upload areas
-document.addEventListener('DOMContentLoaded', function() {
-    const uploads = document.querySelectorAll(".ocr-upload-area");
-    uploads.forEach(area => {
-        addDragDropListeners(area);
-    });
-});
+        // Apply drag & drop listeners to existing upload areas
+        document.addEventListener('DOMContentLoaded', function () {
+            const uploads = document.querySelectorAll(".ocr-upload-area");
+            uploads.forEach(area => {
+                addDragDropListeners(area);
+            });
+        });
 
 
         function clearUpload(buttonEl, event) {
@@ -1628,32 +1667,32 @@ document.addEventListener('DOMContentLoaded', function() {
             sendDataToBackend();
         });
 
-        
-// Add this after your table initialization
-document.addEventListener('click', function(e) {
-    if (e.target.matches('.needs-review-cell::after') || 
-        e.target.closest('.needs-review-cell')) {
-        
-        const cell = e.target.closest('.needs-review-cell');
-        const partNumber = cell.getAttribute('data-part-number');
-        
-        showWarningPopup(e.pageX, e.pageY, partNumber);
-    }
-});
 
-function showWarningPopup(x, y, partNumber) {
-    // Remove existing popup
-    const existingPopup = document.querySelector('.warning-popup');
-    if (existingPopup) existingPopup.remove();
-    
-    // Create new popup
-    const popup = document.createElement('div');
-    popup.className = 'warning-popup';
-    popup.style.left = x + 'px';
-    popup.style.top = y + 'px';
-    popup.style.display = 'block';
-    
-    popup.innerHTML = `
+        // Add this after your table initialization
+        document.addEventListener('click', function (e) {
+            if (e.target.matches('.needs-review-cell::after') ||
+                e.target.closest('.needs-review-cell')) {
+
+                const cell = e.target.closest('.needs-review-cell');
+                const partNumber = cell.getAttribute('data-part-number');
+
+                showWarningPopup(e.pageX, e.pageY, partNumber);
+            }
+        });
+
+        function showWarningPopup(x, y, partNumber) {
+            // Remove existing popup
+            const existingPopup = document.querySelector('.warning-popup');
+            if (existingPopup) existingPopup.remove();
+
+            // Create new popup
+            const popup = document.createElement('div');
+            popup.className = 'warning-popup';
+            popup.style.left = x + 'px';
+            popup.style.top = y + 'px';
+            popup.style.display = 'block';
+
+            popup.innerHTML = `
         <h4>⚠️ Review Required</h4>
         <p><strong>Part Number:</strong> ${partNumber}</p>
         <p>No Childpart found</p>
@@ -1662,30 +1701,30 @@ function showWarningPopup(x, y, partNumber) {
         <button onclick="reportMissingDrawing('${partNumber}')">Coming Soon! - Report Missing Drawing</button>
         <button onclick="closeWarningPopup()">Close</button>
     `;
-    
-    document.body.appendChild(popup);
-    
-    // Auto-close after 10 seconds
-    setTimeout(() => {
-        if (popup.parentNode) popup.remove();
-    }, 10000);
-}
 
-function closeWarningPopup() {
-    const popup = document.querySelector('.warning-popup');
-    if (popup) popup.remove();
-}
+            document.body.appendChild(popup);
 
-function reportMissingDrawing(partNumber) {
-    // TODO: Implement notification/reporting logic
-    console.log(`📧 Reporting missing drawing for: ${partNumber}`);
-    alert(`Missing drawing reported for: ${partNumber}`);
-    closeWarningPopup();
-}
+            // Auto-close after 10 seconds
+            setTimeout(() => {
+                if (popup.parentNode) popup.remove();
+            }, 10000);
+        }
+
+        function closeWarningPopup() {
+            const popup = document.querySelector('.warning-popup');
+            if (popup) popup.remove();
+        }
+
+        function reportMissingDrawing(partNumber) {
+            // TODO: Implement notification/reporting logic
+            console.log(`📧 Reporting missing drawing for: ${partNumber}`);
+            alert(`Missing drawing reported for: ${partNumber}`);
+            closeWarningPopup();
+        }
 
 
 
-        
+
         // ─────────────────────────────────────────────────────────────────────
         // validateRequiredFields (unchanged)
         // ─────────────────────────────────────────────────────────────────────
@@ -1757,38 +1796,40 @@ function reportMissingDrawing(partNumber) {
                     throw new Error("Missing required URL params");
                 }
 
-                // Build ChildParts & BO arrays
+                // Build ChildParts & BO arrays **in the visual row order**
                 const childPartsData = [];
                 const boData = [];
 
-                spreadsheetData.forEach((row) => {
-                    const frontendPN = row.PartNumber?.text?.trim(); //Hidden data
+                for (let vRow = 0; vRow < hot.countRows(); vRow++) {
+                    const pRow = hot.toPhysicalRow(vRow);   // map visual → physical
+                    if (pRow == null) continue;             // skip spare / trimmed rows
+
+                    const row = spreadsheetData[pRow];
                     const qty = row.Quantity?.text?.trim();
                     const type = row.Type?.trim();
 
-                    // Skip completely empty rows
-                    if (!qty && !type) return;
-                    // Validate only the fields users actually submit
-                    if (!qty || !type) return;
+                    // Skip completely empty or incomplete rows
+                    if (!qty && !type) continue;
+                    if (!qty || !type) continue;
 
-                    // Additional validation for Child Parts
                     if (type === "Child Part") {
                         childPartsData.push({
                             quantity: qty,
                             description: row.Description?.text?.trim() || "",
                             material: row.Material?.text?.trim() || "",
                             drawingNumber: row["Matched Childpart"] || "",
+                            ocrWarning: getRowWarning(row)
                         });
                     } else if (type === "BO") {
-                        const matched = row["Matched Childpart"]?.trim();
                         boData.push({
                             quantity: qty,
                             description: row.Description?.text?.trim() || "",
                             material: row.Material?.text?.trim() || "",
                             boughtoutPartNumber: row["Matched Childpart"] || "",
+                            ocrWarning: getRowWarning(row)
                         });
                     }
-                });
+                }
 
                 // Send to backend
                 let successful = 0,
@@ -1854,7 +1895,7 @@ function reportMissingDrawing(partNumber) {
 
         // --- Ensure OCR upload header areas use correct data-column attributes (internal keys) ---
         // This runs once on DOMContentLoaded to fix any "data-column" attributes for header upload areas
-        document.addEventListener("DOMContentLoaded", function() {
+        document.addEventListener("DOMContentLoaded", function () {
             // Map display titles to internal keys
             const columnKeyMap = {
                 "Part Number": "PartNumber",
