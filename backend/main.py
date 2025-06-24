@@ -725,6 +725,9 @@ async def add_child_parts(request: Request):
                     "remote\u001dDrawing number": row.get("drawingNumber", ""),  # Select Drawing Number
                     "remote\u001dQuantity": str(row.get("quantity", "")),
                     "remote\u001dProject Name": project,
+                    "qkM5k": row.get("description", ""),
+                    "JIGhW": row.get("material", ""),
+                    "remote\u001dItem #": row.get("itemNumber"),
                     "Inzp9":row.get("ocrWarning", "")
                     # Note: Item # is not being sent as per your requirement
                 }
@@ -825,6 +828,7 @@ async def add_bo_parts(request: Request):
                     "remote\u001dMOC": row.get("material", ""),  # Material goes to MOC field
                     "remote\u001dQuantity": str(row.get("quantity", "")),
                     "JPBNt": row.get("ocrWarning", "")
+                    "wRubP": row.get("itemNumber"),
                     # Note: cbN8e (Last updated at), remote\u001dItem number, and 8Kjom (Boughtout rate) are not being sent
                 }
             }
