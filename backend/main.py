@@ -827,8 +827,8 @@ async def add_bo_parts(request: Request):
                     "remote\u001dDescription": row.get("description", ""),
                     "remote\u001dMOC": row.get("material", ""),  # Material goes to MOC field
                     "remote\u001dQuantity": str(row.get("quantity", "")),
-                    "JPBNt": row.get("ocrWarning", "")
-                    "wRubP": row.get("itemNumber"),
+                    "JPBNt": row.get("ocrWarning", ""),
+                    "wRubP": row.get("itemNumber")
                     # Note: cbN8e (Last updated at), remote\u001dItem number, and 8Kjom (Boughtout rate) are not being sent
                 }
             }
