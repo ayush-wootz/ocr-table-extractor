@@ -1768,6 +1768,9 @@
         // ─────────────────────────────────────────────────────────────────────
         // Existing sendDataToBackend() function (unchanged from your original)
         // ─────────────────────────────────────────────────────────────────────
+        window.childPartsData = [];
+        window.boData        = [];
+
         async function sendDataToBackend() {
             const addDataBtn = document.getElementById("submit-btn");
             const originalText = addDataBtn.textContent;
@@ -1797,8 +1800,10 @@
                 }
 
                 // Build ChildParts & BO arrays **in the visual row order**
-                const childPartsData = [];
-                const boData = [];
+                // const childPartsData = [];
+                // const boData = [];
+                childPartsData.length = 0;  // reset
+                boData.length = 0;
 
                 for (let vRow = 0; vRow < hot.countRows(); vRow++) {
                     const pRow = hot.toPhysicalRow(vRow);   // map visual → physical
