@@ -58,6 +58,48 @@
             /* border-bottom: 1px solid #222; */
         }
 
+
+#notification-area {
+    display: inline-flex;
+    align-items: center;
+    /* gap: 6px; */
+    /* padding: 6px 10px; */
+    /* margin-bottom: 8px; */
+    border-radius: 4px;
+    font-size: 13px;
+    max-width: 400px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: all 0.3s ease;
+    margin-right: auto;
+}
+
+.notification-hidden { display: none !important; }
+.notification-success { color: #059f3d;}
+.notification-error { color: #fd2d2d;}
+.notification-warning { color: #ffc124;}
+
+/* background: #1a4a2e; color: #4ade80; border: 1px solid #22c55e;  */
+/* background: #4a1a1a; color: #f87171; border: 1px solid #ef4444; */
+/* background: #4a3a1a; color: #fbbf24; border: 1px solid #f59e0b; */
+
+#notification-close {
+    background: none;
+    border: none;
+    color: #ffff;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 0;
+    margin-left: 4px;
+    opacity: 0.6;
+    transition: opacity 0.2s;
+}
+
+#notification-close:hover {
+    opacity: 1;
+}
+
+
         /* --------------------- Top Row Controls --------------------- */
         #top-row-controls {
             display: flex;
@@ -82,7 +124,9 @@
         #table-action-buttons {              
             display: flex;
             justify-content: flex-end;
+            align-items: center;
             gap: 12px;
+            margin-top: 16px;
             margin-bottom: 8px;
         }
 
@@ -814,14 +858,25 @@
             <!-- NEW: Fixed Header Area -->
             <div id="fixed-header-area">
                 <!-- Top Row Controls -->
-                <div id="top-row-controls">
+                <!-- <div id="top-row-controls"> -->
                     <!-- <div id="top-row-left">
                         <span id="tool-heading">Add child parts/BO</span>
                     </div> -->
-                </div>
+                <!-- </div> -->
 
                 <!-- Table Action Buttons -->
                 <div id="table-action-buttons">
+                    <!-- <span id="help-icon" class="help-icon"><i data-lucide="info"></i></span>
+                    <div id="help-popover" class="help-popover">
+                        <strong>Good vs Bad Screenshot:</strong><br />
+                        <img src="sample-screenshot.png" style="width: 100%;" />
+                    </div>                 -->
+                    <!-- Add this notification area -->
+                    <span id="notification-area" class="notification-hidden">
+                        <span id="notification-icon"></span>
+                        <span id="notification-text"></span>
+                        <button id="notification-close">×</button>
+                    </span>
                     <button id="extract-btn">Extract</button>
                     <button id="submit-btn">Submit</button>
                 </div>
@@ -965,7 +1020,7 @@
             const partNumber = urlParams.get("part");
             const parentDrgNum = urlParams.get("parentdrgnum");
             if (!project || !partNumber || !parentDrgNum) {
-                alert("Missing required query params: project/part/parentdrgnum");
+                showNotification("Missing required query params: project/part/parentdrgnum");
                 // Do not return; always initialize table even if params are missing
             } else {
                 try {
@@ -1398,7 +1453,7 @@
                                 if (!isValid) {
                                     console.warn(`⚠️ Invalid childpart selection: "${newVal}" - clearing cell`);
                                     hot.setDataAtCell(row, colIndex, '', 'validation-clear');
-                                    alert(`"${newVal}" is not a valid child part. Please select from the dropdown list.`);
+                                    showNotification(`"${newVal}" is not a valid child part. Please select from the dropdown list.`);
                                     return;
                                 }
                             }
@@ -1769,9 +1824,35 @@ function addColumn(newColumnData, label) {
         function reportMissingDrawing(partNumber) {
             // TODO: Implement notification/reporting logic
             console.log(`📧 Reporting missing drawing for: ${partNumber}`);
-            alert(`Missing drawing reported for: ${partNumber}`);
+            showNotification(`Missing drawing reported for: ${partNumber}`);
             closeWarningPopup();
         }
+
+// Notifications
+function showNotification(message, type = 'success', duration = 5000) {
+    const area = document.getElementById('notification-area');
+    const icon = document.getElementById('notification-icon');
+    const text = document.getElementById('notification-text');
+    
+    // Set content
+    text.textContent = message;
+    icon.textContent = type === 'success' ? '✅' : type === 'error' ? '❌' : '⚠️';
+    
+    // Update styling
+    area.className = `notification-${type}`;
+    
+    // Auto-hide after duration
+    if (duration > 0) {
+        setTimeout(() => hideNotification(), duration);
+    }
+}
+
+function hideNotification() {
+    document.getElementById('notification-area').className = 'notification-hidden';
+}
+
+// Close button event
+document.getElementById('notification-close').addEventListener('click', hideNotification);        
 
 
 
@@ -1833,10 +1914,10 @@ function addColumn(newColumnData, label) {
                 // Validate required fields:
                 const validation = validateRequiredFields();
                 if (!validation.isValid) {
-                    alert(
+                    showNotification(
                         `Missing Required Fields:\n${validation.missingFields.join(
                             ", "
-                        )}\nRequired fields:\n- Child Part/BO, Quantity, Type`
+                        )}`
                     );
                     addDataBtn.textContent = originalText;
                     return;
@@ -1935,7 +2016,7 @@ function addColumn(newColumnData, label) {
                 }
 
                 if (successful === total && total > 0) {
-                    alert(
+                    showNotification(
                         `Data added successfully!\n- Child Parts: ${childPartsData.length}\n- BO Parts: ${boData.length}`
                     );
                     clearTableToDefault();
@@ -1944,7 +2025,7 @@ function addColumn(newColumnData, label) {
                 }
             } catch (error) {
                 console.error("❌ Error sending data:", error);
-                alert(`Error adding data: ${error.message}`);
+                showNotification(`Error adding data: ${error.message}`);
             } finally {
                 addDataBtn.disabled = false;
                 addDataBtn.textContent = "Submit";
