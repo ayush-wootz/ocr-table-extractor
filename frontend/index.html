@@ -30,7 +30,8 @@
             width: 100%;
             max-width: 100%;
             /* reduced to allow Handsontable padding */
-            max-height: 758px;
+            /* max-height: 758px; */
+            height: 100vh;
             background-color: #0a0a0a;
             padding: 0 24px;
             box-sizing: border-box;
@@ -44,6 +45,17 @@
             display: flex;
             flex-direction: column;
             height: 100%;
+            overflow: hidden;  /* Prevent main container scroll */
+        }
+
+        /* ADD this new CSS for the fixed header area: */
+        #fixed-header-area {
+            flex-shrink: 0;  /* Don't shrink */
+            background-color: #0a0a0a;
+            z-index: 10;
+            padding-bottom: 8px;
+            position: relative;          
+            /* border-bottom: 1px solid #222; */
         }
 
         /* --------------------- Top Row Controls --------------------- */
@@ -67,7 +79,7 @@
         }
 
         /* --------------------- Table Action Buttons --------------------- */
-        #table-action-buttons {
+        #table-action-buttons {              
             display: flex;
             justify-content: flex-end;
             gap: 12px;
@@ -106,7 +118,8 @@
         #table-and-ocr-wrapper {
             display: flex;
             flex: 1;
-            overflow: visible;
+            overflow: hidden;
+            min-height: 0;
         }
 
         /* --------------------- Handsontable Area --------------------- */
@@ -798,29 +811,56 @@
 <body>
     <div id="hybrid-tool-container">
         <div id="main-container">
-            <!-- Top Row Controls -->
-            <div id="top-row-controls">
-                <!-- <div id="top-row-left">
-          <span id="tool-heading">Add child parts/BO</span>
-        </div> -->
-                <!-- #top-row-right removed -->
+
+            <!-- NEW: Fixed Header Area -->
+            <div id="fixed-header-area">
+                <!-- Top Row Controls -->
+                <div id="top-row-controls">
+                    <!-- <div id="top-row-left">
+                        <span id="tool-heading">Add child parts/BO</span>
+                    </div> -->
+                </div>
+
+                <!-- Table Action Buttons -->
+                <div id="table-action-buttons">
+                    <button id="extract-btn">Extract</button>
+                    <button id="submit-btn">Submit</button>
+                </div>
             </div>
 
             <!-- Table and OCR Panel Wrapper -->
             <div id="table-and-ocr-wrapper">
                 <!-- Handsontable Area (Left) -->
                 <div id="handsontable-container">
-
-
-                    <div id="table-action-buttons">
-                        <button id="extract-btn">Extract</button>
-                        <button id="submit-btn">Submit</button>
-                    </div>
-
-                    <!-- Removed the Header -->
                     <!-- Handsontable placeholder (will be initialized via JS) -->
                     <div id="hot"></div>
                 </div>
+        
+        
+
+            <!-- Top Row Controls -->
+            <!-- <div id="top-row-controls"> -->
+                <!-- <div id="top-row-left">
+          <span id="tool-heading">Add child parts/BO</span>
+        </div> -->
+                <!-- #top-row-right removed -->
+            <!-- </div> -->
+
+            <!-- Table and OCR Panel Wrapper -->
+            <!-- <div id="table-and-ocr-wrapper"> -->
+                <!-- Handsontable Area (Left) -->
+                <!-- <div id="handsontable-container"> -->
+
+
+                    <!-- <div id="table-action-buttons">
+                        <button id="extract-btn">Extract</button>
+                        <button id="submit-btn">Submit</button>
+                    </div> -->
+
+                    <!-- Removed the Header -->
+                    <!-- Handsontable placeholder (will be initialized via JS) -->
+                    <!-- <div id="hot"></div>
+                </div> -->
 
                 <!-- OCR Slide-In Panel (Right) -->
                 <div id="ocr-panel">
@@ -1176,7 +1216,7 @@
                 // --- NEW afterGetColHeader for OCR upload header area ---
                 afterGetColHeader: function (col, TH) {
                     const columnName = visibleColumns[col];
-                    console.log(`🔍 Column ${col}: "${columnName}"`);
+                    // console.log(`🔍 Column ${col}: "${columnName}"`);
 
                     // ← ADD: Label mapping for display
                     const labelMap = {
@@ -1194,7 +1234,7 @@
                     };
 
                     const ocrKey = ocrMap[columnName];
-                    console.log(`🗝️ ocrKey for "${columnName}": "${ocrKey}"`);
+                    // console.log(`🗝️ ocrKey for "${columnName}": "${ocrKey}"`);
 
                     if (!ocrKey) {
                         console.log(`⏭️ No ocrKey, skipping "${columnName}"`);
@@ -1382,9 +1422,21 @@
         // ─────────────────────────────────────────────────────────────────────
         // addColumn: used by OCR processing to inject a new column's OCR data
         // ─────────────────────────────────────────────────────────────────────
-        function addColumn(newColumnData, label) {
-            console.log(`🔧 addColumn called with label: "${label}"`);
-            console.log(`📊 Data received:`, newColumnData);
+function addColumn(newColumnData, label) {
+    console.log(`🔧 addColumn called with label: "${label}"`);
+    /* --------------------------------------------------------------------
+       If the user re‑uploads the PartNumber column we must clear any
+       previous auto‑matching results so they don’t linger and confuse.
+    -------------------------------------------------------------------- */
+    if (label === 'PartNumber') {
+        spreadsheetData.forEach(r => {
+            r['Matched Childpart']  = '';
+            r['Type']               = '';
+            delete r._needsReview;
+            delete r._similarityScore;
+        });
+    }
+    console.log(`📊 Data received:`, newColumnData);
 
             // Now update spreadsheetData for this column without reordering others
             for (let i = 0; i < newColumnData.length; i++) {
