@@ -58,20 +58,55 @@
             /* border-bottom: 1px solid #222; */
         }
 
+/* Help icon - always stays left */
+#header-help-icon {
+    cursor: pointer;
+    opacity: 0.7;
+    color: #666;
+    /* margin-right: 12px;   */
+}
+
+#header-help-icon:hover {
+    opacity: 1;
+}
+
+/* Add this class for instructions type */
+.notification-instructions {
+    background: #1a1a1a;
+    color: #ccc;
+    border: 0.5px solid #333;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 2px;
+    border-radius: 0.5px;
+    font-size: 13px;
+    /* max-width: 500px; */
+    overflow: hidden;
+    /* text-overflow: ellipsis; */
+    transition: all 0.3s ease;
+    margin-right: auto;
+}
+
+/* Hide close button for instructions */
+.notification-instructions #notification-close {
+    display: none;
+}
 
 #notification-area {
     display: inline-flex;
     align-items: center;
-    /* gap: 6px; */
+    gap: 6px;
     /* padding: 6px 10px; */
     /* margin-bottom: 8px; */
     border-radius: 4px;
     font-size: 13px;
-    max-width: auto;
+    /* max-width: 400px; */
     overflow: hidden;
     text-overflow: ellipsis;
     transition: all 0.3s ease;
     margin-right: auto;
+    margin-left: 10px;
 }
 
 .notification-hidden { display: none !important; }
@@ -82,6 +117,10 @@
 /* background: #1a4a2e; color: #4ade80; border: 1px solid #22c55e;  */
 /* background: #4a1a1a; color: #f87171; border: 1px solid #ef4444; */
 /* background: #4a3a1a; color: #fbbf24; border: 1px solid #f59e0b; */
+
+#notification-icon {
+    margin-right: 6px;
+}
 
 #notification-close {
     background: none;
@@ -97,6 +136,13 @@
 
 #notification-close:hover {
     opacity: 1;
+}
+
+/* Buttons container - always stays right */
+.buttons-container {
+    margin-left: auto;  /* This pushes buttons to the right */
+    display: flex;
+    gap: 12px;
 }
 
 
@@ -123,11 +169,12 @@
         /* --------------------- Table Action Buttons --------------------- */
         #table-action-buttons {              
             display: flex;
-            justify-content: flex-end;
+            /* justify-content: flex-end; */
             align-items: center;
             gap: 12px;
             margin-top: 16px;
             margin-bottom: 8px;
+            /* position: relative; */
         }
 
         #table-action-buttons button {
@@ -866,19 +913,26 @@
 
                 <!-- Table Action Buttons -->
                 <div id="table-action-buttons">
-                    <!-- <span id="help-icon" class="help-icon"><i data-lucide="info"></i></span>
-                    <div id="help-popover" class="help-popover">
-                        <strong>Good vs Bad Screenshot:</strong><br />
-                        <img src="sample-screenshot.png" style="width: 100%;" />
-                    </div>                 -->
+                    <!-- <span id="help-icon" class="help-icon"><i data-lucide="info"></i></span> -->
+ 
+                    <!-- Add help button here -->
+                    <span id="header-help-icon" class="help-icon">
+                        <i data-lucide="info"></i>
+                    </span> 
+                    
+            
                     <!-- Add this notification area -->
                     <span id="notification-area" class="notification-hidden">
                         <span id="notification-icon"></span>
                         <span id="notification-text"></span>
                         <button id="notification-close">×</button>
                     </span>
-                    <button id="extract-btn">Extract</button>
-                    <button id="submit-btn">Submit</button>
+                    
+                    <!-- Buttons container - always right (using span) -->
+                    <span class="buttons-container">
+                        <button id="extract-btn">Extract</button>
+                        <button id="submit-btn">Submit</button>
+                    </span>
                 </div>
             </div>
 
@@ -1020,7 +1074,7 @@
             const partNumber = urlParams.get("part");
             const parentDrgNum = urlParams.get("parentdrgnum");
             if (!project || !partNumber || !parentDrgNum) {
-                showNotification("Missing required query params: project/part/parentdrgnum");
+                showNotification("Missing required query params: project/part/parentdrgnum", 'error');
                 // Do not return; always initialize table even if params are missing
             } else {
                 try {
@@ -1453,11 +1507,33 @@
                                 if (!isValid) {
                                     console.warn(`⚠️ Invalid childpart selection: "${newVal}" - clearing cell`);
                                     hot.setDataAtCell(row, colIndex, '', 'validation-clear');
-                                    showNotification(`"${newVal}" is not a valid child part. Please select from the dropdown list.`);
+                                    showNotification(`"${newVal}" is not a valid child part. Please select from the dropdown list.`, 'error');
                                     return;
                                 }
                             }
                             // BO type always allowed
+                        }
+
+                        // In your afterChange handler, replace the Type validation section with:
+                        if (prop === 'Type') {
+                            console.log(`🔄 Type changed to: "${newVal}" for row ${row}`);
+                            
+                            // If changing TO Child Part, validate existing Matched Childpart value
+                            if (newVal === 'Child Part') {
+                                const rowData = hot.getSourceDataAtRow(row);
+                                const existingMatch = rowData['Matched Childpart'];
+                                
+                                if (existingMatch && existingMatch.toString().trim() !== '') {
+                                    const isValid = windowChildParts.includes(existingMatch.toString());
+                                    if (!isValid) {
+                                        console.warn(`⚠️ Type changed to Child Part but "${existingMatch}" is not valid - clearing`);
+                                        const matchColIndex = hot.propToCol('Matched Childpart');
+                                        hot.setDataAtCell(row, matchColIndex, '', 'validation-clear');
+                                        showNotification(`"${existingMatch}" is not a valid child part. Please select from dropdown.`, 'error');
+                                        return;
+                                    }
+                                }
+                            }
                         }
 
                         // Optional logging for Type edits
@@ -1763,6 +1839,7 @@ function addColumn(newColumnData, label) {
         document.addEventListener("click", (e) => {
             if (!e.target.closest("#help-icon")) {
                 document.getElementById("help-popover").style.display = "none";
+                hideNotification();
             }
         });
 
@@ -1829,20 +1906,28 @@ function addColumn(newColumnData, label) {
         }
 
 // Notifications
-function showNotification(message, type = 'success', duration = 5000) {
+function showNotification(message, type = 'success', duration = null) {
     const area = document.getElementById('notification-area');
     const icon = document.getElementById('notification-icon');
     const text = document.getElementById('notification-text');
     
     // Set content
     text.textContent = message;
-    icon.textContent = type === 'success' ? '✅' : type === 'error' ? '❌' : '⚠️';
+
+    // Set icon based on type
+    const iconMap = {
+        'success': '✅',
+        'error': '❌', 
+        'warning': '⚠️',
+        'instructions': '📝'
+    };
+    icon.textContent = iconMap[type] || '⚠️'; 
     
     // Update styling
     area.className = `notification-${type}`;
-    
-    // Auto-hide after duration
-    if (duration > 0) {
+
+    // Only auto-hide SUCCESS notifications
+    if (type === 'success' && duration > 0) {
         setTimeout(() => hideNotification(), duration);
     }
 }
@@ -1851,8 +1936,39 @@ function hideNotification() {
     document.getElementById('notification-area').className = 'notification-hidden';
 }
 
+// Toggle instructions (just calls showNotification)
+function toggleInstructions() {
+    const area = document.getElementById('notification-area');
+    if (area.className === 'notification-instructions') {
+        clearNotification();
+    } else {
+        showNotification('fill manually or upload screenshots in header (≤10 rows at a time)', 'instructions', 0);
+    }
+}
+
+
+// Help button
+document.getElementById("header-help-icon").addEventListener("click", (e) => {
+    e.stopPropagation();
+    toggleInstructions();
+    
+    // Toggle popover
+    const popover = document.getElementById("header-help-popover");
+    popover.style.display = popover.style.display === "block" ? "none" : "block";
+});
+
+// Close button handles everything
+document.getElementById('notification-close').addEventListener('click', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    hideNotification();
+    
+    // Also close popover if it was instructions
+    document.getElementById("header-help-popover").style.display = "none";
+});
+
 // Close button event
-document.getElementById('notification-close').addEventListener('click', hideNotification);        
+// document.getElementById('notification-close').addEventListener('click', hideNotification);        
 
 
 
@@ -1917,7 +2033,7 @@ document.getElementById('notification-close').addEventListener('click', hideNoti
                     showNotification(
                         `Missing Required Fields:\n${validation.missingFields.join(
                             ", "
-                        )}`
+                        )}`, 'error'
                     );
                     addDataBtn.textContent = originalText;
                     return;
@@ -2017,7 +2133,7 @@ document.getElementById('notification-close').addEventListener('click', hideNoti
 
                 if (successful === total && total > 0) {
                     showNotification(
-                        `Data added successfully!\n- Child Parts: ${childPartsData.length}\n- BO Parts: ${boData.length}`
+                        `Data added successfully!\n- Child Parts: ${childPartsData.length}\n- BO Parts: ${boData.length}`, 'success'
                     );
                     clearTableToDefault();
                 } else {
@@ -2025,7 +2141,7 @@ document.getElementById('notification-close').addEventListener('click', hideNoti
                 }
             } catch (error) {
                 console.error("❌ Error sending data:", error);
-                showNotification(`Error adding data: ${error.message}`);
+                showNotification(`Error adding data: ${error.message}`, 'error');
             } finally {
                 addDataBtn.disabled = false;
                 addDataBtn.textContent = "Submit";
