@@ -1842,7 +1842,11 @@ function addColumn(newColumnData, label) {
         document.addEventListener("click", (e) => {
             if (!e.target.closest("#help-icon")) {
                 document.getElementById("help-popover").style.display = "none";
-                // hideNotification();
+                // Only hide instructions, not error/success notifications
+                const area = document.getElementById('notification-area');               
+                if (area.className === 'notification-instructions') {
+                    hideNotification();
+                }                      
             }
         });
 
@@ -1909,7 +1913,7 @@ function addColumn(newColumnData, label) {
         }
 
 // Notifications
-function showNotification(message, type = 'success', duration = null) {
+function showNotification(message, type = 'success', duration = 5000) {
     const area = document.getElementById('notification-area');
     const icon = document.getElementById('notification-icon');
     const text = document.getElementById('notification-text');
@@ -2011,6 +2015,12 @@ document.getElementById('notification-close').addEventListener('click', function
         }
 
         function clearTableToDefault() {
+            // Clear all cell metadata (including confidence colors)
+            for (let row = 0; row < hot.countRows(); row++) {
+                for (let col = 0; col < hot.countCols(); col++) {
+                    hot.setCellMeta(row, col, 'className', '');
+                }
+            }            
             hot.clear(); // ✅ Built-in method that safely clears all data
             hot.deselectCell(); // Remove selection highlighting
             console.log("✅ Table cleared to default state");
