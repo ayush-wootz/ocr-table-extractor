@@ -1527,9 +1527,12 @@
                                     const isValid = windowChildParts.includes(existingMatch.toString());
                                     if (!isValid) {
                                         console.warn(`⚠️ Type changed to Child Part but "${existingMatch}" is not valid - clearing`);
-                                        const matchColIndex = hot.propToCol('Matched Childpart');
-                                        hot.setDataAtCell(row, matchColIndex, '', 'validation-clear');
-                                        showNotification(`"${existingMatch}" is not a valid child part. Please select from dropdown.`, 'error');
+                                        // Use setTimeout to avoid event conflicts
+                                        setTimeout(() => {
+                                            showNotification(`"${existingMatch}" is not a valid child part. Please select from dropdown.`, 'error');
+                                            const matchColIndex = hot.propToCol('Matched Childpart');
+                                            hot.setDataAtCell(row, matchColIndex, '', 'validation-clear');
+                                        }, 10);
                                         return;
                                     }
                                 }
@@ -2035,6 +2038,7 @@ document.getElementById('notification-close').addEventListener('click', function
                             ", "
                         )}`, 'error'
                     );
+                    addDataBtn.disabled = false;
                     addDataBtn.textContent = originalText;
                     return;
                 }
