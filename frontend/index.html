@@ -1423,7 +1423,13 @@
             // --- Unified afterChange handler: edit, cut, paste -----------------------------------------------
             hot.addHook('afterChange', (changes, source) => {
                 if (!changes) return;
-
+                
+                // Auto-hide error notifications when user makes any change
+                const area = document.getElementById('notification-area');
+                if (area.className === 'notification-error') {
+                    hideNotification();
+                }
+                
                 // ===== 0. COPY: clear any previous cut‑backup so future paste is treated as edit =====
                 if (source === 'CopyPaste.copy') {
                     _cutBackup = [];         // Do not capture confidence on copy
@@ -2042,16 +2048,43 @@ document.getElementById('notification-close').addEventListener('click', function
                 addDataBtn.textContent = "Sending...";
                 // Validate required fields:
                 const validation = validateRequiredFields();
+                
                 if (!validation.isValid) {
-                    showNotification(
-                        `Missing Required Fields:\n${validation.missingFields.join(
-                            ", "
-                        )}`, 'error'
-                    );
-                    addDataBtn.disabled = false;
+                    // Create compact format: "Quantity (Rows 1,3), Type (Row 1)"
+                    const fieldGroups = {};
+                    validation.missingFields.forEach(field => {
+                        const match = field.match(/Row (\d+): (.+)/);
+                        if (match) {
+                            const [, rowNum, fieldName] = match;
+                            if (!fieldGroups[fieldName]) {
+                                fieldGroups[fieldName] = [];
+                            }
+                            fieldGroups[fieldName].push(rowNum);
+                        }
+                    });
+                    
+                    const formattedFields = Object.entries(fieldGroups)
+                        .map(([field, rows]) => {
+                            const rowText = rows.length === 1 ? `Row ${rows[0]}` : `Rows ${rows.join(',')}`;
+                            return `${field} (${rowText})`;
+                        })
+                        .join(', ');
+                    
+                    showNotification(`Missing: ${formattedFields}`, 'error');
                     addDataBtn.textContent = originalText;
                     return;
                 }
+                
+                // if (!validation.isValid) {
+                //     showNotification(
+                //         `Missing Required Fields:\n${validation.missingFields.join(
+                //             ", "
+                //         )}`, 'error'
+                //     );
+                //     addDataBtn.disabled = false;
+                //     addDataBtn.textContent = originalText;
+                //     return;
+                // }
 
                 const urlParams = new URLSearchParams(window.location.search);
                 const project = urlParams.get("project");
@@ -2147,7 +2180,7 @@ document.getElementById('notification-close').addEventListener('click', function
 
                 if (successful === total && total > 0) {
                     showNotification(
-                        `Data added successfully!\n- Child Parts: ${childPartsData.length}\n- BO Parts: ${boData.length}`, 'success'
+                        `Data added successfully! Child Parts: ${childPartsData.length}, BO Parts: ${boData.length}`, 'success'
                     );
                     clearTableToDefault();
                 } else {
