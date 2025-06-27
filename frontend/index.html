@@ -1154,6 +1154,7 @@
         let hot;
         let windowChildParts = []; // expose on window for debugging
         let _cutBackup = [];
+        let hasWarningNotificationShown = false;
 
         // Fetch query-params (project, part, parentdrgnum) on load and fetch childParts
         window.addEventListener("DOMContentLoaded", async () => {
@@ -1330,7 +1331,6 @@
 
                             // Add this flag before the checks
                             let warningNeeded = false;
-                            let hasWarningNotificationShown = false;
 
                             // ✅ ADD: Check for warning needed
                             if (prop === "Type" && value === "BO") {
@@ -2005,7 +2005,7 @@
                 const cell = e.target.closest('.needs-review-cell');
                 const partNumber = cell.getAttribute('data-part-number');
 
-                showWarningPopup(e.pageX, e.pageY, partNumber);
+                // showWarningPopup(e.pageX, e.pageY, partNumber);
             }
         });
 
@@ -2204,6 +2204,11 @@
         function clearTableToDefault() {
             hot.clear(); // ✅ Built-in method that safely clears all data
             hot.deselectCell(); // Remove selection highlighting
+            spreadsheetData.forEach(row => {
+                ["Quantity", "Description", "Material"].forEach(col => {
+                    if (row[col]) row[col].confidence = 0;
+                });
+            });            
             console.log("✅ Table cleared to default state");
         }
 
