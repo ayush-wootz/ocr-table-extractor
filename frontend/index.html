@@ -1330,6 +1330,7 @@
 
                             // Add this flag before the checks
                             let warningNeeded = false;
+                            let hasWarningNotificationShown = false;
 
                             // ✅ ADD: Check for warning needed
                             if (prop === "Type" && value === "BO") {
@@ -1359,9 +1360,10 @@
                             }
 
                             // After both checks, trigger a single notification if needed
-                            if (warningNeeded) {
-                                showNotification("Verify Part Number or Type (BO/Childpart)", "warning");
-                            }               
+                            if (warningNeeded && !hasWarningNotificationShown) {
+                            showNotification("Verify Part Number or Type (BO/Childpart)", "warning");
+                            hasWarningNotificationShown = true;
+                            }
 
                         } else if (isOCRcol) {
                             // OCR columns: color by confidence
@@ -1683,12 +1685,10 @@
                             console.log(`🔄 Type changed to: "${newVal}" for row ${row}`);
                         }
                     });
+                    hasWarningNotificationShown = false;                
                     hot.render();
                 }
             });
-
-
-
         }
 
         // ─────────────────────────────────────────────────────────────────────
@@ -2005,7 +2005,7 @@
                 const cell = e.target.closest('.needs-review-cell');
                 const partNumber = cell.getAttribute('data-part-number');
 
-                // showWarningPopup(e.pageX, e.pageY, partNumber);
+                showWarningPopup(e.pageX, e.pageY, partNumber);
             }
         });
 
@@ -2072,8 +2072,9 @@
 
             // Update styling
             area.className = `notification-${type}`;
+
             // Remove any "hidden" class if present
-            area.classList.remove('notification-hidden');            
+            area.classList.remove('notification-hidden');
 
             // Only auto-hide SUCCESS notifications
             if (type === 'success' && duration > 0) {
