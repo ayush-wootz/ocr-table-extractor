@@ -1319,6 +1319,15 @@
                             // dropdown renderer for mapping columns
                             Handsontable.renderers.DropdownRenderer.apply(this, arguments);
 
+                            // Add Type-specific styling
+                            if (prop === "Type") {
+                                if (value === "Child Part") {
+                                    td.classList.add("type-child-part");
+                                } else if (value === "BO") {
+                                    td.classList.add("type-bo");
+                                }
+                            }
+
                             // ✅ ADD: Check for warning needed
                             if (prop === "Type" && value === "BO") {
                                 const rowData = hotInstance.getSourceDataAtRow(row);
@@ -1418,26 +1427,6 @@
                 autoRowSize: true,
                 outsideClickDeselects: true,
                 licenseKey: "non-commercial-and-evaluation",
-
-                // --- Highlight Type cell text based on value ---
-                cells: function (row, col, prop) {
-                    const cellProperties = {};
-                    if (prop === "Type") {
-                        const cellValue = this.instance.getDataAtCell(row, col);
-                        if (cellValue === "Child Part") {
-                            cellProperties.renderer = function (instance, td, ...rest) {
-                                Handsontable.renderers.DropdownRenderer.apply(this, arguments);
-                                td.classList.add("type-child-part");
-                            };
-                        } else if (cellValue === "BO") {
-                            cellProperties.renderer = function (instance, td, ...rest) {
-                                Handsontable.renderers.DropdownRenderer.apply(this, arguments);
-                                td.classList.add("type-bo");
-                            };
-                        }
-                    }
-                    return cellProperties;
-                },
 
                 // --- NEW afterGetColHeader for OCR upload header area ---
                 afterGetColHeader: function (col, TH) {
