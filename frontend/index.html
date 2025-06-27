@@ -2005,7 +2005,7 @@
                 const cell = e.target.closest('.needs-review-cell');
                 const partNumber = cell.getAttribute('data-part-number');
 
-                showWarningPopup(e.pageX, e.pageY, partNumber);
+                // showWarningPopup(e.pageX, e.pageY, partNumber);
             }
         });
 
@@ -2072,6 +2072,8 @@
 
             // Update styling
             area.className = `notification-${type}`;
+            // Remove any "hidden" class if present
+            area.classList.remove('notification-hidden');            
 
             // Only auto-hide SUCCESS notifications
             if (type === 'success' && duration > 0) {
