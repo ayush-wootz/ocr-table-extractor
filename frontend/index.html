@@ -45,105 +45,157 @@
             display: flex;
             flex-direction: column;
             height: 100%;
-            overflow: hidden;  /* Prevent main container scroll */
+            overflow: hidden;
+            /* Prevent main container scroll */
         }
 
         /* ADD this new CSS for the fixed header area: */
         #fixed-header-area {
-            flex-shrink: 0;  /* Don't shrink */
+            flex-shrink: 0;
+            /* Don't shrink */
             background-color: #0a0a0a;
             z-index: 10;
             padding-bottom: 8px;
-            position: relative;          
+            position: relative;
             /* border-bottom: 1px solid #222; */
         }
 
-/* Help icon - always stays left */
-#header-help-icon {
-    cursor: pointer;
-    opacity: 0.7;
-    color: #666;
-    /* margin-right: 12px;   */
-}
+        /* Help icon - always stays left */
+        #header-help-icon {
+            cursor: pointer;
+            opacity: 0.7;
+            color: #666;
+            /* margin-right: 12px;   */
+        }
 
-#header-help-icon:hover {
-    opacity: 1;
-}
+        #header-help-icon:hover {
+            opacity: 1;
+        }
 
-/* Add this class for instructions type */
-.notification-instructions {
-    background: #1a1a1a;
-    color: #ccc;
-    border: 0.5px solid #333;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 2px;
-    border-radius: 0.5px;
-    font-size: 13px;
-    /* max-width: 500px; */
-    overflow: hidden;
-    /* text-overflow: ellipsis; */
-    transition: all 0.3s ease;
-    margin-right: auto;
-}
+        /* Add this class for instructions type */
+        .notification-instructions {
+            background: #1a1a1a;
+            color: #ccc;
+            border: 0.5px solid #333;
+            display: inline-flex;
+            align-items: center;
+            /* gap: 8px;
+    /* padding: 2px; */
+            border-radius: 6px;
+            font-size: 13px;
+            /* max-width: 500px; */
+            overflow: hidden;
+            /* text-overflow: ellipsis; */
+            transition: all 0.3s ease;
+            margin-right: auto;
+        }
 
-/* Hide close button for instructions */
-.notification-instructions #notification-close {
-    display: none;
-}
+        /* Hide close button for instructions */
+        .notification-instructions #notification-close {
+            display: none;
+        }
 
-#notification-area {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    /* padding: 6px 10px; */
-    /* margin-bottom: 8px; */
-    border-radius: 4px;
-    font-size: 13px;
-    /* max-width: 400px; */
-    overflow: hidden;
-    text-overflow: ellipsis;
-    transition: all 0.3s ease;
-    margin-right: auto;
-    margin-left: 10px;
-}
+        #notification-area {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 2px;
+            /* margin-bottom: 8px; */
+            border-radius: 6px;
+            font-size: 13px;
+            /* max-width: 400px; */
+            overflow: hidden;
+            text-overflow: ellipsis;
+            transition: all 0.3s ease;
+            margin-right: auto;
+            margin-left: 10px;
+        }
 
-.notification-hidden { display: none !important; }
-.notification-success { color: #059f3d;}
-.notification-error { color: #fd2d2d;}
-.notification-warning { color: #ffc124;}
+        .notification-hidden {
+            display: none !important;
+        }
 
-/* background: #1a4a2e; color: #4ade80; border: 1px solid #22c55e;  */
-/* background: #4a1a1a; color: #f87171; border: 1px solid #ef4444; */
-/* background: #4a3a1a; color: #fbbf24; border: 1px solid #f59e0b; */
+        .notification-success {
+            background: #0e3818;
+            color: #aef4c7;
+        }
 
-#notification-icon {
-    margin-right: 6px;
-}
+        .notification-error {
+            background: #38130e;
+            color: #fcaaaa;
+        }
 
-#notification-close {
-    background: none;
-    border: none;
-    color: #ffff;
-    cursor: pointer;
-    font-size: 16px;
-    padding: 0;
-    margin-left: 4px;
-    opacity: 0.6;
-    transition: opacity 0.2s;
-}
+        .notification-warning {
+            background: #ffc124;
+            color: #a8976f;
+        }
 
-#notification-close:hover {
-    opacity: 1;
-}
+        .notification-instructions {
+            background: #2b2a2a;
+            color: #ccc;
+        }
 
-/* Buttons container - always stays right */
-.buttons-container {
-    margin-left: auto;  /* This pushes buttons to the right */
-    display: flex;
-    gap: 12px;
-}
+        .notification-error .notif-icon-symbol {
+            margin-left: 5px;
+            font-size: 18px;
+            font-weight: bolder;
+            color: #fb0202;
+        }
+
+        .notification-warning .notif-icon-symbol {
+            margin-left: 5px;
+            font-size: 18px;
+            font-weight: bolder;
+            color: #f0bf2b;
+            /* yellow */
+        }
+
+        .notification-success .notif-icon-symbol {
+            margin-left: 5px;
+            font-size: 18px;
+            font-weight: bolder;
+            color: #22c55e;
+            /* green */
+        }
+
+        .notification-instructions .notif-icon-symbol {
+            margin-left: 2px;
+            /* color: #999; */
+        }
+
+        /* background: #38130e; color: #4ade80; border: 1px solid #22c55e;  */
+        /* background: #4a1a1a; color: #f87171; border: 1px solid #ef4444; */
+        /* background: #4a3a1a; color: #fbbf24; border: 1px solid #f59e0b; */
+
+        #notification-icon {
+            margin-right: 0px;
+        }
+
+        #notification-close {
+            position: relative;
+            bottom: 9px;
+            /* keeps it aligned to the same vertical spot */
+            background: none;
+            border: none;
+            color: #ffff;
+            cursor: pointer;
+            font-size: 12px !important;
+            padding: 3px !important;
+            opacity: 0.6;
+            transition: opacity 0.2s;
+        }
+
+        #notification-close:hover {
+            opacity: 1;
+        }
+
+        /* Buttons container - always stays right */
+        .buttons-container {
+            margin-left: auto;
+            /* This pushes buttons to the right */
+            display: flex;
+            gap: 12px;
+        }
 
 
         /* --------------------- Top Row Controls --------------------- */
@@ -167,7 +219,7 @@
         }
 
         /* --------------------- Table Action Buttons --------------------- */
-        #table-action-buttons {              
+        #table-action-buttons {
             display: flex;
             /* justify-content: flex-end; */
             align-items: center;
@@ -296,6 +348,17 @@
             word-break: break-word !important;
             overflow-wrap: break-word !important;
             max-width: 300px;
+        }
+
+        /* Type column colors and font weight */
+        .handsontable td.type-child-part {
+            color: #9ca3af !important;
+            font-weight: 600;
+        }
+
+        .handsontable td.type-bo {
+            color: #5c7080 !important;
+            font-weight: 600;
         }
 
         /* Column headers */
@@ -810,13 +873,15 @@
 
         /* Warning icon for low similarity cells */
         .low-similarity-cell::after {
-            content: "⚠️";
+            content: "!";
             position: absolute;
             top: 2px;
             right: 2px;
-            font-size: 12px;
+            font-size: 18px;
+            font-weight: bolder;
             z-index: 10;
             pointer-events: none;
+            color: #f0bf2b;
         }
 
 
@@ -826,21 +891,44 @@
         }
 
         .needs-review-cell::after {
-            content: "⚠️";
+            content: "!";
             position: absolute;
             top: 2px;
             right: 2px;
-            font-size: 12px;
+            font-size: 18px;
+            font-weight: bolder;
             z-index: 10;
             cursor: pointer;
-            opacity: 0.8;
             pointer-events: auto;
+            color: #f0bf2b;
         }
 
         .needs-review-cell::after:hover {
             opacity: 1;
             transform: scale(1.1);
         }
+
+        /* Error styling for Quantity cells with invalid (non-integer) values */
+        .quantity-error-cell {
+            position: relative;
+        }
+
+        /* Red warning icon */
+        .quantity-error-cell::after {
+            content: "!";
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            font-size: 18px;
+            font-weight: bolder;
+            z-index: 10;
+            pointer-events: none;
+            color: #fb0202;
+            /* <-- RED color for the icon */
+        }
+
+
+
 
         /* Warning popup */
         .warning-popup {
@@ -906,7 +994,7 @@
             <div id="fixed-header-area">
                 <!-- Top Row Controls -->
                 <!-- <div id="top-row-controls"> -->
-                    <!-- <div id="top-row-left">
+                <!-- <div id="top-row-left">
                         <span id="tool-heading">Add child parts/BO</span>
                     </div> -->
                 <!-- </div> -->
@@ -914,20 +1002,20 @@
                 <!-- Table Action Buttons -->
                 <div id="table-action-buttons">
                     <!-- <span id="help-icon" class="help-icon"><i data-lucide="info"></i></span> -->
- 
+
                     <!-- Add help button here -->
                     <span id="header-help-icon" class="help-icon">
                         <i data-lucide="info"></i>
-                    </span> 
-                    
-            
+                    </span>
+
+
                     <!-- Add this notification area -->
                     <span id="notification-area" class="notification-hidden">
                         <span id="notification-icon"></span>
                         <span id="notification-text"></span>
                         <button id="notification-close">×</button>
                     </span>
-                    
+
                     <!-- Buttons container - always right (using span) -->
                     <span class="buttons-container">
                         <button id="extract-btn">Extract</button>
@@ -943,31 +1031,31 @@
                     <!-- Handsontable placeholder (will be initialized via JS) -->
                     <div id="hot"></div>
                 </div>
-        
-        
 
-            <!-- Top Row Controls -->
-            <!-- <div id="top-row-controls"> -->
+
+
+                <!-- Top Row Controls -->
+                <!-- <div id="top-row-controls"> -->
                 <!-- <div id="top-row-left">
           <span id="tool-heading">Add child parts/BO</span>
         </div> -->
                 <!-- #top-row-right removed -->
-            <!-- </div> -->
+                <!-- </div> -->
 
-            <!-- Table and OCR Panel Wrapper -->
-            <!-- <div id="table-and-ocr-wrapper"> -->
+                <!-- Table and OCR Panel Wrapper -->
+                <!-- <div id="table-and-ocr-wrapper"> -->
                 <!-- Handsontable Area (Left) -->
                 <!-- <div id="handsontable-container"> -->
 
 
-                    <!-- <div id="table-action-buttons">
+                <!-- <div id="table-action-buttons">
                         <button id="extract-btn">Extract</button>
                         <button id="submit-btn">Submit</button>
                     </div> -->
 
-                    <!-- Removed the Header -->
-                    <!-- Handsontable placeholder (will be initialized via JS) -->
-                    <!-- <div id="hot"></div>
+                <!-- Removed the Header -->
+                <!-- Handsontable placeholder (will be initialized via JS) -->
+                <!-- <div id="hot"></div>
                 </div> -->
 
                 <!-- OCR Slide-In Panel (Right) -->
@@ -1269,6 +1357,16 @@
                             } else {
                                 // ✅ OCR DATA: Show confidence colors   
                                 const rowData = hotInstance.getSourceDataAtRow(row);
+                                if (key === "Quantity") {
+                                    const textValue = rowData[key]?.text?.trim();
+                                    const isInvalid = textValue && !/^\d+$/.test(textValue);
+                                    if (isInvalid) {
+                                        td.classList.add("quantity-error-cell");
+                                    } else {
+                                        td.classList.remove("quantity-error-cell");
+                                    }
+                                }
+
                                 const cellObj = rowData[key];  // the { text, confidence } you stored
 
                                 if (cellObj && typeof cellObj === "object" && cellObj.confidence !== undefined) {
@@ -1320,6 +1418,26 @@
                 autoRowSize: true,
                 outsideClickDeselects: true,
                 licenseKey: "non-commercial-and-evaluation",
+
+                // --- Highlight Type cell text based on value ---
+                cells: function (row, col, prop) {
+                    const cellProperties = {};
+                    if (prop === "Type") {
+                        const cellValue = this.instance.getDataAtCell(row, col);
+                        if (cellValue === "Child Part") {
+                            cellProperties.renderer = function (instance, td, ...rest) {
+                                Handsontable.renderers.DropdownRenderer.apply(this, arguments);
+                                td.classList.add("type-child-part");
+                            };
+                        } else if (cellValue === "BO") {
+                            cellProperties.renderer = function (instance, td, ...rest) {
+                                Handsontable.renderers.DropdownRenderer.apply(this, arguments);
+                                td.classList.add("type-bo");
+                            };
+                        }
+                    }
+                    return cellProperties;
+                },
 
                 // --- NEW afterGetColHeader for OCR upload header area ---
                 afterGetColHeader: function (col, TH) {
@@ -1423,13 +1541,7 @@
             // --- Unified afterChange handler: edit, cut, paste -----------------------------------------------
             hot.addHook('afterChange', (changes, source) => {
                 if (!changes) return;
-                
-                // Auto-hide error notifications when user makes any change
-                const area = document.getElementById('notification-area');
-                if (area.className === 'notification-error') {
-                    hideNotification();
-                }
-                
+
                 // ===== 0. COPY: clear any previous cut‑backup so future paste is treated as edit =====
                 if (source === 'CopyPaste.copy') {
                     _cutBackup = [];         // Do not capture confidence on copy
@@ -1499,7 +1611,28 @@
                         // OCR columns: zero confidence & force default bg
                         if (['Quantity.text', 'Description.text', 'Material.text'].includes(prop)) {
                             spreadsheetData[row][prop.split('.')[0]].confidence = 0;
-                            hot.setCellMeta(row, colIndex, 'className', 'edited-cell user-edited-ocr');
+                            // --- Begin new logic for className to preserve quantity-error-cell ---
+                            // Get existing classes
+                            let existingClasses = hot.getCellMeta(row, colIndex).className || "";
+                            let classes = new Set(existingClasses.split(/\s+/).filter(Boolean));
+
+                            // Add edited markers
+                            classes.add('edited-cell');
+                            classes.add('user-edited-ocr');
+
+                            // Preserve quantity-error-cell if still invalid
+                            if (prop === 'Quantity.text') {
+                                const textValue = spreadsheetData[row].Quantity?.text?.trim();
+                                const isInvalid = textValue && !/^\d+$/.test(textValue);
+                                if (isInvalid) {
+                                    classes.add('quantity-error-cell');
+                                } else {
+                                    classes.delete('quantity-error-cell');
+                                }
+                            }
+
+                            hot.setCellMeta(row, colIndex, 'className', Array.from(classes).join(' '));
+                            // --- End new logic ---
                             console.log(`🔧 User edited OCR cell: Row ${row}, Column ${prop}`);
                         }
 
@@ -1523,12 +1656,12 @@
                         // In your afterChange handler, replace the Type validation section with:
                         if (prop === 'Type') {
                             console.log(`🔄 Type changed to: "${newVal}" for row ${row}`);
-                            
+
                             // If changing TO Child Part, validate existing Matched Childpart value
                             if (newVal === 'Child Part') {
                                 const rowData = hot.getSourceDataAtRow(row);
                                 const existingMatch = rowData['Matched Childpart'];
-                                
+
                                 if (existingMatch && existingMatch.toString().trim() !== '') {
                                     const isValid = windowChildParts.includes(existingMatch.toString());
                                     if (!isValid) {
@@ -1561,21 +1694,21 @@
         // ─────────────────────────────────────────────────────────────────────
         // addColumn: used by OCR processing to inject a new column's OCR data
         // ─────────────────────────────────────────────────────────────────────
-function addColumn(newColumnData, label) {
-    console.log(`🔧 addColumn called with label: "${label}"`);
-    /* --------------------------------------------------------------------
-       If the user re‑uploads the PartNumber column we must clear any
-       previous auto‑matching results so they don’t linger and confuse.
-    -------------------------------------------------------------------- */
-    if (label === 'PartNumber') {
-        spreadsheetData.forEach(r => {
-            r['Matched Childpart']  = '';
-            r['Type']               = '';
-            delete r._needsReview;
-            delete r._similarityScore;
-        });
-    }
-    console.log(`📊 Data received:`, newColumnData);
+        function addColumn(newColumnData, label) {
+            console.log(`🔧 addColumn called with label: "${label}"`);
+            /* --------------------------------------------------------------------
+               If the user re‑uploads the PartNumber column we must clear any
+               previous auto‑matching results so they don’t linger and confuse.
+            -------------------------------------------------------------------- */
+            if (label === 'PartNumber') {
+                spreadsheetData.forEach(r => {
+                    r['Matched Childpart'] = '';
+                    r['Type'] = '';
+                    delete r._needsReview;
+                    delete r._similarityScore;
+                });
+            }
+            console.log(`📊 Data received:`, newColumnData);
 
             // Now update spreadsheetData for this column without reordering others
             for (let i = 0; i < newColumnData.length; i++) {
@@ -1849,10 +1982,10 @@ function addColumn(newColumnData, label) {
             if (!e.target.closest("#help-icon")) {
                 document.getElementById("help-popover").style.display = "none";
                 // Only hide instructions, not error/success notifications
-                const area = document.getElementById('notification-area');               
+                const area = document.getElementById('notification-area');
                 if (area.className === 'notification-instructions') {
                     hideNotification();
-                }                      
+                }
             }
         });
 
@@ -1918,70 +2051,71 @@ function addColumn(newColumnData, label) {
             closeWarningPopup();
         }
 
-// Notifications
-function showNotification(message, type = 'success', duration = 5000) {
-    const area = document.getElementById('notification-area');
-    const icon = document.getElementById('notification-icon');
-    const text = document.getElementById('notification-text');
-    
-    // Set content
-    text.textContent = message;
+        // Notifications
+        function showNotification(message, type = 'success', duration = 5000) {
+            const area = document.getElementById('notification-area');
+            const icon = document.getElementById('notification-icon');
+            const text = document.getElementById('notification-text');
 
-    // Set icon based on type
-    const iconMap = {
-        'success': '✅',
-        'error': '❌', 
-        'warning': '⚠️',
-        'instructions': '📝'
-    };
-    icon.textContent = iconMap[type] || '⚠️'; 
-    
-    // Update styling
-    area.className = `notification-${type}`;
+            // Set content
+            text.textContent = message;
 
-    // Only auto-hide SUCCESS notifications
-    if (type === 'success' && duration > 0) {
-        setTimeout(() => hideNotification(), duration);
-    }
-}
+            // Set icon based on type
+            const iconMap = {
+                'success': '✓',
+                'error': '!',
+                'warning': '!',
+                'instructions': '📝'
+            };
 
-function hideNotification() {
-    document.getElementById('notification-area').className = 'notification-hidden';
-}
+            icon.innerHTML = `<span class="notif-icon-symbol">${iconMap[type] || '⚠️'}</span>`;
 
-// Toggle instructions (just calls showNotification)
-function toggleInstructions() {
-    const area = document.getElementById('notification-area');
-    if (area.className === 'notification-instructions') {
-        clearNotification();
-    } else {
-        showNotification('fill manually or upload screenshots in header (≤10 rows at a time)', 'instructions', 0);
-    }
-}
+            // Update styling
+            area.className = `notification-${type}`;
+
+            // Only auto-hide SUCCESS notifications
+            if (type === 'success' && duration > 0) {
+                setTimeout(() => hideNotification(), duration);
+            }
+        }
+
+        function hideNotification() {
+            document.getElementById('notification-area').className = 'notification-hidden';
+        }
+
+        // Toggle instructions (just calls showNotification)
+        function toggleInstructions() {
+            const area = document.getElementById('notification-area');
+            if (area.className === 'notification-instructions') {
+                clearNotification();
+            } else {
+                showNotification('fill manually or upload screenshots in header (≤10 rows at a time)', 'instructions', 0);
+            }
+        }
 
 
-// Help button
-document.getElementById("header-help-icon").addEventListener("click", (e) => {
-    e.stopPropagation();
-    toggleInstructions();
-    
-    // Toggle popover
-    const popover = document.getElementById("header-help-popover");
-    popover.style.display = popover.style.display === "block" ? "none" : "block";
-});
+        // Help button
+        document.getElementById("header-help-icon").addEventListener("click", (e) => {
+            e.stopPropagation();
+            toggleInstructions();
 
-// Close button handles everything
-document.getElementById('notification-close').addEventListener('click', function(e) {
-    e.preventDefault();
-    e.stopPropagation();
-    hideNotification();
-    
-    // Also close popover if it was instructions
-    document.getElementById("header-help-popover").style.display = "none";
-});
+            // Toggle popover
+            const popover = document.getElementById("header-help-popover");
+            popover.style.display = popover.style.display === "block" ? "none" : "block";
+        });
 
-// Close button event
-// document.getElementById('notification-close').addEventListener('click', hideNotification);        
+        // Close button handles everything
+        document.getElementById('notification-close').addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            hideNotification();
+
+            // Also close popover if it was instructions
+            document.getElementById("header-help-popover").style.display = "none";
+        });
+
+        // Close button event
+        // document.getElementById('notification-close').addEventListener('click', hideNotification);        
 
 
 
@@ -1990,43 +2124,81 @@ document.getElementById('notification-close').addEventListener('click', function
         // validateRequiredFields (unchanged)
         // ─────────────────────────────────────────────────────────────────────
         // UPDATED: Validation function (doesn't check PartNumber since it's hidden)
+        // function validateRequiredFields() {
+        //     const missingFields = [];
+        //     let hasValidRow = false;
+
+        //     spreadsheetData.forEach((row, index) => {
+        //         // Check if row has any meaningful data (Type or Quantity)
+        //         const type = row.Type?.trim();
+        //         const qty = row.Quantity?.text?.trim();
+
+        //         // Skip completely empty rows
+        //         if (!type && !qty) return;
+
+        //         hasValidRow = true;
+
+        //         // Validate required fields for non-empty rows
+        //         if (!qty) missingFields.push(`Row ${index + 1}: Quantity`);
+        //         if (!type) missingFields.push(`Row ${index + 1}: Type`);
+
+        //         // If Type is "Child Part", require Select Drawing Number
+        //         if ((type === "Child Part" || type === "BO") && !row["Matched Childpart"]?.trim()) {
+        //             missingFields.push(`Row ${index + 1}: Child Part/BO (required)`);
+        //         }
+
+        //         if (row.Quantity?.text && !/^\d+$/.test(row.Quantity.text.trim())) {
+        //             missingFields.push(`Row ${index + 1}: Quantity must be a number`);
+        //         }
+        //     });
+
+        //     return {
+        //         isValid: hasValidRow && missingFields.length === 0,
+        //         missingFields
+        //     };
+        // }
+
         function validateRequiredFields() {
-            const missingFields = [];
+            const missingColumns = new Set();
+            const invalidColumns = new Set();
             let hasValidRow = false;
 
-            spreadsheetData.forEach((row, index) => {
-                // Check if row has any meaningful data (Type or Quantity)
+            spreadsheetData.forEach((row) => {
                 const type = row.Type?.trim();
                 const qty = row.Quantity?.text?.trim();
+                const table_partNumber = row["Matched Childpart"]?.trim();
 
-                // Skip completely empty rows
-                if (!type && !qty) return;
+                // Skip empty rows (no Type, Quantity, and PartNumber)
+                if (!type && !qty && !table_partNumber) return;
 
                 hasValidRow = true;
 
-                // Validate required fields for non-empty rows
-                if (!qty) missingFields.push(`Row ${index + 1}: Quantity`);
-                if (!type) missingFields.push(`Row ${index + 1}: Type`);
+                // Collect missing fields
+                if (!type) missingColumns.add("Type");
+                if (!table_partNumber) missingColumns.add("Part Number");
+                if (!qty) missingColumns.add("Quantity");
 
-                // If Type is "Child Part", require Select Drawing Number
-                if ((type === "Child Part" || type === "BO") && !row["Matched Childpart"]?.trim()) {
-                    missingFields.push(`Row ${index + 1}: Child Part/BO (required)`);
+                // Collect invalid fields
+                if (row.Quantity?.text && !/^\d+$/.test(row.Quantity.text.trim())) {
+                    invalidColumns.add("Quantity");
                 }
             });
 
+            const messages = [];
+            if (missingColumns.size > 0) {
+                messages.push(`(${Array.from(missingColumns).join(", ")})`);
+            }
+            if (invalidColumns.size > 0) {
+                messages.push(`Invalid Data (${Array.from(invalidColumns).join(", ")})`);
+            }
+
             return {
-                isValid: hasValidRow && missingFields.length === 0,
-                missingFields
+                isValid: hasValidRow && messages.length === 0,
+                missingFields: messages
             };
         }
 
         function clearTableToDefault() {
-            // Clear all cell metadata (including confidence colors)
-            for (let row = 0; row < hot.countRows(); row++) {
-                for (let col = 0; col < hot.countCols(); col++) {
-                    hot.setCellMeta(row, col, 'className', '');
-                }
-            }            
             hot.clear(); // ✅ Built-in method that safely clears all data
             hot.deselectCell(); // Remove selection highlighting
             console.log("✅ Table cleared to default state");
@@ -2048,43 +2220,16 @@ document.getElementById('notification-close').addEventListener('click', function
                 addDataBtn.textContent = "Sending...";
                 // Validate required fields:
                 const validation = validateRequiredFields();
-                
                 if (!validation.isValid) {
-                    // Create compact format: "Quantity (Rows 1,3), Type (Row 1)"
-                    const fieldGroups = {};
-                    validation.missingFields.forEach(field => {
-                        const match = field.match(/Row (\d+): (.+)/);
-                        if (match) {
-                            const [, rowNum, fieldName] = match;
-                            if (!fieldGroups[fieldName]) {
-                                fieldGroups[fieldName] = [];
-                            }
-                            fieldGroups[fieldName].push(rowNum);
-                        }
-                    });
-                    
-                    const formattedFields = Object.entries(fieldGroups)
-                        .map(([field, rows]) => {
-                            const rowText = rows.length === 1 ? `Row ${rows[0]}` : `Rows ${rows.join(',')}`;
-                            return `${field} (${rowText})`;
-                        })
-                        .join(', ');
-                    
-                    showNotification(`Missing: ${formattedFields}`, 'error');
+                    showNotification(
+                        `Missing Data:\n${validation.missingFields.join(
+                            ", "
+                        )}`, 'error'
+                    );
+                    addDataBtn.disabled = false;
                     addDataBtn.textContent = originalText;
                     return;
                 }
-                
-                // if (!validation.isValid) {
-                //     showNotification(
-                //         `Missing Required Fields:\n${validation.missingFields.join(
-                //             ", "
-                //         )}`, 'error'
-                //     );
-                //     addDataBtn.disabled = false;
-                //     addDataBtn.textContent = originalText;
-                //     return;
-                // }
 
                 const urlParams = new URLSearchParams(window.location.search);
                 const project = urlParams.get("project");
@@ -2180,14 +2325,14 @@ document.getElementById('notification-close').addEventListener('click', function
 
                 if (successful === total && total > 0) {
                     showNotification(
-                        `Data added successfully! Child Parts: ${childPartsData.length}, BO Parts: ${boData.length}`, 'success'
+                        `Data added successfully!\n- Child Parts: ${childPartsData.length}\n- BO Parts: ${boData.length}`, 'success'
                     );
                     clearTableToDefault();
                 } else {
                     throw new Error("No data was processed");
                 }
             } catch (error) {
-                console.error("❌ Error sending data:", error);
+                console.error("Error sending data:", error);
                 showNotification(`Error adding data: ${error.message}`, 'error');
             } finally {
                 addDataBtn.disabled = false;
