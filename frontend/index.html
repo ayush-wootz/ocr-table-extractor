@@ -117,7 +117,7 @@
 
         .notification-success {
             background: #0e3818;
-            color: #aef4c7;
+            color: #c7ddce;
         }
 
         .notification-error {
@@ -126,8 +126,8 @@
         }
 
         .notification-warning {
-            background: #ffc124;
-            color: #a8976f;
+            background: #594001;
+            color: #d2c3a1;
         }
 
         .notification-instructions {
@@ -1328,12 +1328,16 @@
                                 }
                             }
 
+                            // Add this flag before the checks
+                            let warningNeeded = false;
+
                             // ✅ ADD: Check for warning needed
                             if (prop === "Type" && value === "BO") {
                                 const rowData = hotInstance.getSourceDataAtRow(row);
                                 if (rowData["_needsReview"]) {
                                     td.classList.add("needs-review-cell");
                                     td.setAttribute("data-part-number", rowData["PartNumber"]?.text || "");
+                                    warningNeeded = true;
                                 }
                             }
 
@@ -1347,11 +1351,18 @@
                                     const sim = sequentialCharacterMatch(partText, value.toString());
                                     if (sim < 0.95) {
                                         td.classList.add("low-similarity-cell");
+                                        warningNeeded = true;
                                     } else {
                                         td.classList.remove("low-similarity-cell");
                                     }
                                 }
                             }
+
+                            // After both checks, trigger a single notification if needed
+                            if (warningNeeded) {
+                                showNotification("Verify Part Number or Type (BO/Childpart)", "warning");
+                            }               
+
                         } else if (isOCRcol) {
                             // OCR columns: color by confidence
                             Handsontable.renderers.TextRenderer.apply(this, arguments);
