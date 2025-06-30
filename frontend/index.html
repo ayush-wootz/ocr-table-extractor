@@ -352,13 +352,19 @@
 
         /* Type column colors and font weight */
         .handsontable td.type-child-part {
-            color: #9ca3af !important;
+            color:#9ca3af !important;
             font-weight: 600;
         }
 
         .handsontable td.type-bo {
-            color: #5c7080 !important;
-            font-weight: 600;
+            color:#5c7080 !important;
+            font-weight: 600 !important;
+        }
+
+        .handsontable td.bo-row {
+            font-style: italic;
+            font-weight: lighter;
+            /* color:#eaeaea !important; */
         }
 
         /* Column headers */
@@ -992,13 +998,6 @@
 
             <!-- NEW: Fixed Header Area -->
             <div id="fixed-header-area">
-                <!-- Top Row Controls -->
-                <!-- <div id="top-row-controls"> -->
-                <!-- <div id="top-row-left">
-                        <span id="tool-heading">Add child parts/BO</span>
-                    </div> -->
-                <!-- </div> -->
-
                 <!-- Table Action Buttons -->
                 <div id="table-action-buttons">
                     <!-- <span id="help-icon" class="help-icon"><i data-lucide="info"></i></span> -->
@@ -1032,31 +1031,6 @@
                     <div id="hot"></div>
                 </div>
 
-
-
-                <!-- Top Row Controls -->
-                <!-- <div id="top-row-controls"> -->
-                <!-- <div id="top-row-left">
-          <span id="tool-heading">Add child parts/BO</span>
-        </div> -->
-                <!-- #top-row-right removed -->
-                <!-- </div> -->
-
-                <!-- Table and OCR Panel Wrapper -->
-                <!-- <div id="table-and-ocr-wrapper"> -->
-                <!-- Handsontable Area (Left) -->
-                <!-- <div id="handsontable-container"> -->
-
-
-                <!-- <div id="table-action-buttons">
-                        <button id="extract-btn">Extract</button>
-                        <button id="submit-btn">Submit</button>
-                    </div> -->
-
-                <!-- Removed the Header -->
-                <!-- Handsontable placeholder (will be initialized via JS) -->
-                <!-- <div id="hot"></div>
-                </div> -->
 
                 <!-- OCR Slide-In Panel (Right) -->
                 <div id="ocr-panel">
@@ -1229,21 +1203,66 @@
         // ─────────────────────────────────────────────────────────────────────
         // Build a per‑row warning string (hidden; sent only in payload)
         // ─────────────────────────────────────────────────────────────────────
-        function getRowWarning(row) {
-            const warns = [];
+        // function getRowWarning(row) {
+        //     const warns = [];
 
-            // Non‑OCR warnings
-            if (row._needsReview) warns.push('Verify whether a ChildPart or BO');
-            if (row._similarityScore < 0.95) warns.push('Verify whether the PartNumber/BO name and other fields are correct');
+        //     // Non‑OCR warnings
+        //     if (row._needsReview) warns.push('Verify whether a ChildPart or BO');
+        //     if (row._similarityScore < 0.95) warns.push('Verify whether the PartNumber/BO name and other fields are correct');
 
-            // OCR confidences   – flag 0 < conf < 0.95
-            ['Quantity', 'Description', 'Material'].forEach(col => {
-                const conf = row[col]?.confidence ?? 0;
-                if (conf > 0 && conf < 0.95) warns.push(`Caution in ${col} value`);
-            });
+        //     // OCR confidences   – flag 0 < conf < 0.95
+        //     ['Quantity', 'Description', 'Material'].forEach(col => {
+        //         const conf = row[col]?.confidence ?? 0;
+        //         if (conf > 0 && conf < 0.95) warns.push(`Caution in ${col} value`);
+        //     });
 
-            return warns.join('; ');
-        }
+        //     return warns.join('; ');
+        // }
+        
+function getRowWarning(row) {
+  const ocrCols = ["Quantity", "Description", "Material"];
+  const ocr = [];
+  const edited = [];
+  const manual = [];
+  const warn = [];
+
+  // OCR/Manual/Edited classification
+  ocrCols.forEach(col => {
+    const val = row[col];
+    const text = val?.text?.trim() || "";
+    const conf = val?.confidence ?? 0;
+    const isOCR = !!val?.ocr;
+
+    if (text) {
+      if (isOCR && conf > 0) {
+        ocr.push(col[0]);
+      } else if (isOCR && conf === 0) {
+        edited.push(col[0]);
+      } else {
+        manual.push(col[0]);
+      }
+
+      // Low-confidence warning
+      if (conf > 0 && conf < 0.95) {
+        warn.push(col[0]);
+      }
+    }
+  });
+
+  // Type/Matched Childpart warnings
+  if (row._needsReview) warn.push("T");
+  if (row._similarityScore < 0.95) warn.push("P");
+
+  const parts = [];
+
+  if (ocr.length) parts.push(`OCR(${ocr.join(",")})`);
+  if (edited.length) parts.push(`Edited(${edited.join(",")})`);
+  if (manual.length) parts.push(`Manual(${manual.join(",")})`);
+  if (warn.length) parts.push(`Warning(${warn.join(",")})`);
+
+  return parts.join("; ");
+}
+
 
         // ─────────────────────────────────────────────────────────────────────
         // Initialize Handsontable with 3 rows + 2 empty rows
@@ -1320,12 +1339,13 @@
                             // dropdown renderer for mapping columns
                             Handsontable.renderers.DropdownRenderer.apply(this, arguments);
 
-                            // Add Type-specific styling
+                            // Add Type and Row specific styling
                             if (prop === "Type") {
                                 if (value === "Child Part") {
                                     td.classList.add("type-child-part");
                                 } else if (value === "BO") {
                                     td.classList.add("type-bo");
+                                    hot.setCellMeta(row, 0, 'className', 'bo-row');
                                 }
                             }
 
@@ -1440,6 +1460,16 @@
                 autoRowSize: true,
                 outsideClickDeselects: true,
                 licenseKey: "non-commercial-and-evaluation",
+
+                // --- Add cells function to apply bo-row class to all cells in BO rows ---
+                cells: function(row, col) {
+                  const cellProperties = {};
+                  const rowData = spreadsheetData[row];
+                  if (rowData && rowData.Type === "BO") {
+                    cellProperties.className = 'bo-row';
+                  }
+                  return cellProperties;
+                },
 
                 // --- NEW afterGetColHeader for OCR upload header area ---
                 afterGetColHeader: function (col, TH) {
@@ -1721,7 +1751,7 @@
                 }
 
                 // Store OCR data
-                spreadsheetData[i][label] = { text, confidence };
+                spreadsheetData[i][label] = { text, confidence, ocr: true };
                 console.log(`📝 Row ${i}: Set ${label} = "${text}" (confidence: ${confidence})`);
 
                 // CRITICAL: PartNumber matching logic
