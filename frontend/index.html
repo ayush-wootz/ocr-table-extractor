@@ -1256,7 +1256,7 @@ function getRowWarning(row) {
   const parts = [];
 
   if (ocr.length) parts.push(`OCR(${ocr.join(",")})`);
-  if (edited.length) parts.push(`Edited(${edited.join(",")})`);
+  if (edited.length) parts.push(`OCRedited(${edited.join(",")})`);
   if (manual.length) parts.push(`Manual(${manual.join(",")})`);
   if (warn.length) parts.push(`Warning(${warn.join(",")})`);
 
