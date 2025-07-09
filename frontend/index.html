@@ -1787,22 +1787,18 @@ function getRowWarning(row) {
 
                         // Store similarity score for reference
                         spreadsheetData[i]["_similarityScore"] = best.bestMatch.rating;
-
-                        // // Auto-populate Type
-                        // const currentType = spreadsheetData[i]["Type"];
-                        // if (!currentType || currentType === "") {
-                        //     // const autoType = matchText ? "Child Part" : "BO";
-                        //     const autoType = "Child Part";
-                        //     spreadsheetData[i]["Type"] = autoType;
-                        //     console.log(`✅ Auto-populated Type: "${autoType}"`);
-                        // }
                     } else {
                         console.warn("⚠️ No drawing numbers available for matching");
                     }
                 }
             }
 
-            renderSpreadsheet();
+            // Instead of always calling renderSpreadsheet, update data if hot exists
+            if (hot) {
+                hot.loadData(spreadsheetData);
+            } else {
+                renderSpreadsheet();
+            }
         }
 
         // ─────────────────────────────────────────────────────────────────────
