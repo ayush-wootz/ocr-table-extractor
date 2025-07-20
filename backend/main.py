@@ -603,9 +603,41 @@ def extract_drawing_number(url: str):
     match = re.search(r"/([^/]+)\.pdf$", url)
     return match.group(1) if match else ""
 
+# Updates the lastItem Number in glide Drawing table
+async def update_last_ocr_bom_item_direct(row_id: str, new_last_item: int):
+    """Update lastOcrBomItem using direct rowID"""
+    try:
+        print(f"🔄 Updating lastOcrBomItem to {new_last_item} for rowID: {row_id}")
+        
+        update_body = {
+            "appID": GLIDE_APP_ID,
+            "mutations": [{
+                "kind": "set-columns-in-row",
+                "tableName": GLIDE_TABLE,
+                "columnValues": {"WddPP": new_last_item},
+                "rowID": row_id
+            }]
+        }
+        
+        async with httpx.AsyncClient() as client:
+            update_res = await client.post(
+                "https://api.glideapp.io/api/function/mutateTables",
+                headers={"Authorization": f"Bearer {GLIDE_API_KEY}", "Content-Type": "application/json"},
+                json=update_body
+            )
+        
+        update_res.raise_for_status()
+        result = update_res.json()
+        print(f"✅ Successfully updated lastOcrBomItem to {new_last_item}")
+        return True
+        
+    except Exception as e:
+        print(f"❌ Error updating lastOcrBomItem: {e}")
+        return False
+
 # API code to fetch drawing numbers (File name)
 GLIDE_API_KEY = "54333200-37b8-4742-929c-156d49cd7c64"
-GLIDE_APP_ID = "1Ywfm3mzeWfqqAMNovPV"
+GLIDE_APP_ID = "rIdnwOvTnxdsQUtlXKUB"
 GLIDE_TABLE = "native-table-unGdNRqsjTPlBDZB2629"
 
 @app.post("/fetch-drawings")
@@ -697,9 +729,11 @@ async def add_child_parts(request: Request):
         project = payload.get("project")
         parent_drawing_number = payload.get("parentDrawingNumber")
         part_number = payload.get("partNumber")  # Overall Part Number from URL
+        rowID = payload.get("rowID")
+        maxItemNumber = payload.get("maxItemNumber")
         
         print(f"📦 Child Parts Request: project={project}, parent={parent_drawing_number}, part={part_number}")
-        print(f"📊 Rows to add: {len(rows_data)}")
+        print(f"📊 Rows to add: {len(rows_data)}, rowID: {rowID}, maxItemNumber: {maxItemNumber}")
         
         if not project or not parent_drawing_number or not part_number:
             return JSONResponse(
@@ -763,6 +797,10 @@ async def add_child_parts(request: Request):
         result = response.json()
         
         print("✅ Child Parts added successfully:", result)
+
+        if rowID and maxItemNumber:
+            await update_last_ocr_bom_item_direct(rowID, maxItemNumber)
+            print(f"🎯 Drawing table update result: {update_success}") 
         return {
             "success": True, 
             "message": f"Successfully added {len(mutations)} child parts",
@@ -797,6 +835,9 @@ async def add_bo_parts(request: Request):
         project = payload.get("project")
         parent_drawing_number = payload.get("parentDrawingNumber")
         part_number = payload.get("partNumber")  # Overall Part Number from URL
+
+        rowID = payload.get("rowID")
+        maxItemNumber = payload.get("maxItemNumber")
         
         print(f"📦 BO Parts Request: project={project}, parent={parent_drawing_number}, part={part_number}")
         print(f"📊 Rows to add: {len(rows_data)}")
@@ -863,6 +904,11 @@ async def add_bo_parts(request: Request):
         result = response.json()
         
         print("✅ BO Parts added successfully:", result)
+
+        if rowID and maxItemNumber:
+            await update_last_ocr_bom_item_direct(rowID, maxItemNumber)
+            print(f"🎯 Drawing table update result: {update_success}") 
+
         return {
             "success": True,
             "message": f"Successfully added {len(mutations)} BO parts", 
