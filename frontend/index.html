@@ -1130,14 +1130,14 @@
         let _cutBackup = [];
         let hasWarningNotificationShown = false;
         let lastOcrBomItem = 0;
-
+        let rowID = null;
         // Fetch query-params (project, part, parentdrgnum) on load and fetch childParts
         window.addEventListener("DOMContentLoaded", async () => {
             const urlParams = new URLSearchParams(window.location.search);
             const project = urlParams.get("project");
             const partNumber = urlParams.get("part");
             const parentDrgNum = urlParams.get("parentdrgnum");
-            const rowID = urlParams.get("rowID");  // ADD THIS LINE
+            rowID = urlParams.get("rowID");
             lastOcrBomItem = parseInt(urlParams.get("item") || "0"); 
             
             console.log("  rowID:", rowID);
