@@ -1136,8 +1136,11 @@
             const project = urlParams.get("project");
             const partNumber = urlParams.get("part");
             const parentDrgNum = urlParams.get("parentdrgnum");
-            if (!project || !partNumber || !parentDrgNum) {
-                showNotification("Missing required query params: project/part/parentdrgnum", 'error');
+            const rowID = urlParams.get("rowID");  // ADD THIS LINE
+            const lastOcrBomItem = parseInt(urlParams.get("item") || "0"); 
+
+            if (!project || !partNumber || !parentDrgNum || !rowID) {
+                showNotification("Missing required query params: project/part/parentdrgnum/rowID", 'error');
                 // Do not return; always initialize table even if params are missing
             } else {
                 try {
@@ -2293,7 +2296,7 @@ function getRowWarning(row) {
 
                     if (type === "Child Part") {
                         childPartsData.push({
-                            itemNumber: vRow + 1,
+                            itemNumber: lastOcrBomItem + vRow + 1,
                             quantity: qty,
                             description: row.Description?.text?.trim() || "",
                             material: row.Material?.text?.trim() || "",
@@ -2302,7 +2305,7 @@ function getRowWarning(row) {
                         });
                     } else if (type === "BO") {
                         boData.push({
-                            itemNumber: vRow + 1,
+                            itemNumber: lastOcrBomItem + vRow + 1,
                             quantity: qty,
                             description: row.Description?.text?.trim() || "",
                             material: row.Material?.text?.trim() || "",
@@ -2311,6 +2314,12 @@ function getRowWarning(row) {
                         });
                     }
                 }
+
+                // Calculate the maximum item number from all data
+                let maxItemNumber = lastOcrBomItem; // Start with current value
+                [...childPartsData, ...boData].forEach(item => {
+                    maxItemNumber = Math.max(maxItemNumber, item.itemNumber);
+                });
 
                 // Send to backend
                 let successful = 0,
@@ -2328,6 +2337,8 @@ function getRowWarning(row) {
                                 project,
                                 parentDrawingNumber,
                                 partNumber,
+                                rowID: rowID,
+                                maxItemNumber: maxItemNumber
                             }),
                         }
                     );
@@ -2348,6 +2359,8 @@ function getRowWarning(row) {
                                 project,
                                 parentDrawingNumber,
                                 partNumber,
+                                rowID: rowID,
+                                maxItemNumber: maxItemNumber
                             }),
                         }
                     );
