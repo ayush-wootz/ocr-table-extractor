@@ -1129,6 +1129,7 @@
         let windowChildParts = []; // expose on window for debugging
         let _cutBackup = [];
         let hasWarningNotificationShown = false;
+        let lastOcrBomItem = 0;
 
         // Fetch query-params (project, part, parentdrgnum) on load and fetch childParts
         window.addEventListener("DOMContentLoaded", async () => {
@@ -1137,7 +1138,7 @@
             const partNumber = urlParams.get("part");
             const parentDrgNum = urlParams.get("parentdrgnum");
             const rowID = urlParams.get("rowID");  // ADD THIS LINE
-            const lastOcrBomItem = parseInt(urlParams.get("item") || "0"); 
+            lastOcrBomItem = parseInt(urlParams.get("item") || "0"); 
             
             console.log("  rowID:", rowID);
             console.log("  lastOcrBomItem:", lastOcrBomItem);
