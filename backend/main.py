@@ -799,7 +799,7 @@ async def add_child_parts(request: Request):
         print("✅ Child Parts added successfully:", result)
 
         if rowID and maxItemNumber:
-            await update_last_ocr_bom_item_direct(rowID, maxItemNumber)
+            update_success = await update_last_ocr_bom_item_direct(rowID, maxItemNumber)
             print(f"🎯 Drawing table update result: {update_success}") 
         return {
             "success": True, 
@@ -906,7 +906,7 @@ async def add_bo_parts(request: Request):
         print("✅ BO Parts added successfully:", result)
 
         if rowID and maxItemNumber:
-            await update_last_ocr_bom_item_direct(rowID, maxItemNumber)
+            update_success = await update_last_ocr_bom_item_direct(rowID, maxItemNumber)
             print(f"🎯 Drawing table update result: {update_success}") 
 
         return {
