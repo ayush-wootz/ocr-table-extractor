@@ -1138,6 +1138,9 @@
             const parentDrgNum = urlParams.get("parentdrgnum");
             const rowID = urlParams.get("rowID");  // ADD THIS LINE
             const lastOcrBomItem = parseInt(urlParams.get("item") || "0"); 
+            
+            console.log("  rowID:", rowID);
+            console.log("  lastOcrBomItem:", lastOcrBomItem);
 
             if (!project || !partNumber || !parentDrgNum || !rowID) {
                 showNotification("Missing required query params: project/part/parentdrgnum/rowID", 'error');
@@ -2320,6 +2323,12 @@ function getRowWarning(row) {
                 [...childPartsData, ...boData].forEach(item => {
                     maxItemNumber = Math.max(maxItemNumber, item.itemNumber);
                 });
+
+                // ADD THIS CONSOLE LOG:
+                console.log("📊 Item Number Calculation:");
+                console.log("  Base lastOcrBomItem:", lastOcrBomItem);
+                console.log("  Calculated maxItemNumber:", maxItemNumber);
+                console.log("  Total items:", [...childPartsData, ...boData].length);
 
                 // Send to backend
                 let successful = 0,
