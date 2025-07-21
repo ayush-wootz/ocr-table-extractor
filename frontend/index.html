@@ -1039,7 +1039,7 @@
                     </div>
                     <!-- Instructions bar above the table -->
                     <div class="instructions">
-                        🔢 &lt; 20 rows | 🔍 zoom &amp; sharp | 🚫 no header
+                        🔢 &lt; 10 rows | 🔍 zoom &amp; sharp | 🚫 no header
                         <span id="help-icon" class="help-icon"><i data-lucide="info"></i></span>
                         <div id="help-popover" class="help-popover">
                             <strong>Good vs Bad Screenshot:</strong><br />
@@ -2125,7 +2125,7 @@ function getRowWarning(row) {
             if (area.className === 'notification-instructions') {
                 clearNotification();
             } else {
-                showNotification('fill manually or upload screenshots in header (≤10 rows at a time)', 'instructions', 0);
+                showNotification('Type or Upload Column screenshots (≤10 rows) in header', 'instructions', 0);
             }
         }
 
