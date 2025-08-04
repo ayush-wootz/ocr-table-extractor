@@ -600,7 +600,7 @@ async def ocr_endpoint(request: Request):
 def extract_drawing_number(url: str):
     if not url:
         return ""
-    match = re.search(r"/([^/]+)\.pdf$", url)
+    match = re.search(r"/([^/]+)\.pdf$", url, re.IGNORECASE)
     return match.group(1) if match else ""
 
 # Updates the lastItem Number in glide Drawing table
