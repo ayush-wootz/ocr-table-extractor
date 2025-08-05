@@ -1171,39 +1171,81 @@
         });
 
         // Sequential character matching + best‐match utility
+
+        // function sequentialCharacterMatch(part, child) {
+        //     if (!part || !child) return 0;
+        //     const p = part.trim().toUpperCase();
+        //     const c = child.trim().toUpperCase();
+        //     if (p === c) return 1.0;
+        //     if (c.includes(p)) return 0.99;
+        //     let i = 0,
+        //         j = 0,
+        //         matched = 0;
+        //     while (i < p.length && j < c.length) {
+        //         if (p[i] === c[j]) {
+        //             matched++;
+        //             i++;
+        //         }
+        //         j++;
+        //     }
+        //     const baseSim = matched / p.length;
+        //     const lengthDiff = Math.abs(p.length - c.length);
+        //     const penalty = lengthDiff > 1 ? (lengthDiff - 1) * 0.1 : 0;
+        //     const sim = Math.max(0, baseSim - penalty);
+        //     if (matched === p.length) return Math.max(0.85, sim);
+        //     return sim;
+        // }
+
         function sequentialCharacterMatch(part, child) {
             if (!part || !child) return 0;
             const p = part.trim().toUpperCase();
             const c = child.trim().toUpperCase();
+            
+            // Exact match
             if (p === c) return 1.0;
-            if (c.includes(p)) return 0.99;
-            let i = 0,
-                j = 0,
-                matched = 0;
-            while (i < p.length && j < c.length) {
-                if (p[i] === c[j]) {
-                    matched++;
-                    i++;
-                }
-                j++;
-            }
-            const baseSim = matched / p.length;
-            const lengthDiff = Math.abs(p.length - c.length);
-            const penalty = lengthDiff > 1 ? (lengthDiff - 1) * 0.1 : 0;
-            const sim = Math.max(0, baseSim - penalty);
-            if (matched === p.length) return Math.max(0.85, sim);
-            return sim;
+            
+            // Exact prefix match (logical extensions)
+            if (c.startsWith(p)) return 0.99;
+            
+            // Exact substring match
+            if (c.includes(p)) return 0.85;
+            
+            // No match
+            return 0;
         }
 
+        
+
+        // function findBestSequentialMatch(partText, drawingNumbers) {
+        //     if (!partText || !drawingNumbers.length || !drawingNumbers.length) {
+        //         return { bestMatch: { target: "", rating: 0 }, allMatches: [] };
+        //     }
+        //     const matches = drawingNumbers.map((d) => ({
+        //         target: d,
+        //         rating: sequentialCharacterMatch(partText, d),
+        //     }));
+        //     matches.sort((a, b) => b.rating - a.rating);
+        //     return { bestMatch: matches[0], allMatches: matches };
+        // }
+
         function findBestSequentialMatch(partText, drawingNumbers) {
-            if (!partText || !drawingNumbers.length || !drawingNumbers.length) {
+            if (!partText || !drawingNumbers.length) {
                 return { bestMatch: { target: "", rating: 0 }, allMatches: [] };
             }
+            
             const matches = drawingNumbers.map((d) => ({
                 target: d,
                 rating: sequentialCharacterMatch(partText, d),
             }));
-            matches.sort((a, b) => b.rating - a.rating);
+            
+            // Sort by rating (descending), then alphabetically for ties
+            matches.sort((a, b) => {
+                if (b.rating !== a.rating) {
+                    return b.rating - a.rating;  // Primary: by score
+                }
+                return a.target.localeCompare(b.target);  // Secondary: alphabetical
+            });
+            
             return { bestMatch: matches[0], allMatches: matches };
         }
 
